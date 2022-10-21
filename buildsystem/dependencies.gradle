@@ -1,0 +1,22 @@
+ext {
+    ktxVersion = "1.7.0"
+    appCompatVersion = "1.5.0"
+    materialVersion = "1.6.1"
+    coreLibraries = [
+            "androidx.core:core-ktx:$ktxVersion",
+            "androidx.appcompat:appcompat:$appCompatVersion",
+            "com.google.android.material:material:$materialVersion"
+    ]
+
+    junitVersion = "4.13.2"
+    test = [
+            "junit:junit:$junitVersion"
+    ]
+
+    espresso = "3.4.0"
+    andoidJunitVersion = "1.1.3"
+    androidTest = [
+            "androidx.test.ext:junit:$andoidJunitVersion",
+            "androidx.test.espresso:espresso-core:$espresso"
+    ]
+}
