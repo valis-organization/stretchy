@@ -1,5 +1,5 @@
 ext {
-    ktxVersion = "1.7.0"
+    ktxVersion = "1.9.0"
     appCompatVersion = "1.5.0"
     materialVersion = "1.6.1"
     coreLibraries = [
