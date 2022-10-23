@@ -35,4 +35,27 @@ ext {
             "androidx.compose.ui:ui-tooling:$composeVersion",
             "androidx.compose.ui:ui-test-manifest:$composeVersion"
     ]
+
+    coroutinesVersion = "1.6.4"
+    coroutines = [
+            "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
+            "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutinesVersion"
+    ]
+    coroutinesRunTimeVersion = "2.5.1"
+    coroutinesRunTime = [
+            "androidx.lifecycle:lifecycle-viewmodel-ktx:$coroutinesRunTimeVersion",
+            "androidx.lifecycle:lifecycle-runtime-ktx:$coroutinesRunTimeVersion",
+            "androidx.lifecycle:lifecycle-livedata-ktx:$coroutinesRunTimeVersion"
+
+    ]
+
+    daggerVersion = "2.44"
+    dagger = [
+            "com.google.dagger:dagger:$daggerVersion",
+            "com.google.dagger:dagger-android-support:$daggerVersion"
+    ]
+    daggerAnnotationProcessor = [
+            "com.google.dagger:dagger-android-processor:$daggerVersion",
+            "com.google.dagger:dagger-compiler:$daggerVersion"
+    ]
 }
