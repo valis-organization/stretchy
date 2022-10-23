@@ -37,7 +37,7 @@ android {
         compose true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion composeVersion
+        kotlinCompilerExtensionVersion = "1.1.1"
     }
     packagingOptions {
         resources {
@@ -52,5 +52,7 @@ dependencies {
 
     testImplementation test
     androidTestImplementation androidTest
+    debugImplementation  composeDebugImplementation
+
 }
 
