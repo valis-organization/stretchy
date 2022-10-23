@@ -49,6 +49,11 @@ android {
 dependencies {
     implementation coreLibraries
     implementation jetpackCompose
+    implementation coroutines
+    implementation dagger
+
+    annotationProcessor daggerAnnotationProcessor
+    runtimeOnly coroutinesRunTime
 
     testImplementation test
     androidTestImplementation androidTest
