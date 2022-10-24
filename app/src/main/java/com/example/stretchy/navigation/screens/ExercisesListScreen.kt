@@ -13,7 +13,7 @@ import androidx.navigation.NavController
 
 
 @Composable
-fun MainScreenView(navController: NavController) {
+fun ExerciseListScreen(navController: NavController) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
