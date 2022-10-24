@@ -10,11 +10,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun PlanningScreenView() {
+fun ExerciseScreen(){
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()
     ) {
-        Text(text = "Planning Screen", fontSize = 27.sp, fontWeight = FontWeight.Bold)
+        Text(text = "Exercise", fontSize = 27.sp, fontWeight = FontWeight.Bold)
     }
 }

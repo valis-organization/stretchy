@@ -20,11 +20,16 @@ fun MainScreenView(navController: NavController) {
             .fillMaxSize()
     ) {
         Column {
-            Text(text = "Main Screen", fontSize = 27.sp, fontWeight = FontWeight.Bold)
+            Text(text = "Exercise List Screen", fontSize = 27.sp, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(10.dp))
             Button(
-                onClick = { navController.navigate(Screen.PlanningScreen.route) }) {
-                Text(text = "Planning Screen")
+                onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
+                Text(text = "Create exercise")
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                onClick = { navController.navigate(Screen.ExerciseScreen.route) }) {
+                Text(text = "Exercise")
             }
         }
     }
