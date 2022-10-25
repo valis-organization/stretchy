@@ -11,21 +11,9 @@ import com.example.stretchy.navigation.screens.ExerciseScreen
 import com.example.stretchy.navigation.screens.Screen
 
 @Composable
-fun Navigation() {
+fun Navigation(exercisesList: List<ExerciseInfo>) {
     val navController = rememberNavController()
-    val exercise1 = ExerciseInfo(
-        itemName = "Recommendation name",
-        numberOfExercises = 11,
-        timeInSeconds = 397
-    )
 
-    val exercise2 = ExerciseInfo(
-        itemName = "Exercise name",
-        numberOfExercises = 7,
-        timeInSeconds = 203
-    )
-
-    val exercisesList = mutableListOf(exercise1, exercise2)
 
     NavHost(navController = navController, startDestination = Screen.ExercisesListScreen.route) {
         composable(route = Screen.ExercisesListScreen.route) {
