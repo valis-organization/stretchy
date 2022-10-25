@@ -17,12 +17,14 @@ fun Navigation(exercisesList: List<ExerciseInfo>) {
 
     NavHost(navController = navController, startDestination = Screen.ExercisesListScreen.route) {
         composable(route = Screen.ExercisesListScreen.route) {
-            ExerciseListScreen(navController = navController,exercisesList)
+            ExerciseListScreen(navController = navController, exercisesList)
         }
         composable(route = Screen.ExerciseCreatorScreen.route) {
-            ExerciseCreatorScreen()
+            ExerciseCreatorScreen({
+
+            })
         }
-        composable(route = Screen.ExerciseScreen.route){
+        composable(route = Screen.ExerciseScreen.route) {
             ExerciseScreen()
         }
     }
