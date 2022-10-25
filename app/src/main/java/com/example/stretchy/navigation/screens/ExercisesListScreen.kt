@@ -16,22 +16,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.ExerciseInfo
 
-val exercise1 = ExerciseInfo(
-    itemName = "Recommendation name",
-    numberOfExercises = 11,
-    timeInSeconds = 397
-)
-
-val exercise2 = ExerciseInfo(
-    itemName = "Exercise name",
-    numberOfExercises = 7,
-    timeInSeconds = 203
-)
-
-val exercisesList = mutableListOf(exercise1, exercise2)
 
 @Composable
-fun ExerciseListScreen(navController: NavController) {
+fun ExerciseListScreen(navController: NavController, exercises: List<ExerciseInfo>) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
@@ -49,7 +36,7 @@ fun ExerciseListScreen(navController: NavController) {
                 Row(modifier = Modifier.padding(start = 25.dp)) {
                     Text(text = "Stretches", fontSize = 32.sp, fontWeight = FontWeight.Bold)
                 }
-                ExerciseList(exercises = exercisesList)
+                ExerciseList(exercises = exercises)
             }
         }
     }
