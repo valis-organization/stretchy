@@ -8,17 +8,24 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.stretchy.ExerciseInfo
+import com.example.stretchy.ExerciseListViewModel
+import com.example.stretchy.ui.theme.ExerciseItem
+import com.example.stretchy.ui.theme.ExerciseListUiModel
 
 
 @Composable
-fun ExerciseListScreen(navController: NavController, exercises: List<ExerciseInfo>) {
+fun ExerciseListScreen(
+    navController: NavController,
+    exerciseListViewModel: ExerciseListViewModel = viewModel()
+) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
@@ -36,23 +43,55 @@ fun ExerciseListScreen(navController: NavController, exercises: List<ExerciseInf
                 Row(modifier = Modifier.padding(start = 25.dp)) {
                     Text(text = "Stretches", fontSize = 32.sp, fontWeight = FontWeight.Bold)
                 }
-                ExerciseList(exercises = exercises)
+
+                when (val state = exerciseListViewModel.uiState.collectAsState().value) {
+                    is ExerciseListViewModel.ExerciseListUiState.Empty ->
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "You did not add any exercises yet!",
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Text(
+                                text = "Do it by clicking + button",
+                                fontSize = 25.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    is ExerciseListViewModel.ExerciseListUiState.Loading ->
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    is ExerciseListViewModel.ExerciseListUiState.Loaded -> ExerciseList(state.data)
+                }
+
+
             }
         }
     }
 }
 
 @Composable
-private fun ExerciseList(exercises: List<ExerciseInfo>) {
+private fun ExerciseList(uiModel: ExerciseListUiModel) {
     LazyColumn {
-        items(exercises) { exercise ->
+        items(uiModel.exerciseList) { exercise ->
             ExerciseListItem(item = exercise)
         }
     }
 }
 
 @Composable
-private fun ExerciseListItem(item: ExerciseInfo) {
+private fun ExerciseListItem(item: ExerciseItem) {
     Spacer(modifier = Modifier.height(25.dp))
     Column(
         modifier = Modifier
