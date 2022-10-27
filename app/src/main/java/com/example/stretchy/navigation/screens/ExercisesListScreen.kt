@@ -23,7 +23,7 @@ import com.example.stretchy.ui.theme.ExerciseListUiModel
 @Composable
 fun ExerciseListScreen(
     navController: NavController,
-    exerciseListViewModel: ExerciseListViewModel
+    exerciseListViewModel: ExerciseListViewModel = viewModel()
 ) {
     Scaffold(
         floatingActionButton = {

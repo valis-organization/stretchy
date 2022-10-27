@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 class ExerciseListViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<ExerciseListUiState>(ExerciseListUiState.Empty)
     val uiState: StateFlow<ExerciseListUiState> = _uiState
+    private val repository = Repository() //In future inject it
 
     init {
         fetchExercisesList()
@@ -19,7 +20,7 @@ class ExerciseListViewModel : ViewModel() {
     private fun fetchExercisesList() {
         _uiState.value = ExerciseListUiState.Loading
         viewModelScope.launch {
-            val exercisesList = Repository.getExercisesList()
+            val exercisesList = repository.getExercisesList()
             if (exercisesList.isEmpty()) {
                 _uiState.value = ExerciseListUiState.Empty
             } else {
