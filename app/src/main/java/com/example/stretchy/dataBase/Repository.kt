@@ -1,8 +1,8 @@
-package com.example.stretchy
+package com.example.stretchy.dataBase
 
 import com.example.stretchy.ui.theme.ExerciseItem
 
-object Repository {
+object Repository : DataBase {
 
     private val exercise1 = ExerciseItem(
         itemName = "Recommendation name",
@@ -18,7 +18,7 @@ object Repository {
 
     private val exercisesList : List<ExerciseItem> = mutableListOf(exercise1, exercise2) //temp, in future get it from data base
 
-    fun getExercisesList(): List<ExerciseItem> {
+    override suspend fun getExercisesList(): List<ExerciseItem> {
         return exercisesList
     }
 }
