@@ -2,7 +2,7 @@ package com.example.stretchy.dataBase
 
 import com.example.stretchy.ui.theme.ExerciseItem
 
-class DataBaseImpl : DataBase {
+class StretchyDataBase : DataBase {
 
     private val exercise1 = ExerciseItem(
         itemName = "Recommendation name",

@@ -11,12 +11,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.stretchy.ExerciseListViewModel
+import com.example.stretchy.R
 import com.example.stretchy.ui.theme.ExerciseItem
 import com.example.stretchy.ui.theme.ExerciseListUiModel
 
@@ -38,9 +40,9 @@ fun ExerciseListScreen(
                 .background(Color.LightGray)
                 .fillMaxSize()
         ) {
-            Column(modifier = Modifier.padding(top = 25.dp)) {
-                Row(modifier = Modifier.padding(start = 25.dp)) {
-                    Text(text = "Stretches", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            Column(modifier = Modifier.padding(top = 24.dp)) {
+                Row(modifier = Modifier.padding(start = 24.dp)) {
+                    Text(text = stringResource(R.string.stretches), fontSize = 32.sp, fontWeight = FontWeight.Bold)
                 }
 
                 when (val state = exerciseListViewModel.uiState.collectAsState().value) {
@@ -50,15 +52,14 @@ fun ExerciseListScreen(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(
-                                text = "You did not add any exercises yet!",
-                                fontSize = 25.sp,
+                            Text(text = stringResource(R.string.exercises_not_added),
+                                fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
-                                text = "Do it by clicking + button",
-                                fontSize = 25.sp,
+                                text = stringResource(R.string.do_it_by_add_button),
+                                fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
@@ -91,39 +92,39 @@ private fun ExerciseList(uiModel: ExerciseListUiModel) {
 
 @Composable
 private fun ExerciseListItem(item: ExerciseItem) {
-    Spacer(modifier = Modifier.height(25.dp))
+    Spacer(modifier = Modifier.height(24.dp))
     Column(
         modifier = Modifier
             .background(color = Color.White)
             .fillMaxWidth()
-            .height(150.dp)
-            .padding(start = 25.dp, end = 25.dp, top = 10.dp, bottom = 10.dp),
+            .height(152.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.Center
     ) {
         Text(text = item.itemName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Divider(color = Color.LightGray, thickness = 1.dp)
-        Spacer(modifier = Modifier.height(15.dp))
+        Spacer(modifier = Modifier.height(16.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
             Column {
-                Text(text = "Exercises", fontSize = 10.sp, color = Color.LightGray)
-                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = stringResource(R.string.exercises), fontSize = 12.sp, color = Color.LightGray)
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "${item.numberOfExercises}",
-                    fontSize = 15.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
             Spacer(modifier = Modifier.width(100.dp))
             Column {
-                Text(text = "Total time", fontSize = 10.sp, color = Color.LightGray)
-                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = stringResource(R.string.total_time), fontSize = 12.sp, color = Color.LightGray)
+                Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = convertSecondsToMinutes(item.timeInSeconds),
-                    fontSize = 15.sp,
+                    fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             }

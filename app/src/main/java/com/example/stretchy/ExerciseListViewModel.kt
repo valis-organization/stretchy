@@ -3,6 +3,7 @@ package com.example.stretchy
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.dataBase.Repository
+import com.example.stretchy.dataBase.StretchyDataBase
 import com.example.stretchy.ui.theme.ExerciseListUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,7 +12,8 @@ import kotlinx.coroutines.launch
 class ExerciseListViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<ExerciseListUiState>(ExerciseListUiState.Empty)
     val uiState: StateFlow<ExerciseListUiState> = _uiState
-    private val repository = Repository() //In future inject it
+    private val db = StretchyDataBase()
+    private val repository = Repository(db) //In future inject it
 
     init {
         fetchExercisesList()
