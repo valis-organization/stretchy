@@ -12,16 +12,14 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val exerciseListViewModel: ExerciseListViewModel = viewModel()
-            Navigation(exerciseListViewModel)
+            Navigation()
         }
     }
 
     @Preview(showBackground = true)
     @Composable
     fun DefaultPreview() {
-        val exerciseListViewModel: ExerciseListViewModel = viewModel()
-        Navigation(exerciseListViewModel)
+        Navigation()
     }
 
 }

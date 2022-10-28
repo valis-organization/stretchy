@@ -11,12 +11,12 @@ import com.example.stretchy.navigation.screens.ExerciseScreen
 import com.example.stretchy.navigation.screens.Screen
 
 @Composable
-fun Navigation(exerciseListViewModel: ExerciseListViewModel) {
+fun Navigation() {
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = Screen.ExercisesListScreen.route) {
         composable(route = Screen.ExercisesListScreen.route) {
-            ExerciseListScreen(navController = navController,exerciseListViewModel)
+            ExerciseListScreen(navController = navController)
         }
         composable(route = Screen.ExerciseCreatorScreen.route) {
             ExerciseCreatorScreen()
