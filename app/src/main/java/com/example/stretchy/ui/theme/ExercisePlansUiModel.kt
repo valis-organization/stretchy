@@ -1,10 +1,10 @@
 package com.example.stretchy.ui.theme
 
 data class ExerciseListUiModel(
-    var exerciseList: List<ExerciseItem>
+    var exercisePlans: List<ExercisePlanItem>
 )
 
-data class ExerciseItem(
+data class ExercisePlanItem(
     val itemName: String,
     val numberOfExercises: Int,
     val timeInSeconds: Int

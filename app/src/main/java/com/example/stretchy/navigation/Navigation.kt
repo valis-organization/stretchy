@@ -4,8 +4,7 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.stretchy.ExerciseListViewModel
-import com.example.stretchy.navigation.screens.ExerciseListScreen
+import com.example.stretchy.navigation.screens.ExercisePlansScreen
 import com.example.stretchy.navigation.screens.ExerciseCreatorScreen
 import com.example.stretchy.navigation.screens.ExerciseScreen
 import com.example.stretchy.navigation.screens.Screen
@@ -14,9 +13,9 @@ import com.example.stretchy.navigation.screens.Screen
 fun Navigation() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Screen.ExercisesListScreen.route) {
-        composable(route = Screen.ExercisesListScreen.route) {
-            ExerciseListScreen(navController = navController)
+    NavHost(navController = navController, startDestination = Screen.ExercisePlansScreen.route) {
+        composable(route = Screen.ExercisePlansScreen.route) {
+            ExercisePlansScreen(navController = navController)
         }
         composable(route = Screen.ExerciseCreatorScreen.route) {
             ExerciseCreatorScreen()

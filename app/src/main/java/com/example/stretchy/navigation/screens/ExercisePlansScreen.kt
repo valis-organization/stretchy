@@ -17,15 +17,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.stretchy.ExerciseListViewModel
+import com.example.stretchy.ExercisePlansViewModel
 import com.example.stretchy.R
-import com.example.stretchy.ui.theme.ExerciseItem
+import com.example.stretchy.ui.theme.ExercisePlanItem
 import com.example.stretchy.ui.theme.ExerciseListUiModel
 
 @Composable
-fun ExerciseListScreen(
+fun ExercisePlansScreen(
     navController: NavController,
-    exerciseListViewModel: ExerciseListViewModel = viewModel()
+    exercisePlansViewModel: ExercisePlansViewModel = viewModel()
 ) {
     Scaffold(
         floatingActionButton = {
@@ -45,8 +45,8 @@ fun ExerciseListScreen(
                     Text(text = stringResource(R.string.stretches), fontSize = 32.sp, fontWeight = FontWeight.Bold)
                 }
 
-                when (val state = exerciseListViewModel.uiState.collectAsState().value) {
-                    is ExerciseListViewModel.ExerciseListUiState.Empty ->
+                when (val state = exercisePlansViewModel.uiState.collectAsState().value) {
+                    is ExercisePlansViewModel.ExercisePlansUiState.Empty ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
@@ -64,7 +64,7 @@ fun ExerciseListScreen(
                                 color = Color.White
                             )
                         }
-                    is ExerciseListViewModel.ExerciseListUiState.Loading ->
+                    is ExercisePlansViewModel.ExercisePlansUiState.Loading ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
@@ -72,7 +72,7 @@ fun ExerciseListScreen(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is ExerciseListViewModel.ExerciseListUiState.Loaded -> ExerciseList(state.data)
+                    is ExercisePlansViewModel.ExercisePlansUiState.Loaded -> ExercisePlansList(state.data)
                 }
 
 
@@ -82,16 +82,16 @@ fun ExerciseListScreen(
 }
 
 @Composable
-private fun ExerciseList(uiModel: ExerciseListUiModel) {
+private fun ExercisePlansList(uiModel: ExerciseListUiModel) {
     LazyColumn {
-        items(uiModel.exerciseList) { exercise ->
-            ExerciseListItem(item = exercise)
+        items(uiModel.exercisePlans) { exercise ->
+            ExercisePlansListItem(item = exercise)
         }
     }
 }
 
 @Composable
-private fun ExerciseListItem(item: ExerciseItem) {
+private fun ExercisePlansListItem(item: ExercisePlanItem) {
     Spacer(modifier = Modifier.height(24.dp))
     Column(
         modifier = Modifier

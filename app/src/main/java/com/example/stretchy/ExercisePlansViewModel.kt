@@ -9,31 +9,31 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class ExerciseListViewModel : ViewModel() {
-    private val _uiState = MutableStateFlow<ExerciseListUiState>(ExerciseListUiState.Empty)
-    val uiState: StateFlow<ExerciseListUiState> = _uiState
+class ExercisePlansViewModel : ViewModel() {
+    private val _uiState = MutableStateFlow<ExercisePlansUiState>(ExercisePlansUiState.Empty)
+    val uiState: StateFlow<ExercisePlansUiState> = _uiState
     private val db = StretchyDataBase()
     private val repository = Repository(db) //In future inject it
 
     init {
-        fetchExercisesList()
+        fetchPlansList()
     }
 
-    private fun fetchExercisesList() {
-        _uiState.value = ExerciseListUiState.Loading
+    private fun fetchPlansList() {
+        _uiState.value = ExercisePlansUiState.Loading
         viewModelScope.launch {
             val exercisesList = repository.getExercisesList()
             if (exercisesList.isEmpty()) {
-                _uiState.value = ExerciseListUiState.Empty
+                _uiState.value = ExercisePlansUiState.Empty
             } else {
-                _uiState.value = ExerciseListUiState.Loaded(ExerciseListUiModel(exercisesList))
+                _uiState.value = ExercisePlansUiState.Loaded(ExerciseListUiModel(exercisesList))
             }
         }
     }
 
-    sealed class ExerciseListUiState {
-        object Empty : ExerciseListUiState()
-        object Loading : ExerciseListUiState()
-        class Loaded(val data: ExerciseListUiModel) : ExerciseListUiState()
+    sealed class ExercisePlansUiState {
+        object Empty : ExercisePlansUiState()
+        object Loading : ExercisePlansUiState()
+        class Loaded(val data: ExerciseListUiModel) : ExercisePlansUiState()
     }
 }
