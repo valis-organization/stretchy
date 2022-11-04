@@ -22,11 +22,11 @@ class ExercisePlansViewModel : ViewModel() {
     private fun fetchPlansList() {
         _uiState.value = ExercisePlansUiState.Loading
         viewModelScope.launch {
-            val exercisesList = repository.getExercisesList()
-            if (exercisesList.isEmpty()) {
+            val plansList = repository.getPlansList()
+            if (plansList.isEmpty()) {
                 _uiState.value = ExercisePlansUiState.Empty
             } else {
-                _uiState.value = ExercisePlansUiState.Loaded(ExerciseListUiModel(exercisesList))
+                _uiState.value = ExercisePlansUiState.Loaded(ExerciseListUiModel(plansList))
             }
         }
     }

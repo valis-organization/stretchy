@@ -4,7 +4,11 @@ import com.example.stretchy.ui.theme.ExercisePlanItem
 
 class Repository(private val db : StretchyDataBase){
 
-    suspend fun getExercisesList(): List<ExercisePlanItem> {
+    suspend fun getPlansList(): List<ExercisePlanItem> {
+        return db.getPlansList()
+    }
+
+    suspend fun getExercisesList() : List<ExerciseItem>{
         return db.getExercisesList()
     }
 }

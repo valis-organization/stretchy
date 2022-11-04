@@ -1,8 +1,4 @@
 package com.example.stretchy.ui.theme
 
-data class ExercisesUiModel(val exerciseList: List<ExerciseItem>)
+data class ExercisesUiModel(val activityItem: ActivityItem)
 
-data class ExerciseItem(
-    val exerciseName: String,
-    val exerciseTimeLength: Long
-)

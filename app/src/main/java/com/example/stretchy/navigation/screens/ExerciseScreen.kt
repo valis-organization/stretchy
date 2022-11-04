@@ -13,17 +13,27 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.stretchy.ExerciseViewModel
 import com.example.stretchy.ui.theme.*
-import kotlinx.coroutines.delay
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.stretchy.R
 import kotlin.math.*
 
 @Composable
-fun ExerciseScreen() {
-    Surface(modifier = Modifier.fillMaxSize()) {
+fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
+    Surface(modifier = Modifier
+        .fillMaxSize()
+        .clickable(
+            interactionSource = remember { MutableInteractionSource() },
+            indication = null
+        ) {
+            viewModel.stopTimer()
+        }) {
         Box(
             contentAlignment = Alignment.Center
         )
@@ -32,71 +42,77 @@ fun ExerciseScreen() {
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Recommendation name", fontSize = 32.sp, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(100.dp))
-                Timer(
-                    totalTime = 20 * 1000,
-                    modifier = Modifier.size(300.dp)
-                )
-                Spacer(modifier = Modifier.height(36.dp))
-                Text(
-                    text = "Next exercise:",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.LightGray
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(text = "Exercise name", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                when (val state = viewModel.uiState.collectAsState().value) {
+                    is ExerciseViewModel.ExerciseUiState.Loading ->
+                        Text(
+                            text = stringResource(id = R.string.loading),
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    is ExerciseViewModel.ExerciseUiState.Success -> {
+                        when (val item = state.data.activityItem) {
+                            is Exercise -> {
+                                Exercise(
+                                    exerciseName = item.exerciseName,
+                                    nextExerciseName = item.nextExercise,
+                                    currentTime = item.currentTime,
+                                    totalTime = item.totalTime
+                                )
+                            }
+                            is Break -> Exercise(
+                                exerciseName = stringResource(id = R.string.exercise_break),
+                                nextExerciseName = item.nextExercise,
+                                currentTime = item.currentTime,
+                                totalTime = item.totalTime
+                            )
+                        }
+                    }
+                    ExerciseViewModel.ExerciseUiState.Error -> Text(
+                        text = stringResource(id = R.string.error),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }
 }
 
 @Composable
+fun Exercise(exerciseName: String, nextExerciseName: String, currentTime: Int, totalTime: Int) {
+    Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    Spacer(modifier = Modifier.height(100.dp))
+    Timer(
+        totalTime = totalTime.toFloat() * 1000,
+        modifier = Modifier.size(300.dp),
+        currentTime = currentTime.toFloat() * 1000
+    )
+    Spacer(modifier = Modifier.height(36.dp))
+    Text(
+        text = stringResource(id = R.string.nxt_exercise),
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.LightGray
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Text(text = nextExerciseName, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+}
+
+@Composable
 fun Timer(
-    totalTime: Long,
+    totalTime: Float,
+    currentTime: Float,
     modifier: Modifier = Modifier,
-    initialValue: Float = 1f,
     strokeWidth: Dp = 10.dp
 ) {
-    var percentageOfTimer by remember {
-        mutableStateOf(initialValue)
-    }
-    var currentTime by remember {
-        mutableStateOf(totalTime)
-    }
-    var isTimerRunning by remember {
-        mutableStateOf(false)
-    }
+    val percentageOfTimer = (currentTime / totalTime)
     val sweepAngle = 250f
 
-    LaunchedEffect(key1 = currentTime, key2 = isTimerRunning) {
-        if (currentTime > 0 && isTimerRunning) {
-            delay(100)
-            currentTime -= 100
-            percentageOfTimer = currentTime / totalTime.toFloat()
-        }
-    }
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = modifier
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                if (currentTime <= 0L) {
-                    currentTime = totalTime
-                    isTimerRunning = true
-                } else {
-                    isTimerRunning = !isTimerRunning
-                }
-            },
-    )
+    Box(contentAlignment = Alignment.Center)
     {
         Canvas(modifier = modifier) {
             drawArc(
-                color = Color.DarkGray,
+                color = Color.White,
                 startAngle = -215f,
                 sweepAngle = sweepAngle,
                 useCenter = false,
@@ -113,11 +129,11 @@ fun Timer(
             )
         }
         Text(
-            text = (ceil((currentTime).toFloat() / 1000)).toInt().toString(),
+            text = (ceil((currentTime) / 1000)).toInt().toString(),
             fontSize = 100.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
-            modifier= Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 32.dp)
         )
     }
 }
