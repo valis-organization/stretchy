@@ -52,14 +52,14 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                     is ExerciseViewModel.ExerciseUiState.Success -> {
                         when (val item = state.data.activityItem) {
                             is Exercise -> {
-                                Exercise(
+                                ExerciseComposable(
                                     exerciseName = item.exerciseName,
                                     nextExerciseName = item.nextExercise,
                                     currentTime = item.currentTime,
                                     totalTime = item.totalTime
                                 )
                             }
-                            is Break -> Exercise(
+                            is Break -> ExerciseComposable(
                                 exerciseName = stringResource(id = R.string.exercise_break),
                                 nextExerciseName = item.nextExercise,
                                 currentTime = item.currentTime,
@@ -79,13 +79,18 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
 }
 
 @Composable
-fun Exercise(exerciseName: String, nextExerciseName: String, currentTime: Int, totalTime: Int) {
+fun ExerciseComposable(
+    exerciseName: String,
+    nextExerciseName: String,
+    currentTime: Float,
+    totalTime: Int
+) {
     Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(100.dp))
-    Timer(
-        totalTime = totalTime.toFloat() * 1000,
+    TimerComposable(
+        totalSeconds = totalTime.toFloat() * 1000,
         modifier = Modifier.size(300.dp),
-        currentTime = currentTime.toFloat() * 1000
+        currentSeconds = currentTime
     )
     Spacer(modifier = Modifier.height(36.dp))
     Text(
@@ -99,26 +104,18 @@ fun Exercise(exerciseName: String, nextExerciseName: String, currentTime: Int, t
 }
 
 @Composable
-fun Timer(
-    totalTime: Float,
-    currentTime: Float,
+fun TimerComposable(
+    totalSeconds: Float,
+    currentSeconds: Float,
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 10.dp
 ) {
-    val percentageOfTimer = (currentTime / totalTime)
+    val percentageOfTimer = (currentSeconds / totalSeconds)
     val sweepAngle = 250f
 
     Box(contentAlignment = Alignment.Center)
     {
         Canvas(modifier = modifier) {
-            drawArc(
-                color = Color.White,
-                startAngle = -215f,
-                sweepAngle = sweepAngle,
-                useCenter = false,
-                size = Size(size.width, size.height),
-                style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
-            )
             drawArc(
                 color = Color(azureBlue.toArgb()),
                 startAngle = -215f,
@@ -129,7 +126,7 @@ fun Timer(
             )
         }
         Text(
-            text = (ceil((currentTime) / 1000)).toInt().toString(),
+            text = (ceil((currentSeconds) / 1000)).toInt().toString(),
             fontSize = 100.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
