@@ -1,4 +1,10 @@
-package com.example.stretchy.ui.theme
+package com.example.stretchy.features.executetraining.ui.data
+
+sealed class ExecuteTrainingUiState {
+    object Loading : ExecuteTrainingUiState()
+    object Error : ExecuteTrainingUiState()
+    class Success(val activityItem: ActivityItem) : ExecuteTrainingUiState()
+}
 
 sealed class ActivityItem(
     open val nextExercise: String?,
@@ -17,5 +23,4 @@ sealed class ActivityItem(
         override val currentTime: Float,
         override val totalTime: Int
     ) : ActivityItem(nextExercise, currentTime, totalTime)
-
 }

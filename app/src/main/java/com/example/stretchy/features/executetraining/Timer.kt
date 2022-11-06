@@ -1,4 +1,4 @@
-package com.example.stretchy
+package com.example.stretchy.features.executetraining
 
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay

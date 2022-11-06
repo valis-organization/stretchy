@@ -1,4 +1,4 @@
-package com.example.stretchy.navigation.screens
+package com.example.stretchy.features.executetraining.ui.composable
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -18,22 +18,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stretchy.ExerciseViewModel
-import com.example.stretchy.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.stretchy.ExerciseUiState
 import com.example.stretchy.R
+import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
+import com.example.stretchy.features.executetraining.ui.data.ActivityItem
+import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
+import com.example.stretchy.theme.azureBlue
 import kotlin.math.*
 
 @Composable
-fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
+fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel()) {
     Surface(modifier = Modifier
         .fillMaxSize()
         .clickable(
             interactionSource = remember { MutableInteractionSource() },
             indication = null
         ) {
-            viewModel.toggleStartOrStopTimer()
+            viewModel.toggleStartStopTimer()
         }) {
         Box(
             contentAlignment = Alignment.Center
@@ -44,14 +45,14 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 when (val state = viewModel.uiState.collectAsState().value) {
-                    is ExerciseUiState.Loading ->
+                    is ExecuteTrainingUiState.Loading ->
                         Text(
                             text = stringResource(id = R.string.loading),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold
                         )
-                    is ExerciseUiState.Success -> {
-                        when (val item = state.data) {
+                    is ExecuteTrainingUiState.Success -> {
+                        when (val item = state.activityItem) {
                             is ActivityItem.Exercise -> {
                                 ExerciseComposable(
                                     exerciseName = item.exerciseName,
@@ -67,7 +68,7 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                             )
                         }
                     }
-                    ExerciseUiState.Error -> Text(
+                    ExecuteTrainingUiState.Error -> Text(
                         text = stringResource(id = R.string.error),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold
