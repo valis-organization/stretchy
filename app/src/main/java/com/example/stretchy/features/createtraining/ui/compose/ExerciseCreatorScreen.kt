@@ -1,4 +1,4 @@
-package com.example.stretchy.navigation.screens
+package com.example.stretchy.features.createtraining.ui.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun ExerciseCreatorScreen() {
+fun CreateTrainingComposable() {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier.fillMaxSize()

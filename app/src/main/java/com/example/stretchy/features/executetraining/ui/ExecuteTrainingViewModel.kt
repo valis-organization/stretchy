@@ -1,41 +1,43 @@
-package com.example.stretchy
+package com.example.stretchy.features.executetraining.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stretchy.dataBase.ActivityRepo
-import com.example.stretchy.dataBase.Repository
-import com.example.stretchy.dataBase.StretchyDataBase
-import com.example.stretchy.ui.theme.ActivityItem
+import com.example.stretchy.database.MockedDataBaseImpl
+import com.example.stretchy.repository.ActivityDomain
+import com.example.stretchy.features.executetraining.Timer
+import com.example.stretchy.features.executetraining.ui.data.ActivityItem
+import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
+import com.example.stretchy.repository.RepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
-class ExerciseViewModel : ViewModel() {
+class ExecuteTrainingViewModel : ViewModel() {
     private var timer: Timer = Timer()
-    private val _uiState = MutableStateFlow<ExerciseUiState>(ExerciseUiState.Loading)
-    val uiState: StateFlow<ExerciseUiState> = _uiState
+    private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
+    val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
 
-    private val db = StretchyDataBase()
-    private val repository = Repository(db)
+    private val db = MockedDataBaseImpl()
+    private val repository = RepositoryImpl(db)
     private var isPaused = true
 
     init {
-        _uiState.value = ExerciseUiState.Loading
+        _uiState.value = ExecuteTrainingUiState.Loading
         viewModelScope.launch {
-            val exercisesList = repository.getActivities()
+            val exercisesList = repository.getActivitiesForTraining("someId")
             if (exercisesList.isEmpty()) {
-                _uiState.value = ExerciseUiState.Error
+                _uiState.value = ExecuteTrainingUiState.Error
             } else {
                 exercisesList.forEachIndexed { index, exercise ->
                     timer.setSeconds(exercise.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
                         when (exercise) {
-                            is ActivityRepo.ExerciseRepo -> {
+                            is ActivityDomain.ExerciseDomain -> {
                                 val nextExerciseName =
-                                    (exercisesList.getOrNull(index + 2) as? ActivityRepo.ExerciseRepo)?.name
-                                _uiState.value = ExerciseUiState.Success(
+                                    (exercisesList.getOrNull(index + 2) as? ActivityDomain.ExerciseDomain)?.name
+                                _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Exercise(
                                         exercise.name,
                                         nextExerciseName,
@@ -44,10 +46,10 @@ class ExerciseViewModel : ViewModel() {
                                     )
                                 )
                             }
-                            is ActivityRepo.BreakRepo -> {
+                            is ActivityDomain.BreakDomain -> {
                                 val nextExerciseName =
-                                    (exercisesList.getOrNull(index + 1) as? ActivityRepo.ExerciseRepo)?.name
-                                _uiState.value = ExerciseUiState.Success(
+                                    (exercisesList.getOrNull(index + 1) as? ActivityDomain.ExerciseDomain)?.name
+                                _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Break(
                                         nextExerciseName!!,
                                         currentSeconds,
@@ -62,7 +64,7 @@ class ExerciseViewModel : ViewModel() {
         }
     }
 
-    fun toggleStartOrStopTimer() {
+    fun toggleStartStopTimer() {
         if (!isPaused) {
             isPaused = true
             Log.i(TIMER_LOG_TAG, "Timer is paused.")

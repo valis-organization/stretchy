@@ -1,4 +1,4 @@
-package com.example.stretchy.ui.theme
+package com.example.stretchy.theme
 
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Shapes
