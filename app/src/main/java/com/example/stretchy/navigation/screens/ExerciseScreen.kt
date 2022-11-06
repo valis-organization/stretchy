@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.example.stretchy.ExerciseViewModel
 import com.example.stretchy.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.stretchy.ExerciseUiState
 import com.example.stretchy.R
 import kotlin.math.*
 
@@ -43,13 +44,13 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 when (val state = viewModel.uiState.collectAsState().value) {
-                    is ExerciseViewModel.ExerciseUiState.Loading ->
+                    is ExerciseUiState.Loading ->
                         Text(
                             text = stringResource(id = R.string.loading),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold
                         )
-                    is ExerciseViewModel.ExerciseUiState.Success -> {
+                    is ExerciseUiState.Success -> {
                         when (val item = state.data.activityItem) {
                             is Exercise -> {
                                 ExerciseComposable(
@@ -67,7 +68,7 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                             )
                         }
                     }
-                    ExerciseViewModel.ExerciseUiState.Error -> Text(
+                    ExerciseUiState.Error -> Text(
                         text = stringResource(id = R.string.error),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold

@@ -80,12 +80,6 @@ class ExerciseViewModel : ViewModel() {
             timer.start()
         }
     }
-
-    sealed class ExerciseUiState {
-        object Loading : ExerciseUiState()
-        object Error : ExerciseUiState()
-        class Success(val data: ExercisesUiModel) : ExerciseUiState()
-    }
     companion object{
         const val BREAK = "Break"
     }
