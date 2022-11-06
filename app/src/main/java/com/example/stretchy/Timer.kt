@@ -5,9 +5,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
-class Timer{
-    private var _counterFlow: Flow<Int>? = null
-    var flow: MutableStateFlow<Int> = MutableStateFlow(0)
+class Timer {
+    private var _counterFlow: Flow<Float>? = null
+    var flow: MutableStateFlow<Float> = MutableStateFlow(0f)
     private var currentMs: Int = 0
     private var paused = true
 
@@ -15,17 +15,16 @@ class Timer{
         _counterFlow = (0..Int.MAX_VALUE)
             .asSequence()
             .asFlow()
+            .map { it.toFloat() }
             .onEach {
                 delay(10)
                 if (!paused) {
                     currentMs -= 10
-                    if (it.mod(100) == 0) {
-                        flow.emit(currentMs / 1000)
-                    }
+                    flow.emit(currentMs.toFloat())
                 }
             }
-        GlobalScope.launch{
-                _counterFlow!!.collect {}
+        GlobalScope.launch {
+            _counterFlow!!.collect {}
         }
     }
 
@@ -37,12 +36,8 @@ class Timer{
         paused = true
     }
 
-    fun setSeconds(seconds : Int){
-        flow.value = seconds
+    fun setSeconds(seconds: Int) {
+        flow.value = seconds.toFloat() * 1000
         currentMs = seconds * 1000
-    }
-
-    companion object {
-        private const val ONE_SECOND = 1_000L
     }
 }

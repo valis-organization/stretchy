@@ -2,20 +2,20 @@ package com.example.stretchy.ui.theme
 
 sealed class ActivityItem {
     abstract val nextExercise: String
-    abstract val currentTime: Int
+    abstract val currentTime: Float
     abstract val totalTime: Int
 }
 
 data class Exercise(
     val exerciseName: String,
     override val nextExercise: String,
-    override val currentTime: Int,
+    override val currentTime: Float,
     override val totalTime: Int
 ) : ActivityItem()
 
 data class Break(
     override val nextExercise: String,
-    override val currentTime: Int,
+    override val currentTime: Float,
     override val totalTime: Int
 ) : ActivityItem()
 

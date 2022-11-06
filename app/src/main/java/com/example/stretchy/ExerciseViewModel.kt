@@ -33,11 +33,14 @@ class ExerciseViewModel : ViewModel() {
                 for ((counter, exercise) in exercisesList.withIndex()) {
                     countDownTimer.setSeconds(exercise.exerciseTimeLength)
                     val currentExercise = exercise.exerciseName
-                    val nextExercise = exercisesList[counter + 1].exerciseName
+                    var nextExercise = ""
+                    if (counter + 1 != exercisesList.size) {
+                        nextExercise = exercisesList[counter + 1].exerciseName
+                    }
                     countDownTimer.flow.takeWhile { it >= 0 }.collect {
                         val currentSecond = it
                         Log.i(TIMER_LOG_TAG, "$currentSecond")
-                        if (currentExercise == "Break") {
+                        if (currentExercise == BREAK) {
                             _uiState.value = ExerciseUiState.Success(
                                 ExercisesUiModel(
                                     Exercise(
@@ -66,7 +69,7 @@ class ExerciseViewModel : ViewModel() {
         }
     }
 
-    fun stopTimer() {
+    fun stopOrStartTimer() {
         if (!isPaused) {
             isPaused = true
             Log.i(TIMER_LOG_TAG, "Timer is paused.")
@@ -77,14 +80,13 @@ class ExerciseViewModel : ViewModel() {
             countDownTimer.start()
         }
     }
-
-    fun resumeTimer() {
-        countDownTimer.start()
-    }
-
+    
     sealed class ExerciseUiState {
         object Loading : ExerciseUiState()
         object Error : ExerciseUiState()
         class Success(val data: ExercisesUiModel) : ExerciseUiState()
+    }
+    companion object{
+        const val BREAK = "Break"
     }
 }
