@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
 class ExerciseViewModel : ViewModel() {
-    private var countDownTimer: Timer = Timer()
+    private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExerciseUiState>(ExerciseUiState.Loading)
     val uiState: StateFlow<ExerciseUiState> = _uiState
 
@@ -30,14 +30,14 @@ class ExerciseViewModel : ViewModel() {
             if (exercisesList.isEmpty()) {
                 _uiState.value = ExerciseUiState.Error
             } else {
-                for ((counter, exercise) in exercisesList.withIndex()) {
-                    countDownTimer.setSeconds(exercise.exerciseTimeLength)
+                exercisesList.forEachIndexed{index, exercise->
+                    timer.setSeconds(exercise.exerciseTimeLength)
                     val currentExercise = exercise.exerciseName
                     var nextExercise = ""
-                    if (counter + 1 != exercisesList.size) {
-                        nextExercise = exercisesList[counter + 1].exerciseName
+                    if (index + 1 != exercisesList.size) {
+                        nextExercise = exercisesList[index + 1].exerciseName
                     }
-                    countDownTimer.flow.takeWhile { it >= 0 }.collect {
+                    timer.flow.takeWhile { it >= 0 }.collect {
                         val currentSecond = it
                         Log.i(TIMER_LOG_TAG, "$currentSecond")
                         if (currentExercise == BREAK) {
@@ -69,18 +69,18 @@ class ExerciseViewModel : ViewModel() {
         }
     }
 
-    fun stopOrStartTimer() {
+    fun toggleStartOrStopTimer() {
         if (!isPaused) {
             isPaused = true
             Log.i(TIMER_LOG_TAG, "Timer is paused.")
-            countDownTimer.pause()
+            timer.pause()
         } else {
             isPaused = false
             Log.i(TIMER_LOG_TAG, "Timer is resumed.")
-            countDownTimer.start()
+            timer.start()
         }
     }
-    
+
     sealed class ExerciseUiState {
         object Loading : ExerciseUiState()
         object Error : ExerciseUiState()

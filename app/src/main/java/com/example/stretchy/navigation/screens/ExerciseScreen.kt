@@ -32,7 +32,7 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
             interactionSource = remember { MutableInteractionSource() },
             indication = null
         ) {
-            viewModel.stopOrStartTimer()
+            viewModel.toggleStartOrStopTimer()
         }) {
         Box(
             contentAlignment = Alignment.Center
