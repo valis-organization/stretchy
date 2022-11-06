@@ -8,4 +8,8 @@
     <string name="exercises_not_added">You did not add any exercises yet!</string>
     <string name="do_it_by_add_button">Do it by clicking + button</string>
     <string name="stretches">Stretches</string>
+    <string name="nxt_exercise">Next exercise:</string>
+    <string name="loading">Loading..</string>
+    <string name="error">Something went wrong. Try restarting your app</string>
+    <string name="exercise_break">Break</string>
 </resources>

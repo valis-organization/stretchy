@@ -29,7 +29,7 @@ fun ExercisePlansScreen(
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
+            FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseScreen.route) }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
             }
         }
@@ -42,7 +42,11 @@ fun ExercisePlansScreen(
         ) {
             Column(modifier = Modifier.padding(top = 24.dp)) {
                 Row(modifier = Modifier.padding(start = 24.dp)) {
-                    Text(text = stringResource(R.string.stretches), fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(R.string.stretches),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
 
                 when (val state = exercisePlansViewModel.uiState.collectAsState().value) {
@@ -52,7 +56,8 @@ fun ExercisePlansScreen(
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(text = stringResource(R.string.exercises_not_added),
+                            Text(
+                                text = stringResource(R.string.exercises_not_added),
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -74,8 +79,6 @@ fun ExercisePlansScreen(
                         }
                     is ExercisePlansViewModel.ExercisePlansUiState.Loaded -> ExercisePlansList(state.data)
                 }
-
-
             }
         }
     }
@@ -110,7 +113,11 @@ private fun ExercisePlansListItem(item: ExercisePlanItem) {
                 .fillMaxWidth()
         ) {
             Column {
-                Text(text = stringResource(R.string.exercises), fontSize = 12.sp, color = Color.LightGray)
+                Text(
+                    text = stringResource(R.string.exercises),
+                    fontSize = 12.sp,
+                    color = Color.LightGray
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "${item.numberOfExercises}",
@@ -120,7 +127,11 @@ private fun ExercisePlansListItem(item: ExercisePlanItem) {
             }
             Spacer(modifier = Modifier.width(100.dp))
             Column {
-                Text(text = stringResource(R.string.total_time), fontSize = 12.sp, color = Color.LightGray)
+                Text(
+                    text = stringResource(R.string.total_time),
+                    fontSize = 12.sp,
+                    color = Color.LightGray
+                )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = convertSecondsToMinutes(item.timeInSeconds),
