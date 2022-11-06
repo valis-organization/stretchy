@@ -1,6 +1,8 @@
-package com.example.stretchy.database
+package com.example.stretchy.repository
 
-import com.example.stretchy.ui.theme.ExercisePlanItem
+import com.example.stretchy.database.data.ExerciseItem
+import com.example.stretchy.database.StretchyDataBase
+import com.example.stretchy.theme.ExercisePlanItem
 
 class Repository(private val db : StretchyDataBase){
 

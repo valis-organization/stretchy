@@ -1,4 +1,4 @@
-package com.example.stretchy.navigation.screens
+package com.example.stretchy.features.training.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -18,16 +18,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.stretchy.ExerciseViewModel
-import com.example.stretchy.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.stretchy.R
-import com.example.stretchy.ui.theme.data.Break
-import com.example.stretchy.ui.theme.data.Exercise
+import com.example.stretchy.features.training.ui.data.Break
+import com.example.stretchy.features.training.ui.data.Exercise
+import com.example.stretchy.features.training.ui.data.ExerciseUiState
+import com.example.stretchy.theme.azureBlue
 import kotlin.math.*
 
 @Composable
-fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
+fun ExerciseScreen(viewModel: TrainingViewModel = viewModel()) {
     Surface(modifier = Modifier
         .fillMaxSize()
         .clickable(
@@ -45,13 +45,13 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 when (val state = viewModel.uiState.collectAsState().value) {
-                    is ExerciseViewModel.ExerciseUiState.Loading ->
+                    is ExerciseUiState.Loading ->
                         Text(
                             text = stringResource(id = R.string.loading),
                             fontSize = 32.sp,
                             fontWeight = FontWeight.Bold
                         )
-                    is ExerciseViewModel.ExerciseUiState.Success -> {
+                    is ExerciseUiState.Success -> {
                         when (val item = state.data.activityItem) {
                             is Exercise -> {
                                 ExerciseComposable(
@@ -69,7 +69,7 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                             )
                         }
                     }
-                    ExerciseViewModel.ExerciseUiState.Error -> Text(
+                    ExerciseUiState.Error -> Text(
                         text = stringResource(id = R.string.error),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold

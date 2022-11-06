@@ -1,4 +1,4 @@
-package com.example.stretchy
+package com.example.stretchy.features.training
 
 import android.content.Context
 import android.speech.tts.TextToSpeech

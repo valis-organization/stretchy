@@ -1,6 +1,4 @@
-package com.example.stretchy.ui.theme
-
-import com.example.stretchy.ui.theme.data.ActivityItem
+package com.example.stretchy.features.training.ui.data
 
 data class ExercisesUiModel(val activityItem: ActivityItem)
 

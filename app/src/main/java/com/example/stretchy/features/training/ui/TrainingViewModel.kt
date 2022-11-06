@@ -1,18 +1,20 @@
-package com.example.stretchy
+package com.example.stretchy.features.training.ui
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stretchy.dataBase.Repository
-import com.example.stretchy.dataBase.StretchyDataBase
-import com.example.stretchy.ui.theme.data.Exercise
-import com.example.stretchy.ui.theme.ExercisesUiModel
+import com.example.stretchy.repository.Repository
+import com.example.stretchy.database.StretchyDataBase
+import com.example.stretchy.features.training.Timer
+import com.example.stretchy.features.training.ui.data.Exercise
+import com.example.stretchy.features.training.ui.data.ExerciseUiState
+import com.example.stretchy.features.training.ui.data.ExercisesUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
-class ExerciseViewModel : ViewModel() {
+class TrainingViewModel : ViewModel() {
     private var countDownTimer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExerciseUiState>(ExerciseUiState.Loading)
     val uiState: StateFlow<ExerciseUiState> = _uiState
@@ -83,12 +85,6 @@ class ExerciseViewModel : ViewModel() {
 
     fun resumeTimer() {
         countDownTimer.start()
-    }
-
-    sealed class ExerciseUiState {
-        object Loading : ExerciseUiState()
-        object Error : ExerciseUiState()
-        class Success(val data: ExercisesUiModel) : ExerciseUiState()
     }
     companion object{
         const val BREAK = "Break"

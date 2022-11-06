@@ -19,8 +19,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.R
-import com.example.stretchy.ui.theme.ExercisePlanItem
-import com.example.stretchy.ui.theme.ExerciseListUiModel
+import com.example.stretchy.Screen
+import com.example.stretchy.features.traininglist.ui.ExercisePlansUiState
+import com.example.stretchy.theme.ExercisePlanItem
+import com.example.stretchy.theme.ExerciseListUiModel
 
 @Composable
 fun ExercisePlansScreen(
@@ -50,7 +52,7 @@ fun ExercisePlansScreen(
                 }
 
                 when (val state = exercisePlansViewModel.uiState.collectAsState().value) {
-                    is TrainingListViewModel.ExercisePlansUiState.Empty ->
+                    is ExercisePlansUiState.Empty ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
@@ -69,7 +71,7 @@ fun ExercisePlansScreen(
                                 color = Color.White
                             )
                         }
-                    is TrainingListViewModel.ExercisePlansUiState.Loading ->
+                    is ExercisePlansUiState.Loading ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
@@ -77,7 +79,7 @@ fun ExercisePlansScreen(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is TrainingListViewModel.ExercisePlansUiState.Loaded -> ExercisePlansList(state.data)
+                    is ExercisePlansUiState.Loaded -> ExercisePlansList(state.data)
                 }
             }
         }

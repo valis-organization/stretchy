@@ -1,4 +1,4 @@
-package com.example.stretchy.ui.theme
+package com.example.stretchy.theme
 
 data class ExerciseListUiModel(
     var exercisePlans: List<ExercisePlanItem>

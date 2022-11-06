@@ -1,4 +1,4 @@
-package com.example.stretchy.navigation
+package com.example.stretchy
 
 import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
@@ -7,7 +7,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.stretchy.navigation.screens.ExercisePlansScreen
 import com.example.stretchy.navigation.screens.ExerciseCreatorScreen
 import com.example.stretchy.features.training.ui.ExerciseScreen
-import com.example.stretchy.navigation.screens.Screen
 
 @Composable
 fun Navigation() {
