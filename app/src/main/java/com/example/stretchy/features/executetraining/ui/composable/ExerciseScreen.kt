@@ -1,6 +1,7 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -23,6 +24,7 @@ import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
+import com.example.stretchy.theme.BrownBackground
 import com.example.stretchy.theme.azureBlue
 import kotlin.math.*
 
@@ -38,8 +40,7 @@ fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel())
         }) {
         Box(
             contentAlignment = Alignment.Center
-        )
-        {
+        ) {
             Column(
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally

@@ -22,9 +22,10 @@ import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
+import com.example.stretchy.theme.*
 
 @Composable
-fun TrainingsComposable(
+fun TrainingListComposable(
     navController: NavController,
     exercisePlansViewModel: TrainingListViewModel = viewModel()
 ) {
@@ -38,12 +39,13 @@ fun TrainingsComposable(
         Box(
             modifier = Modifier
                 .padding(contentPadding)
-                .background(Color.LightGray)
+                .background(PrimaryDark)
                 .fillMaxSize()
         ) {
             Column(modifier = Modifier.padding(top = 24.dp)) {
                 Row(modifier = Modifier.padding(start = 24.dp)) {
                     Text(
+                        color = Color.White,
                         text = stringResource(R.string.stretches),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold
@@ -51,6 +53,7 @@ fun TrainingsComposable(
                 }
 
                 when (val state = exercisePlansViewModel.uiState.collectAsState().value) {
+                    is TrainingListUiState.Loaded -> TrainingListComposable(state.trainings)
                     is TrainingListUiState.Empty ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
@@ -78,7 +81,6 @@ fun TrainingsComposable(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is TrainingListUiState.Loaded -> TrainingsComposable(state.trainings)
                 }
             }
         }
@@ -86,7 +88,7 @@ fun TrainingsComposable(
 }
 
 @Composable
-private fun TrainingsComposable(trainingList: List<Training>) {
+private fun TrainingListComposable(trainingList: List<Training>) {
     LazyColumn {
         items(trainingList) { exercise ->
             TrainingComposable(item = exercise)
@@ -99,15 +101,16 @@ private fun TrainingComposable(item: Training) {
     Spacer(modifier = Modifier.height(24.dp))
     Column(
         modifier = Modifier
-            .background(color = Color.White)
+            .background(color = Primary)
             .fillMaxWidth()
             .height(152.dp)
             .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = item.itemName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        val textColor = Color.White
+        Text(text = item.itemName, fontSize = 22.sp, fontWeight = FontWeight.Bold,  color = textColor)
         Spacer(modifier = Modifier.height(16.dp))
-        Divider(color = Color.LightGray, thickness = 1.dp)
+        Divider(color = textColor, thickness = 1.dp)
         Spacer(modifier = Modifier.height(16.dp))
         Row(
             modifier = Modifier
@@ -117,12 +120,13 @@ private fun TrainingComposable(item: Training) {
                 Text(
                     text = stringResource(R.string.exercises),
                     fontSize = 12.sp,
-                    color = Color.LightGray
+                    color = textColor
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = "${item.numberOfExercises}",
                     fontSize = 16.sp,
+                    color = textColor,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -131,17 +135,19 @@ private fun TrainingComposable(item: Training) {
                 Text(
                     text = stringResource(R.string.total_time),
                     fontSize = 12.sp,
-                    color = Color.LightGray
+                    color = textColor
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = convertSecondsToMinutes(item.timeInSeconds),
+                    color = textColor,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
             }
         }
     }
+
 }
 
 private fun convertSecondsToMinutes(seconds: Int): String {
