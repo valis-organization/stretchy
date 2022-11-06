@@ -1,6 +1,12 @@
 package com.example.stretchy.dataBase
 
-data class ExerciseItem(
-    val exerciseName: String,
-    val exerciseTimeLength: Int
-)
+
+sealed class ActivityRepo(open var duration: Int) {
+    class ExerciseRepo(
+        val name: String,
+        override var duration: Int
+    ) : ActivityRepo(duration)
+
+    class BreakRepo(override var duration: Int) : ActivityRepo(duration)
+
+}

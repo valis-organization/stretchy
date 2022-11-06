@@ -16,12 +16,12 @@ class StretchyDataBase : DataBase {
         timeInSeconds = 203
     )
 
-    private val plan1ExercisesList: List<ExerciseItem> =
+    private val plan1ExercisesList: List<ExerciseItemPOJO> =
         mutableListOf(
-            ExerciseItem("Exercise 1", 10),
-            ExerciseItem("Exercise 2", 20),
-            ExerciseItem("Exercise 3", 30),
-            ExerciseItem("Exercise 4", 40)
+            ExerciseItemPOJO("Exercise 1", 10),
+            ExerciseItemPOJO("Exercise 2", 20),
+            ExerciseItemPOJO("Exercise 3", 30),
+            ExerciseItemPOJO("Exercise 4", 40)
         )
 
     private val plansList: List<ExercisePlanItem> =
@@ -31,7 +31,7 @@ class StretchyDataBase : DataBase {
         return plansList
     }
 
-   override suspend fun getExercisesList(): List<ExerciseItem> {
+    override suspend fun getExercisesList(): List<ExerciseItemPOJO> {
         return plan1ExercisesList
     }
 }

@@ -51,8 +51,8 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                             fontWeight = FontWeight.Bold
                         )
                     is ExerciseUiState.Success -> {
-                        when (val item = state.data.activityItem) {
-                            is Exercise -> {
+                        when (val item = state.data) {
+                            is ActivityItem.Exercise -> {
                                 ExerciseComposable(
                                     exerciseName = item.exerciseName,
                                     nextExerciseName = item.nextExercise,
@@ -60,8 +60,7 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
                                     totalTime = item.totalTime
                                 )
                             }
-                            is Break -> ExerciseComposable(
-                                exerciseName = stringResource(id = R.string.exercise_break),
+                            is ActivityItem.Break -> BreakComposable(
                                 nextExerciseName = item.nextExercise,
                                 currentTime = item.currentTime,
                                 totalTime = item.totalTime
@@ -80,9 +79,30 @@ fun ExerciseScreen(viewModel: ExerciseViewModel = viewModel()) {
 }
 
 @Composable
+fun BreakComposable(
+    nextExerciseName: String,
+    currentTime: Float,
+    totalTime: Int
+) {
+    Text(
+        text = "Prepare to next Exercise:",
+        fontSize = 16.sp,
+        color = Color.LightGray,
+        fontWeight = FontWeight.Bold
+    )
+    Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    Spacer(modifier = Modifier.height(100.dp))
+    TimerComposable(
+        totalSeconds = totalTime.toFloat() * 1000,
+        modifier = Modifier.size(300.dp),
+        currentSeconds = currentTime
+    )
+}
+
+@Composable
 fun ExerciseComposable(
     exerciseName: String,
-    nextExerciseName: String,
+    nextExerciseName: String?,
     currentTime: Float,
     totalTime: Int
 ) {
@@ -94,14 +114,16 @@ fun ExerciseComposable(
         currentSeconds = currentTime
     )
     Spacer(modifier = Modifier.height(36.dp))
-    Text(
-        text = stringResource(id = R.string.nxt_exercise),
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.LightGray
-    )
+    if (!nextExerciseName.isNullOrBlank()) {
+        Text(
+            text = stringResource(id = R.string.nxt_exercise),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.LightGray
+        )
+    }
     Spacer(modifier = Modifier.height(8.dp))
-    Text(text = nextExerciseName, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
 }
 
 @Composable

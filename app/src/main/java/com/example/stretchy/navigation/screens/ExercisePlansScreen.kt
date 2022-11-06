@@ -29,7 +29,7 @@ fun ExercisePlansScreen(
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
+            FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseScreen.route) }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
             }
         }
