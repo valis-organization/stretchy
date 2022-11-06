@@ -6,7 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.stretchy.navigation.screens.ExercisePlansScreen
 import com.example.stretchy.navigation.screens.ExerciseCreatorScreen
-import com.example.stretchy.navigation.screens.ExerciseScreen
+import com.example.stretchy.features.training.ui.ExerciseScreen
 import com.example.stretchy.navigation.screens.Screen
 
 @Composable

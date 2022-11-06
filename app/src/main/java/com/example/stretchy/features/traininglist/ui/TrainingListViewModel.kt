@@ -37,3 +37,5 @@ class ExercisePlansViewModel : ViewModel() {
         class Loaded(val data: ExerciseListUiModel) : ExercisePlansUiState()
     }
 }
+
+

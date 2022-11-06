@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.dataBase.Repository
 import com.example.stretchy.dataBase.StretchyDataBase
-import com.example.stretchy.ui.theme.Exercise
+import com.example.stretchy.ui.theme.data.Exercise
 import com.example.stretchy.ui.theme.ExercisesUiModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.stretchy.ExercisePlansViewModel
+import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.R
 import com.example.stretchy.ui.theme.ExercisePlanItem
 import com.example.stretchy.ui.theme.ExerciseListUiModel
@@ -25,7 +25,7 @@ import com.example.stretchy.ui.theme.ExerciseListUiModel
 @Composable
 fun ExercisePlansScreen(
     navController: NavController,
-    exercisePlansViewModel: ExercisePlansViewModel = viewModel()
+    exercisePlansViewModel: TrainingListViewModel = viewModel()
 ) {
     Scaffold(
         floatingActionButton = {
@@ -50,7 +50,7 @@ fun ExercisePlansScreen(
                 }
 
                 when (val state = exercisePlansViewModel.uiState.collectAsState().value) {
-                    is ExercisePlansViewModel.ExercisePlansUiState.Empty ->
+                    is TrainingListViewModel.ExercisePlansUiState.Empty ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
@@ -69,7 +69,7 @@ fun ExercisePlansScreen(
                                 color = Color.White
                             )
                         }
-                    is ExercisePlansViewModel.ExercisePlansUiState.Loading ->
+                    is TrainingListViewModel.ExercisePlansUiState.Loading ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Center,
@@ -77,7 +77,7 @@ fun ExercisePlansScreen(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is ExercisePlansViewModel.ExercisePlansUiState.Loaded -> ExercisePlansList(state.data)
+                    is TrainingListViewModel.ExercisePlansUiState.Loaded -> ExercisePlansList(state.data)
                 }
             }
         }

@@ -22,6 +22,8 @@ import com.example.stretchy.ExerciseViewModel
 import com.example.stretchy.ui.theme.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.stretchy.R
+import com.example.stretchy.ui.theme.data.Break
+import com.example.stretchy.ui.theme.data.Exercise
 import kotlin.math.*
 
 @Composable

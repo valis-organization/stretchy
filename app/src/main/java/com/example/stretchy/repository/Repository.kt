@@ -1,4 +1,4 @@
-package com.example.stretchy.dataBase
+package com.example.stretchy.database
 
 import com.example.stretchy.ui.theme.ExercisePlanItem
 

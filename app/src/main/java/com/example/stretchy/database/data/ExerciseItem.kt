@@ -1,4 +1,4 @@
-package com.example.stretchy.dataBase
+package com.example.stretchy.database
 
 data class ExerciseItem(
     val exerciseName: String,

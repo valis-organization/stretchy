@@ -5,6 +5,7 @@ data class ExerciseListUiModel(
 )
 
 data class ExercisePlanItem(
+    val id: String,
     val itemName: String,
     val numberOfExercises: Int,
     val timeInSeconds: Int

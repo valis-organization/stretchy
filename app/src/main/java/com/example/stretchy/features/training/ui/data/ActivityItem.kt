@@ -1,4 +1,4 @@
-package com.example.stretchy.ui.theme
+package com.example.stretchy.ui.theme.data
 
 sealed class ActivityItem {
     abstract val nextExercise: String
