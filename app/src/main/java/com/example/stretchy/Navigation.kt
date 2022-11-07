@@ -17,7 +17,7 @@ fun Navigation() {
             TrainingsComposable(navController = navController)
         }
         composable(route = Screen.ExerciseCreatorScreen.route) {
-            CreateTrainingComposable()
+            CreateTrainingComposable(navController = navController)
         }
         composable(route = Screen.ExerciseScreen.route) {
             ExecuteTrainingComposable()

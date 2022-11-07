@@ -1,5 +1,6 @@
 package com.example.stretchy.features.createtraining.ui.compose
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -18,21 +19,35 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
-val temp: List<Exercises> = mutableListOf(Exercises("Exercise 1"), Exercises("Exercise 2"))
+import androidx.navigation.NavController
+import com.example.stretchy.Screen
 
 @Composable
-fun CreateTrainingComposable() {
+fun CreateTrainingComposable(navController: NavController) {
+    val temp = remember { mutableStateListOf<Exercises>()}
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
         Column(Modifier.padding(top = 16.dp)) {
             ExerciseList(exercises = temp)
-            CreateSequence()
+            CreateSequence(temp)
+        }
+        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+            Button(modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp), onClick = {
+                navController.navigate(
+                    Screen.ExercisePlansScreen.route
+                )
+            }) {
+                //send exercises list to db
+                Text("Create training!")
+            }
         }
     }
 }
@@ -63,12 +78,14 @@ private fun ExerciseItem(item: Exercises) {
 }
 
 @Composable
-fun CreateSequence() {
+fun CreateSequence(temp: MutableList<Exercises>) {
     var visible by remember { mutableStateOf(false) }
     val sliderMaxValue = 300
     val sliderSteps: Int = (sliderMaxValue / 60) - 1
     var sliderValue: Int by remember { mutableStateOf(0) }
     var exerciseDuration: Int by remember { mutableStateOf(0) }
+    var exerciseName = ""
+    val context = LocalContext.current
     AnimatedVisibility(visible = !visible) {
         Box(
             contentAlignment = Alignment.Center,
@@ -97,12 +114,12 @@ fun CreateSequence() {
                 .background(color = Color.LightGray)
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            ExerciseNameControls(onNameEntered = {})
+            ExerciseNameControls(onNameEntered = {exerciseName = it})
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                text = "Length: ${toDisplayableLength(exerciseDuration)}",
+                text = "Duration: ${toDisplayableLength(exerciseDuration)}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -125,7 +142,15 @@ fun CreateSequence() {
                     .fillMaxWidth()
                     .padding(bottom = 16.dp, top = 16.dp),
                 onClick = {
-                    visible = !visible
+                    if(exerciseName.isNotEmpty() && sliderValue != 0){
+                        visible = !visible
+                        temp.add(Exercises(exerciseName))
+                        sliderValue = 0
+                        exerciseDuration = 0
+                        Toast.makeText(context, "Exercise added", Toast.LENGTH_LONG).show()
+                    }else{
+                        Toast.makeText(context, "You need to specify exercise properties!", Toast.LENGTH_LONG).show()
+                    }
                 }
             ) { Text(text = "Add Exercise") }
         }
@@ -186,7 +211,7 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
 fun ExerciseNameControls(
     onNameEntered: (value: String) -> Unit
 ) {
-    val exerciseName by remember { mutableStateOf("L-sit") }
+    var exerciseName by remember { mutableStateOf("") }
     Text(
         modifier = Modifier
             .fillMaxWidth()
@@ -202,6 +227,7 @@ fun ExerciseNameControls(
         value = exerciseName,
         textStyle = TextStyle(fontSize = 12.sp),
         onValueChange = {
+            exerciseName = it
             onNameEntered(it)
         },
     )
