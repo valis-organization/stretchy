@@ -35,7 +35,9 @@ import com.example.stretchy.theme.DarkGray
 fun CreateTrainingComposable(navController: NavController) {
     val temp = remember { mutableStateListOf<Exercises>() }
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
     ) {
         Column(
             Modifier
@@ -270,9 +272,11 @@ fun TrainingName() {
                             .fillMaxWidth()
                     ) {
                         if (trainingName.isEmpty()) {
-                            Text(text = "Your training name..",
+                            Text(
+                                text = "Your training name..",
                                 fontSize = 16.sp,
-                                color = Color(DarkGray.toArgb()))
+                                color = Color(DarkGray.toArgb())
+                            )
                         }
                         innerTextField()
                     }
