@@ -23,7 +23,7 @@ import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
-import com.example.stretchy.theme.azureBlue
+import com.example.stretchy.theme.AzureBlue
 import kotlin.math.*
 
 @Composable
@@ -141,7 +141,7 @@ fun TimerComposable(
     {
         Canvas(modifier = modifier) {
             drawArc(
-                color = Color(azureBlue.toArgb()),
+                color = Color(AzureBlue.toArgb()),
                 startAngle = -215f,
                 sweepAngle = sweepAngle * percentageOfTimer,
                 useCenter = false,

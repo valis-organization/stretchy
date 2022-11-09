@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -19,24 +20,33 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.Screen
+import com.example.stretchy.theme.DarkGray
 
 @Composable
 fun CreateTrainingComposable(navController: NavController) {
-    val temp = remember { mutableStateListOf<Exercises>()}
+    val temp = remember { mutableStateListOf<Exercises>() }
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Column(Modifier.padding(top = 16.dp)) {
+        Column(
+            Modifier
+                .padding(top = 16.dp)
+        ) {
+            TrainingName()
+            Spacer(modifier = Modifier.height(8.dp))
             ExerciseList(exercises = temp)
             CreateSequence(temp)
         }
+        Spacer(modifier = Modifier.height(200.dp))
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             Button(modifier = Modifier
                 .fillMaxWidth()
@@ -53,8 +63,11 @@ fun CreateTrainingComposable(navController: NavController) {
 }
 
 @Composable
-private fun ExerciseList(exercises: List<Exercises>) {
-    LazyColumn {
+private fun ExerciseList(exercises: MutableList<Exercises>) {
+    LazyColumn(
+        modifier = Modifier.heightIn(0.dp, 240.dp),
+        verticalArrangement = Arrangement.Top
+    ) {
         items(exercises) { exercise ->
             ExerciseItem(item = exercise)
         }
@@ -71,7 +84,6 @@ private fun ExerciseItem(item: Exercises) {
             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
             .clip(RoundedCornerShape(10.dp))
             .background(color = Color.LightGray)
-
     ) {
         Text(text = item.exerciseName, color = Color.Black, fontWeight = FontWeight.Bold)
     }
@@ -82,8 +94,8 @@ fun CreateSequence(temp: MutableList<Exercises>) {
     var visible by remember { mutableStateOf(false) }
     val sliderMaxValue = 300
     val sliderSteps: Int = (sliderMaxValue / 60) - 1
-    var sliderValue: Int by remember { mutableStateOf(0) }
-    var exerciseDuration: Int by remember { mutableStateOf(0) }
+    var sliderValue: Int by remember { mutableStateOf(10) }
+    var exerciseDuration: Int by remember { mutableStateOf(10) }
     var exerciseName = ""
     val context = LocalContext.current
     AnimatedVisibility(visible = !visible) {
@@ -114,7 +126,7 @@ fun CreateSequence(temp: MutableList<Exercises>) {
                 .background(color = Color.LightGray)
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            ExerciseNameControls(onNameEntered = {exerciseName = it})
+            ExerciseNameControls(onNameEntered = { exerciseName = it })
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -129,12 +141,14 @@ fun CreateSequence(temp: MutableList<Exercises>) {
                     sliderValue = it.toInt()
                     exerciseDuration = sliderValue
                 },
-                valueRange = 0f..sliderMaxValue.toFloat(),
+                valueRange = 10f..sliderMaxValue.toFloat(),
                 steps = sliderSteps,
             )
             AddOrSubtractButtons { changeValue ->
-                sliderValue += changeValue
-                exerciseDuration = sliderValue
+                if (sliderValue + changeValue >= 10) {
+                    sliderValue += changeValue
+                    exerciseDuration = sliderValue
+                }
             }
             Button(
                 modifier = Modifier
@@ -142,14 +156,18 @@ fun CreateSequence(temp: MutableList<Exercises>) {
                     .fillMaxWidth()
                     .padding(bottom = 16.dp, top = 16.dp),
                 onClick = {
-                    if(exerciseName.isNotEmpty() && sliderValue != 0){
+                    if (exerciseName.isNotEmpty() && sliderValue != 0) {
                         visible = !visible
                         temp.add(Exercises(exerciseName))
-                        sliderValue = 0
-                        exerciseDuration = 0
+                        sliderValue = 10
+                        exerciseDuration = 10
                         Toast.makeText(context, "Exercise added", Toast.LENGTH_LONG).show()
-                    }else{
-                        Toast.makeText(context, "You need to specify exercise properties!", Toast.LENGTH_LONG).show()
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "You need to specify exercise properties!",
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
                 }
             ) { Text(text = "Add Exercise") }
@@ -208,6 +226,64 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
 }
 
 @Composable
+fun TrainingName() {
+    var trainingName by remember { mutableStateOf("") }
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp)
+            .background(shape = RoundedCornerShape(percent = 10), color = Color.White),
+    ) {
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp),
+            text = "Training name:",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Box(
+            modifier = Modifier
+                .background(
+                    shape = RoundedCornerShape(percent = 10),
+                    color = Color.LightGray,
+                )
+                .height(36.dp)
+                .padding(start = 12.dp, end = 12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            BasicTextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.Center),
+                value = trainingName,
+                textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+                singleLine = true,
+                onValueChange = {
+                    trainingName = it
+                },
+                decorationBox = { innerTextField ->
+                    Row(
+                        Modifier
+                            .background(Color.LightGray, RoundedCornerShape(percent = 10))
+                            .padding(start = 8.dp)
+                            .fillMaxWidth()
+                    ) {
+                        if (trainingName.isEmpty()) {
+                            Text(text = "Your training name..",
+                                fontSize = 16.sp,
+                                color = Color(DarkGray.toArgb()))
+                        }
+                        innerTextField()
+                    }
+                },
+            )
+        }
+
+    }
+}
+
+@Composable
 fun ExerciseNameControls(
     onNameEntered: (value: String) -> Unit
 ) {
@@ -220,17 +296,28 @@ fun ExerciseNameControls(
         fontSize = 16.sp,
         fontWeight = FontWeight.Bold
     )
-    TextField(
+    Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp),
-        value = exerciseName,
-        textStyle = TextStyle(fontSize = 12.sp),
-        onValueChange = {
-            exerciseName = it
-            onNameEntered(it)
-        },
-    )
+            .background(
+                shape = RoundedCornerShape(percent = 10),
+                color = Color(DarkGray.toArgb()),
+            )
+            .height(36.dp)
+            .padding(start = 12.dp, end = 12.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        BasicTextField(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.Center),
+            value = exerciseName,
+            textStyle = TextStyle(fontSize = 16.sp),
+            onValueChange = {
+                exerciseName = it
+                onNameEntered(it)
+            },
+        )
+    }
 }
 
 private fun toDisplayableLength(exerciseDuration: Int): String {
