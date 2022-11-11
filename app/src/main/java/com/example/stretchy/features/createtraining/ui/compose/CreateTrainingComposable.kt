@@ -22,12 +22,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.theme.DarkGray
 
@@ -58,7 +59,7 @@ fun CreateTrainingComposable(navController: NavController) {
                 )
             }) {
                 //send exercises list to db
-                Text("Create training!")
+                Text(stringResource(id = R.string.create_training))
             }
         }
     }
@@ -95,7 +96,6 @@ private fun ExerciseItem(item: Exercises) {
 fun CreateSequence(temp: MutableList<Exercises>) {
     var visible by remember { mutableStateOf(false) }
     val sliderMaxValue = 300
-    val sliderSteps: Int = (sliderMaxValue / 60) - 1
     var sliderValue: Int by remember { mutableStateOf(10) }
     var exerciseDuration: Int by remember { mutableStateOf(10) }
     var exerciseName = ""
@@ -144,10 +144,9 @@ fun CreateSequence(temp: MutableList<Exercises>) {
                     exerciseDuration = sliderValue
                 },
                 valueRange = 10f..sliderMaxValue.toFloat(),
-                steps = sliderSteps,
             )
             AddOrSubtractButtons { changeValue ->
-                if (sliderValue + changeValue >= 10) {
+                if (sliderValue + changeValue in 10..300) {
                     sliderValue += changeValue
                     exerciseDuration = sliderValue
                 }
@@ -167,7 +166,7 @@ fun CreateSequence(temp: MutableList<Exercises>) {
                     } else {
                         Toast.makeText(
                             context,
-                            "You need to specify exercise properties!",
+                            "You need to specify exercise name!",
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -231,21 +230,22 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
 fun TrainingName() {
     var trainingName by remember { mutableStateOf("") }
 
-        TextField(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp).padding(start = 16.dp,end = 16.dp),
-            colors = TextFieldDefaults.textFieldColors(
-                backgroundColor = Color.White
-            ),
-            label = {Text("Training name") },
-            value = trainingName,
-            textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-            singleLine = true,
-            onValueChange = {
-                trainingName = it
-            }
-        )
+    TextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .padding(start = 16.dp, end = 16.dp),
+        colors = TextFieldDefaults.textFieldColors(
+            backgroundColor = Color.White
+        ),
+        label = { Text(stringResource(id = R.string.training_name)) },
+        value = trainingName,
+        textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+        singleLine = true,
+        onValueChange = {
+            trainingName = it
+        }
+    )
 }
 
 @Composable
@@ -257,7 +257,7 @@ fun ExerciseNameControls(
         modifier = Modifier
             .fillMaxWidth()
             .padding(top = 8.dp, bottom = 8.dp),
-        text = "Name:",
+        text = stringResource(id = R.string.name),
         fontSize = 16.sp,
         fontWeight = FontWeight.Bold
     )
