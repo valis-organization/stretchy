@@ -44,7 +44,7 @@ fun CreateTrainingComposable(navController: NavController) {
                 .padding(top = 16.dp)
         ) {
             TrainingName()
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(24.dp))
             ExerciseList(exercises = temp)
             CreateSequence(temp)
         }
@@ -230,61 +230,22 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
 @Composable
 fun TrainingName() {
     var trainingName by remember { mutableStateOf("") }
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(12.dp)
-            .background(shape = RoundedCornerShape(percent = 10), color = Color.White),
-    ) {
-        Text(
+
+        TextField(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 8.dp),
-            text = "Training name:",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
+                .height(56.dp).padding(start = 16.dp,end = 16.dp),
+            colors = TextFieldDefaults.textFieldColors(
+                backgroundColor = Color.White
+            ),
+            label = {Text("Training name") },
+            value = trainingName,
+            textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            singleLine = true,
+            onValueChange = {
+                trainingName = it
+            }
         )
-        Box(
-            modifier = Modifier
-                .background(
-                    shape = RoundedCornerShape(percent = 10),
-                    color = Color.LightGray,
-                )
-                .height(36.dp)
-                .padding(start = 12.dp, end = 12.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            BasicTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.Center),
-                value = trainingName,
-                textStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                singleLine = true,
-                onValueChange = {
-                    trainingName = it
-                },
-                decorationBox = { innerTextField ->
-                    Row(
-                        Modifier
-                            .background(Color.LightGray, RoundedCornerShape(percent = 10))
-                            .padding(start = 8.dp)
-                            .fillMaxWidth()
-                    ) {
-                        if (trainingName.isEmpty()) {
-                            Text(
-                                text = "Your training name..",
-                                fontSize = 16.sp,
-                                color = Color(DarkGray.toArgb())
-                            )
-                        }
-                        innerTextField()
-                    }
-                },
-            )
-        }
-
-    }
 }
 
 @Composable
