@@ -30,7 +30,7 @@ fun TrainingsComposable(
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseScreen.route) }) {
+            FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
             }
         }
