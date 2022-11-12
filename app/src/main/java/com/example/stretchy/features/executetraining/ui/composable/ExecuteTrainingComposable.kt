@@ -1,5 +1,7 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -98,6 +100,7 @@ fun BreakComposable(
         modifier = Modifier.size(300.dp),
         currentSeconds = currentTime
     )
+    Spacer(modifier = Modifier.height(120.dp))
 }
 
 @Composable
@@ -127,6 +130,7 @@ fun ExerciseComposable(
     Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TimerComposable(
     totalSeconds: Float,
@@ -149,12 +153,20 @@ fun TimerComposable(
                 style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
             )
         }
-        Text(
-            text = (ceil((currentSeconds) / 1000)).toInt().toString(),
-            fontSize = 100.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
+        AnimatedContent(
+            targetState = (ceil((currentSeconds) / 1000)).toInt().toString(),
+            transitionSpec = {
+                fadeIn(animationSpec = tween(150, 150)) with
+                        fadeOut(animationSpec = tween(150))
+            }
+        ) { seconds ->
+            Text(
+                text = seconds,
+                fontSize = 100.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
+        }
     }
 }
