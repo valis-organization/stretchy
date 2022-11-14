@@ -3,27 +3,31 @@ package com.example.stretchy.features.executetraining.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stretchy.database.MockedDataBaseImpl
+import com.example.stretchy.di.DaggerRepositoryComponent
 import com.example.stretchy.repository.ActivityDomain
 import com.example.stretchy.features.executetraining.Timer
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
+import com.example.stretchy.di.RepositoryComponent
 import com.example.stretchy.repository.RepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 class ExecuteTrainingViewModel : ViewModel() {
     private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
 
-    private val db = MockedDataBaseImpl()
-    private val repository = RepositoryImpl(db)
+    @Inject
+    lateinit var repository: RepositoryImpl
+    private val repositoryComponent: RepositoryComponent = DaggerRepositoryComponent.create()
     private var isPaused = true
 
     init {
+        repositoryComponent.inject(this)
         _uiState.value = ExecuteTrainingUiState.Loading
         viewModelScope.launch {
             val exercisesList = repository.getActivitiesForTraining("someId")

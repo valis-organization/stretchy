@@ -2,8 +2,9 @@ package com.example.stretchy.database
 
 import com.example.stretchy.database.data.ExerciseItemDb
 import com.example.stretchy.features.traininglist.ui.data.Training
+import javax.inject.Inject
 
-class MockedDataBaseImpl : DataBase {
+class MockedDataBaseImpl @Inject constructor() : DataBase {
     override suspend fun getTrainings(): List<Training> {
         return trainingsMock
     }

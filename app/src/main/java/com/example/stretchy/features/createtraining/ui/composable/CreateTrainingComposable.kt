@@ -1,4 +1,4 @@
-package com.example.stretchy.features.createtraining.ui.compose
+package com.example.stretchy.features.createtraining.ui.composable
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
+import com.example.stretchy.features.createtraining.ui.data.Exercises
 import com.example.stretchy.theme.DarkGray
 
 @Composable

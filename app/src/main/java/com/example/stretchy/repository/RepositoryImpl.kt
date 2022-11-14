@@ -1,10 +1,10 @@
 package com.example.stretchy.repository
 
 import com.example.stretchy.database.DataBase
-import com.example.stretchy.database.MockedDataBaseImpl
 import com.example.stretchy.features.traininglist.ui.data.Training
+import javax.inject.Inject
 
-class RepositoryImpl(private val db: DataBase) : Repository{
+class RepositoryImpl @Inject constructor(private val db: DataBase) : Repository{
 
     override suspend fun getTrainings(): List<Training> {
         return db.getTrainings()

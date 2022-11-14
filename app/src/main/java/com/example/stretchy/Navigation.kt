@@ -4,7 +4,7 @@ import androidx.compose.runtime.*
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.stretchy.features.createtraining.ui.compose.CreateTrainingComposable
+import com.example.stretchy.features.createtraining.ui.composable.CreateTrainingComposable
 import com.example.stretchy.features.traininglist.ui.composable.TrainingsComposable
 import com.example.stretchy.features.executetraining.ui.composable.ExecuteTrainingComposable
 
