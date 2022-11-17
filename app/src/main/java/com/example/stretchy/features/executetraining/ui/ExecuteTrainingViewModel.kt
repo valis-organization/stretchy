@@ -26,39 +26,48 @@ class ExecuteTrainingViewModel : ViewModel() {
     init {
         _uiState.value = ExecuteTrainingUiState.Loading
         viewModelScope.launch {
-            val exercisesList = repository.getActivitiesForTraining("someId")
-            if (exercisesList.isEmpty()) {
+            val activitiesList = repository.getActivitiesForTraining("someId")
+            val totalTrainingTime = calculateTotalTrainingTime(activitiesList)
+            var trainingProgressPercent = 0f
+
+            if (activitiesList.isEmpty()) {
                 _uiState.value = ExecuteTrainingUiState.Error
             } else {
-                exercisesList.forEachIndexed { index, exercise ->
-                    timer.setSeconds(exercise.duration)
+                activitiesList.forEachIndexed { index, activity ->
+                    timer.setSeconds(activity.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                        when (exercise) {
+                        when (activity) {
                             is ActivityDomain.ExerciseDomain -> {
                                 val nextExerciseName =
-                                    (exercisesList.getOrNull(index + 2) as? ActivityDomain.ExerciseDomain)?.name
+                                    (activitiesList.getOrNull(index + 2) as? ActivityDomain.ExerciseDomain)?.name
                                 _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Exercise(
-                                        exercise.name,
+                                        activity.name,
                                         nextExerciseName,
                                         currentSeconds,
-                                        exercise.duration
+                                        activity.duration,
+                                        trainingProgressPercent.toInt()
                                     )
                                 )
                             }
                             is ActivityDomain.BreakDomain -> {
                                 val nextExerciseName =
-                                    (exercisesList.getOrNull(index + 1) as? ActivityDomain.ExerciseDomain)?.name
+                                    (activitiesList.getOrNull(index + 1) as? ActivityDomain.ExerciseDomain)?.name
                                 _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Break(
                                         nextExerciseName!!,
                                         currentSeconds,
-                                        exercise.duration
+                                        activity.duration,
+                                        trainingProgressPercent.toInt()
                                     )
                                 )
                             }
                         }
                     }
+                    trainingProgressPercent += calcExercisePercent(
+                        totalTrainingTime,
+                        activity.duration.toFloat()
+                    )
                 }
             }
         }
@@ -76,8 +85,17 @@ class ExecuteTrainingViewModel : ViewModel() {
         }
     }
 
+    private fun calcExercisePercent(totalTime: Float, activityTime: Float): Float {
+        return (activityTime / totalTime)*100
+    }
+
+    private fun calculateTotalTrainingTime(exerciseList: List<ActivityDomain>): Float {
+        var totalTime = 0f
+        exerciseList.forEach { activity -> totalTime += activity.duration }
+        return totalTime
+    }
+
     companion object {
         private const val TIMER_LOG_TAG = "TIMER"
-        private const val BREAK = "Break"
     }
 }

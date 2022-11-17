@@ -1,6 +1,7 @@
 package com.example.stretchy.features.traininglist.ui.composable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -78,7 +79,7 @@ fun TrainingsComposable(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is TrainingListUiState.Loaded -> TrainingsComposable(state.trainings)
+                    is TrainingListUiState.Loaded -> TrainingsComposable(state.trainings,navController)
                 }
             }
         }
@@ -86,17 +87,19 @@ fun TrainingsComposable(
 }
 
 @Composable
-private fun TrainingsComposable(trainingList: List<Training>) {
+private fun TrainingsComposable(trainingList: List<Training>,navController: NavController) {
     LazyColumn {
         items(trainingList) { exercise ->
-            TrainingComposable(item = exercise)
+            Box(modifier = Modifier.clickable { navController.navigate(Screen.ExerciseScreen.route)}){
+                TrainingComposable(item = exercise)
+            }
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
 private fun TrainingComposable(item: Training) {
-    Spacer(modifier = Modifier.height(24.dp))
     Column(
         modifier = Modifier
             .background(color = Color.White)

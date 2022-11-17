@@ -10,9 +10,9 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.*
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
@@ -26,6 +26,7 @@ import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
 import com.example.stretchy.theme.AzureBlue
+import com.example.stretchy.theme.LapisLazuli
 import kotlin.math.*
 
 @Composable
@@ -59,14 +60,16 @@ fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel())
                                 ExerciseComposable(
                                     exerciseName = item.exerciseName,
                                     nextExerciseName = item.nextExercise,
-                                    currentTime = item.currentTime,
-                                    totalTime = item.totalTime
+                                    currentExerciseTime = item.currentTime,
+                                    totalExerciseTime = item.totalExerciseTime,
+                                    trainingProgressPercent = item.trainingProgressPercent
                                 )
                             }
                             is ActivityItem.Break -> BreakComposable(
                                 nextExerciseName = item.nextExercise,
                                 currentTime = item.currentTime,
-                                totalTime = item.totalTime
+                                totalTime = item.totalExerciseTime,
+                                trainingProgressPercent = item.trainingProgressPercent
                             )
                         }
                     }
@@ -85,7 +88,8 @@ fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel())
 fun BreakComposable(
     nextExerciseName: String,
     currentTime: Float,
-    totalTime: Int
+    totalTime: Int,
+    trainingProgressPercent: Int
 ) {
     Text(
         text = "Prepare to next Exercise:",
@@ -100,22 +104,24 @@ fun BreakComposable(
         modifier = Modifier.size(300.dp),
         currentSeconds = currentTime
     )
-    Spacer(modifier = Modifier.height(120.dp))
+    Spacer(modifier = Modifier.height(84.dp))
+    ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
 }
 
 @Composable
 fun ExerciseComposable(
     exerciseName: String,
     nextExerciseName: String?,
-    currentTime: Float,
-    totalTime: Int
+    currentExerciseTime: Float,
+    totalExerciseTime: Int,
+    trainingProgressPercent: Int
 ) {
     Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.height(100.dp))
     TimerComposable(
-        totalSeconds = totalTime.toFloat() * 1000,
+        totalSeconds = totalExerciseTime.toFloat() * 1000,
         modifier = Modifier.size(300.dp),
-        currentSeconds = currentTime
+        currentSeconds = currentExerciseTime
     )
     Spacer(modifier = Modifier.height(36.dp))
     if (!nextExerciseName.isNullOrBlank()) {
@@ -128,6 +134,7 @@ fun ExerciseComposable(
     }
     Spacer(modifier = Modifier.height(8.dp))
     Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
 }
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -168,5 +175,31 @@ fun TimerComposable(
                 modifier = Modifier.padding(bottom = 32.dp)
             )
         }
+    }
+}
+
+@Composable
+fun ProgressBarComposable(
+    percentageOfTimer : Int,
+    modifier: Modifier = Modifier,
+    strokeWidth: Dp = 15.dp
+) {
+    val heightPos = 240f
+    val startPos = -500f
+    val progressBarStart = Offset(startPos, heightPos)
+
+    Canvas(modifier = modifier) {
+        drawLine(
+            color = Color.LightGray,
+            start = progressBarStart,
+            end = Offset(-startPos, heightPos),
+            strokeWidth = strokeWidth.toPx()
+        )
+        drawLine(
+            color = Color(LapisLazuli.toArgb()),
+            start = progressBarStart,
+            end = Offset((2 * - startPos * (percentageOfTimer.toFloat()/100)) + startPos, heightPos),
+            strokeWidth = strokeWidth.toPx()
+        )
     }
 }
