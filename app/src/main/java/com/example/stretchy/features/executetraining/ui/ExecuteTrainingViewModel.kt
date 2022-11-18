@@ -86,7 +86,7 @@ class ExecuteTrainingViewModel : ViewModel() {
     }
 
     private fun calcExercisePercent(totalTime: Float, activityTime: Float): Float {
-        return (activityTime / totalTime)*100
+        return (activityTime / totalTime) * 100
     }
 
     private fun calculateTotalTrainingTime(exerciseList: List<ActivityDomain>): Float {

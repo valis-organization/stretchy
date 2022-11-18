@@ -91,21 +91,28 @@ fun BreakComposable(
     totalTime: Int,
     trainingProgressPercent: Int
 ) {
+    var visible by remember { mutableStateOf(false) }
     Text(
         text = "Prepare to next Exercise:",
         fontSize = 16.sp,
         color = Color.LightGray,
         fontWeight = FontWeight.Bold
     )
-    Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    if (!visible) {
+        Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    }
+    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0.3f)) {
+        Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    }
     Spacer(modifier = Modifier.height(100.dp))
     TimerComposable(
         totalSeconds = totalTime.toFloat() * 1000,
         modifier = Modifier.size(300.dp),
         currentSeconds = currentTime
     )
-    Spacer(modifier = Modifier.height(84.dp))
+    Spacer(modifier = Modifier.height(77.dp))
     ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
+    visible = true
 }
 
 @Composable
@@ -116,7 +123,13 @@ fun ExerciseComposable(
     totalExerciseTime: Int,
     trainingProgressPercent: Int
 ) {
-    Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    var visible by remember { mutableStateOf(false) }
+    if (!visible) {
+        Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    }
+    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0.3f)) {
+        Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    }
     Spacer(modifier = Modifier.height(100.dp))
     TimerComposable(
         totalSeconds = totalExerciseTime.toFloat() * 1000,
@@ -133,8 +146,14 @@ fun ExerciseComposable(
         )
     }
     Spacer(modifier = Modifier.height(8.dp))
-    Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    if (!visible) {
+        Text(text = "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    }
+    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0.3f)) {
+        Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    }
     ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
+    visible = true
 }
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -180,14 +199,13 @@ fun TimerComposable(
 
 @Composable
 fun ProgressBarComposable(
-    percentageOfTimer : Int,
+    percentageOfTimer: Int,
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 15.dp
 ) {
     val heightPos = 240f
-    val startPos = -500f
+    val startPos = -540f
     val progressBarStart = Offset(startPos, heightPos)
-
     Canvas(modifier = modifier) {
         drawLine(
             color = Color.LightGray,
@@ -198,7 +216,10 @@ fun ProgressBarComposable(
         drawLine(
             color = Color(LapisLazuli.toArgb()),
             start = progressBarStart,
-            end = Offset((2 * - startPos * (percentageOfTimer.toFloat()/100)) + startPos, heightPos),
+            end = Offset(
+                (2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos,
+                heightPos
+            ),
             strokeWidth = strokeWidth.toPx()
         )
     }
