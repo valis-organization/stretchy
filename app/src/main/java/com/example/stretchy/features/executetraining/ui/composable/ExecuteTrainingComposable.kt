@@ -32,6 +32,7 @@ import kotlin.math.*
 
 @Composable
 fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel()) {
+    var disableExerciseAnimation = true
     Surface(modifier = Modifier
         .fillMaxSize()
         .clickable(
@@ -63,8 +64,10 @@ fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel())
                                     nextExerciseName = item.nextExercise,
                                     currentExerciseTime = item.currentTime,
                                     totalExerciseTime = item.totalExerciseTime,
-                                    trainingProgressPercent = item.trainingProgressPercent
+                                    trainingProgressPercent = item.trainingProgressPercent,
+                                    disableExerciseAnimation = disableExerciseAnimation
                                 )
+                                disableExerciseAnimation = false
                             }
                             is ActivityItem.Break -> BreakComposable(
                                 nextExerciseName = item.nextExercise,
@@ -126,9 +129,10 @@ fun ExerciseComposable(
     nextExerciseName: String?,
     currentExerciseTime: Float,
     totalExerciseTime: Int,
-    trainingProgressPercent: Int
+    trainingProgressPercent: Int,
+    disableExerciseAnimation : Boolean
 ) {
-    var visible by remember { mutableStateOf(false) }
+    var visible by remember { mutableStateOf(disableExerciseAnimation) }
     if (!visible) {
         Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
