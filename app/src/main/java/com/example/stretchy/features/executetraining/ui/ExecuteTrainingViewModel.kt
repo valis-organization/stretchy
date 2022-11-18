@@ -27,9 +27,8 @@ class ExecuteTrainingViewModel : ViewModel() {
         _uiState.value = ExecuteTrainingUiState.Loading
         viewModelScope.launch {
             val activitiesList = repository.getActivitiesForTraining("someId")
-            val totalTrainingTime = calculateTotalTrainingTime(activitiesList)
             var trainingProgressPercent = 0f
-
+            val totalNumberOfExercises = getTotalExercisesNumber(activitiesList)
             if (activitiesList.isEmpty()) {
                 _uiState.value = ExecuteTrainingUiState.Error
             } else {
@@ -64,10 +63,9 @@ class ExecuteTrainingViewModel : ViewModel() {
                             }
                         }
                     }
-                    trainingProgressPercent += calcExercisePercent(
-                        totalTrainingTime,
-                        activity.duration.toFloat()
-                    )
+                    if (activity is ActivityDomain.ExerciseDomain) {
+                        trainingProgressPercent+= 1/totalNumberOfExercises * 100
+                    }
                 }
             }
         }
@@ -84,17 +82,15 @@ class ExecuteTrainingViewModel : ViewModel() {
             timer.start()
         }
     }
-
-    private fun calcExercisePercent(totalTime: Float, activityTime: Float): Float {
-        return (activityTime / totalTime) * 100
+    private fun getTotalExercisesNumber(exerciseList: List<ActivityDomain>): Float {
+        var activities = 0f
+        exerciseList.forEach { activity ->
+            if (activity is ActivityDomain.ExerciseDomain) {
+                activities++
+            }
+        }
+        return activities
     }
-
-    private fun calculateTotalTrainingTime(exerciseList: List<ActivityDomain>): Float {
-        var totalTime = 0f
-        exerciseList.forEach { activity -> totalTime += activity.duration }
-        return totalTime
-    }
-
     companion object {
         private const val TIMER_LOG_TAG = "TIMER"
     }

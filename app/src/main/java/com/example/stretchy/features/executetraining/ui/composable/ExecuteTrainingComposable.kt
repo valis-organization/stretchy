@@ -1,6 +1,7 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -101,7 +102,7 @@ fun BreakComposable(
     if (!visible) {
         Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
-    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0.3f)) {
+    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))) {
         Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
     Spacer(modifier = Modifier.height(100.dp))
@@ -127,7 +128,7 @@ fun ExerciseComposable(
     if (!visible) {
         Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
-    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0.3f)) {
+    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))) {
         Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
     Spacer(modifier = Modifier.height(100.dp))
@@ -149,7 +150,7 @@ fun ExerciseComposable(
     if (!visible) {
         Text(text = "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
-    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0.3f)) {
+    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))) {
         Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
     ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
@@ -197,6 +198,7 @@ fun TimerComposable(
     }
 }
 
+var initialValue = -540f
 @Composable
 fun ProgressBarComposable(
     percentageOfTimer: Int,
@@ -206,18 +208,25 @@ fun ProgressBarComposable(
     val heightPos = 240f
     val startPos = -540f
     val progressBarStart = Offset(startPos, heightPos)
+    // Animation properties
+    val animateLine = remember { androidx.compose.animation.core.Animatable(initialValue) }
+    LaunchedEffect(animateLine) {
+        animateLine.animateTo(
+            targetValue = ((2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos),
+            animationSpec = tween(
+                    durationMillis = 1000,
+                    easing = LinearEasing
+                ),
+            )
+        initialValue = ((2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos)
+    }
+
     Canvas(modifier = modifier) {
-        drawLine(
-            color = Color.LightGray,
-            start = progressBarStart,
-            end = Offset(-startPos, heightPos),
-            strokeWidth = strokeWidth.toPx()
-        )
         drawLine(
             color = Color(LapisLazuli.toArgb()),
             start = progressBarStart,
             end = Offset(
-                (2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos,
+                 animateLine.value,
                 heightPos
             ),
             strokeWidth = strokeWidth.toPx()
