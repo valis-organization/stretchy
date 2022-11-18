@@ -102,7 +102,10 @@ fun BreakComposable(
     if (!visible) {
         Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
-    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+    ) {
         Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
     Spacer(modifier = Modifier.height(100.dp))
@@ -111,7 +114,8 @@ fun BreakComposable(
         modifier = Modifier.size(300.dp),
         currentSeconds = currentTime
     )
-    Spacer(modifier = Modifier.height(77.dp))
+    Spacer(modifier = Modifier.height(44.dp))
+    Text(text = "", fontSize = 24.sp) //space filler to match ExerciseComposable
     ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
     visible = true
 }
@@ -128,7 +132,10 @@ fun ExerciseComposable(
     if (!visible) {
         Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
-    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+    ) {
         Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
     Spacer(modifier = Modifier.height(100.dp))
@@ -150,7 +157,10 @@ fun ExerciseComposable(
     if (!visible) {
         Text(text = "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
-    AnimatedVisibility(visible = visible, enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))) {
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+    ) {
         Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
     ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
@@ -199,13 +209,14 @@ fun TimerComposable(
 }
 
 var initialValue = -540f
+
 @Composable
 fun ProgressBarComposable(
     percentageOfTimer: Int,
     modifier: Modifier = Modifier,
-    strokeWidth: Dp = 15.dp
+    strokeWidth: Dp = 8.dp
 ) {
-    val heightPos = 240f
+    val heightPos = 260f
     val startPos = -540f
     val progressBarStart = Offset(startPos, heightPos)
     // Animation properties
@@ -214,10 +225,10 @@ fun ProgressBarComposable(
         animateLine.animateTo(
             targetValue = ((2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos),
             animationSpec = tween(
-                    durationMillis = 1000,
-                    easing = LinearEasing
-                ),
-            )
+                durationMillis = 1000,
+                easing = LinearEasing
+            ),
+        )
         initialValue = ((2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos)
     }
 
@@ -226,7 +237,7 @@ fun ProgressBarComposable(
             color = Color(LapisLazuli.toArgb()),
             start = progressBarStart,
             end = Offset(
-                 animateLine.value,
+                animateLine.value,
                 heightPos
             ),
             strokeWidth = strokeWidth.toPx()
