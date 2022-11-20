@@ -3,8 +3,14 @@ package com.example.stretchy.features.executetraining.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stretchy.database.MockedDataBaseImpl
-import com.example.stretchy.repository.ActivityDomain
+import androidx.room.DatabaseConfiguration
+import androidx.room.InvalidationTracker
+import androidx.sqlite.db.SupportSQLiteOpenHelper
+import com.example.stretchy.database.AppDatabase
+import com.example.stretchy.database.dao.ActivityDao
+import com.example.stretchy.database.dao.TrainingDao
+import com.example.stretchy.database.dao.TrainingWithActivitiesDao
+import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
@@ -19,24 +25,57 @@ class ExecuteTrainingViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
 
-    private val db = MockedDataBaseImpl()
+  /*  val db: AppDatabase = Room.databaseBuilder(
+        applicationContext,
+        AppDatabase::class.java, "stretchydb"
+    ).build()*/
+
+    //todo inject repository to
+    val db : AppDatabase = object : AppDatabase() {
+      override fun activityDao(): ActivityDao {
+          TODO("Not yet implemented")
+      }
+
+      override fun trainingDao(): TrainingDao {
+          TODO("Not yet implemented")
+      }
+
+      override fun trainingWithActivitiesDao(): TrainingWithActivitiesDao {
+          TODO("Not yet implemented")
+      }
+
+      override fun createOpenHelper(config: DatabaseConfiguration?): SupportSQLiteOpenHelper {
+          TODO("Not yet implemented")
+      }
+
+      override fun createInvalidationTracker(): InvalidationTracker {
+          TODO("Not yet implemented")
+      }
+
+      override fun clearAllTables() {
+          TODO("Not yet implemented")
+      }
+  }
     private val repository = RepositoryImpl(db)
+
+
     private var isPaused = true
 
-    init {
+    fun init(trainingId: Long) {
         _uiState.value = ExecuteTrainingUiState.Loading
         viewModelScope.launch {
-            val exercisesList = repository.getActivitiesForTraining("someId")
-            if (exercisesList.isEmpty()) {
+
+            val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+            if (trainingWithActivities.activities.isEmpty()) {
                 _uiState.value = ExecuteTrainingUiState.Error
             } else {
-                exercisesList.forEachIndexed { index, exercise ->
+                trainingWithActivities.activities.forEachIndexed { index, exercise ->
                     timer.setSeconds(exercise.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                        when (exercise) {
-                            is ActivityDomain.ExerciseDomain -> {
+                        when (exercise.activityType) {
+                            ActivityType.STRETCH -> {
                                 val nextExerciseName =
-                                    (exercisesList.getOrNull(index + 2) as? ActivityDomain.ExerciseDomain)?.name
+                                    trainingWithActivities.activities.getOrNull(index + 2)?.name
                                 _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Exercise(
                                         exercise.name,
@@ -46,9 +85,9 @@ class ExecuteTrainingViewModel : ViewModel() {
                                     )
                                 )
                             }
-                            is ActivityDomain.BreakDomain -> {
+                            ActivityType.BREAK -> {
                                 val nextExerciseName =
-                                    (exercisesList.getOrNull(index + 1) as? ActivityDomain.ExerciseDomain)?.name
+                                    trainingWithActivities.activities.getOrNull(index + 1)?.name
                                 _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Break(
                                         nextExerciseName!!,

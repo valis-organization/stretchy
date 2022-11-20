@@ -2,6 +2,7 @@ plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
 }
+apply plugin: 'kotlin-kapt'
 
 android {
     compileSdk 32
@@ -51,8 +52,10 @@ dependencies {
     implementation jetpackCompose
     implementation coroutines
     implementation dagger
+    implementation room
 
-    annotationProcessor daggerAnnotationProcessor
+    kapt roomKapt
+    kapt daggerAnnotationProcessor
     runtimeOnly coroutinesRunTime
 
     testImplementation test
