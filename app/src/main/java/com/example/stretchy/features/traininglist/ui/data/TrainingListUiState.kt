@@ -10,5 +10,13 @@ data class Training(
     val id: String,
     val itemName: String,
     val numberOfExercises: Int,
-    val timeInSeconds: Int
-)
+    val timeInSeconds: Int,
+    val type: Type
+) {
+    enum class Type {
+        STRETCHING,
+        BODY_WEIGHT
+    }
+}
+
+

@@ -62,4 +62,12 @@ ext {
             "com.google.dagger:dagger-android-processor:$daggerVersion",
             "com.google.dagger:dagger-compiler:$daggerVersion"
     ]
+
+    roomVersion = "2.4.3"
+    room = [
+            "androidx.room:room-runtime:$roomVersion"
+    ]
+    roomKapt = [
+            "androidx.room:room-compiler:$roomVersion"
+    ]
 }
