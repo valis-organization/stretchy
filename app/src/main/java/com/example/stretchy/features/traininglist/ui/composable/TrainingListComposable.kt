@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.R
 import com.example.stretchy.Screen
+import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 
@@ -79,7 +80,10 @@ fun TrainingsComposable(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is TrainingListUiState.Loaded -> TrainingsComposable(state.trainings,navController)
+                    is TrainingListUiState.Loaded -> TrainingsComposable(
+                        state.trainings,
+                        navController
+                    )
                 }
             }
         }
@@ -87,10 +91,10 @@ fun TrainingsComposable(
 }
 
 @Composable
-private fun TrainingsComposable(trainingList: List<Training>,navController: NavController) {
+private fun TrainingsComposable(trainingList: List<Training>, navController: NavController) {
     LazyColumn {
         items(trainingList) { exercise ->
-            Box(modifier = Modifier.clickable { navController.navigate(Screen.ExerciseScreen.route)}){
+            Box(modifier = Modifier.clickable { navController.navigate(Screen.ExerciseScreen.route) }) {
                 TrainingComposable(item = exercise)
             }
             Spacer(modifier = Modifier.height(24.dp))
@@ -138,7 +142,7 @@ private fun TrainingComposable(item: Training) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = convertSecondsToMinutes(item.timeInSeconds),
+                    text = convertSecondsToMinutes(item.timeInSeconds.toLong()),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -147,7 +151,3 @@ private fun TrainingComposable(item: Training) {
     }
 }
 
-private fun convertSecondsToMinutes(seconds: Int): String {
-    val minutes = seconds / 60
-    return "$minutes m ${seconds % 60}s"
-}

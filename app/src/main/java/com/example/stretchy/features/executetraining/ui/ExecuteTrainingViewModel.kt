@@ -3,6 +3,7 @@ package com.example.stretchy.features.executetraining.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.database.MockedDataBaseImpl
 import com.example.stretchy.repository.ActivityDomain
 import com.example.stretchy.features.executetraining.Timer
@@ -13,15 +14,18 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
+import java.util.*
 
 class ExecuteTrainingViewModel : ViewModel() {
     private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
+    private var startDateSaved = false
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
 
     private val db = MockedDataBaseImpl()
     private val repository = RepositoryImpl(db)
     private var isPaused = true
+    private var startDateMs = 0L
 
     init {
         _uiState.value = ExecuteTrainingUiState.Loading
@@ -35,6 +39,12 @@ class ExecuteTrainingViewModel : ViewModel() {
                 activitiesList.forEachIndexed { index, activity ->
                     timer.setSeconds(activity.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
+                        if (activity == activitiesList[0] && !isPaused && !startDateSaved) {
+                            val startDate = Calendar.getInstance()
+                            Log.i("Start date", "Started on ${startDate.time}")
+                            startDateMs = startDate.timeInMillis
+                            startDateSaved = true
+                        }
                         when (activity) {
                             is ActivityDomain.ExerciseDomain -> {
                                 val nextExerciseName =
@@ -64,7 +74,13 @@ class ExecuteTrainingViewModel : ViewModel() {
                         }
                     }
                     if (activity is ActivityDomain.ExerciseDomain) {
-                        trainingProgressPercent+= 1/totalNumberOfExercises * 100
+                        trainingProgressPercent += 1 / totalNumberOfExercises * 100
+                    }
+                    if (activitiesList.getOrNull(index + 1) == null) {
+                        val currentTime = Calendar.getInstance()
+                        val seconds = (currentTime.timeInMillis - startDateMs) / 1000
+                        _uiState.value =
+                            ExecuteTrainingUiState.TrainingCompleted(timeSpent = convertSecondsToMinutes(seconds))
                     }
                 }
             }
@@ -82,6 +98,7 @@ class ExecuteTrainingViewModel : ViewModel() {
             timer.start()
         }
     }
+
     private fun getTotalExercisesNumber(exerciseList: List<ActivityDomain>): Float {
         var activities = 0f
         exerciseList.forEach { activity ->

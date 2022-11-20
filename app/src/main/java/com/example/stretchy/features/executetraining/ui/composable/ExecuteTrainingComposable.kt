@@ -82,6 +82,10 @@ fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel())
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold
                     )
+                    is ExecuteTrainingUiState.TrainingCompleted -> TrainingSummaryComposable(
+                        numberOfExercises = 4,
+                        timeSpent = state.timeSpent
+                        )
                 }
             }
         }
