@@ -52,7 +52,9 @@ dependencies {
     implementation jetpackCompose
     implementation coroutines
     implementation dagger
+    implementation room
 
+    kapt roomKapt
     kapt daggerAnnotationProcessor
     runtimeOnly coroutinesRunTime
 
