@@ -27,7 +27,9 @@ import com.example.stretchy.theme.AzureBlue
 import kotlin.math.*
 
 @Composable
-fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel()) {
+fun ExecuteTrainingComposable(
+    viewModel: ExecuteTrainingViewModel
+) {
     Surface(modifier = Modifier
         .fillMaxSize()
         .clickable(

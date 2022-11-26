@@ -15,7 +15,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.R
@@ -24,9 +23,10 @@ import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 
 @Composable
-fun TrainingsComposable(
+fun TrainingListComposable(
+    viewModel: TrainingListViewModel,
     navController: NavController,
-    exercisePlansViewModel: TrainingListViewModel = viewModel()
+    exercisePlansViewModel: TrainingListViewModel? = null
 ) {
     Scaffold(
         floatingActionButton = {
@@ -50,7 +50,7 @@ fun TrainingsComposable(
                     )
                 }
 
-                when (val state = exercisePlansViewModel.uiState.collectAsState().value) {
+                when (val state = exercisePlansViewModel?.uiState?.collectAsState()?.value) {
                     is TrainingListUiState.Empty ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
@@ -78,7 +78,7 @@ fun TrainingsComposable(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is TrainingListUiState.Loaded -> TrainingsComposable(state.trainings)
+                    is TrainingListUiState.Loaded -> TrainingListComposable(state.trainings)
                 }
             }
         }
@@ -86,7 +86,7 @@ fun TrainingsComposable(
 }
 
 @Composable
-private fun TrainingsComposable(trainingList: List<Training>) {
+private fun TrainingListComposable(trainingList: List<Training>) {
     LazyColumn {
         items(trainingList) { exercise ->
             TrainingComposable(item = exercise)
