@@ -21,4 +21,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
     abstract fun trainingDao(): TrainingDao
     abstract fun trainingWithActivitiesDao(): TrainingWithActivitiesDao
+
+    companion object{
+        const val NAME = "streachy_app"
+    }
 }

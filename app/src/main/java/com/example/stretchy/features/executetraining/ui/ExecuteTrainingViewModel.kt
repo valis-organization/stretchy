@@ -25,37 +25,32 @@ class ExecuteTrainingViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
 
-  /*  val db: AppDatabase = Room.databaseBuilder(
-        applicationContext,
-        AppDatabase::class.java, "stretchydb"
-    ).build()*/
-
     //todo inject repository to
-    val db : AppDatabase = object : AppDatabase() {
-      override fun activityDao(): ActivityDao {
-          TODO("Not yet implemented")
-      }
+    val db: AppDatabase = object : AppDatabase() {
+        override fun activityDao(): ActivityDao {
+            TODO("Not yet implemented")
+        }
 
-      override fun trainingDao(): TrainingDao {
-          TODO("Not yet implemented")
-      }
+        override fun trainingDao(): TrainingDao {
+            TODO("Not yet implemented")
+        }
 
-      override fun trainingWithActivitiesDao(): TrainingWithActivitiesDao {
-          TODO("Not yet implemented")
-      }
+        override fun trainingWithActivitiesDao(): TrainingWithActivitiesDao {
+            TODO("Not yet implemented")
+        }
 
-      override fun createOpenHelper(config: DatabaseConfiguration?): SupportSQLiteOpenHelper {
-          TODO("Not yet implemented")
-      }
+        override fun createOpenHelper(config: DatabaseConfiguration?): SupportSQLiteOpenHelper {
+            TODO("Not yet implemented")
+        }
 
-      override fun createInvalidationTracker(): InvalidationTracker {
-          TODO("Not yet implemented")
-      }
+        override fun createInvalidationTracker(): InvalidationTracker {
+            TODO("Not yet implemented")
+        }
 
-      override fun clearAllTables() {
-          TODO("Not yet implemented")
-      }
-  }
+        override fun clearAllTables() {
+            TODO("Not yet implemented")
+        }
+    }
     private val repository = RepositoryImpl(db)
 
 
