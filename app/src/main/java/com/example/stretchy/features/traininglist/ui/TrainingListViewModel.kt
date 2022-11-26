@@ -1,6 +1,5 @@
 package com.example.stretchy.features.traininglist.ui
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.TrainingType
@@ -13,12 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-class TrainingListViewModel(application: Application) : ViewModel() {
+class TrainingListViewModel(repository: Repository) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState
 
     @Inject
-    lateinit var repository : Repository
+    lateinit var repository: Repository
 
     private fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading

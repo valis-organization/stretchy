@@ -3,56 +3,20 @@ package com.example.stretchy.features.executetraining.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.DatabaseConfiguration
-import androidx.room.InvalidationTracker
-import androidx.sqlite.db.SupportSQLiteOpenHelper
-import com.example.stretchy.database.AppDatabase
-import com.example.stretchy.database.dao.ActivityDao
-import com.example.stretchy.database.dao.TrainingDao
-import com.example.stretchy.database.dao.TrainingWithActivitiesDao
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
-import com.example.stretchy.repository.RepositoryImpl
+import com.example.stretchy.repository.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
-class ExecuteTrainingViewModel : ViewModel() {
+class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
     private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
-
-    //todo inject repository to
-    val db: AppDatabase = object : AppDatabase() {
-        override fun activityDao(): ActivityDao {
-            TODO("Not yet implemented")
-        }
-
-        override fun trainingDao(): TrainingDao {
-            TODO("Not yet implemented")
-        }
-
-        override fun trainingWithActivitiesDao(): TrainingWithActivitiesDao {
-            TODO("Not yet implemented")
-        }
-
-        override fun createOpenHelper(config: DatabaseConfiguration?): SupportSQLiteOpenHelper {
-            TODO("Not yet implemented")
-        }
-
-        override fun createInvalidationTracker(): InvalidationTracker {
-            TODO("Not yet implemented")
-        }
-
-        override fun clearAllTables() {
-            TODO("Not yet implemented")
-        }
-    }
-    private val repository = RepositoryImpl(db)
-
 
     private var isPaused = true
 

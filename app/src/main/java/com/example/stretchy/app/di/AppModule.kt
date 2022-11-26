@@ -9,7 +9,6 @@ import com.example.stretchy.repository.RepositoryImpl
 import dagger.Module
 import dagger.Provides
 
-
 @Module
 class AppModule {
     @ApplicationScope

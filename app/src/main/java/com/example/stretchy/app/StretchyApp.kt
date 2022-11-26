@@ -1,7 +1,7 @@
 package com.example.stretchy.app
 
 import android.app.Application
-import com.example.stretchy.activity.di.AppComponent
+import com.example.stretchy.app.di.AppComponent
 
 class StretchyApp : Application() {
 

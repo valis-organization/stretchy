@@ -1,9 +1,8 @@
-package com.example.stretchy.activity.di
+package com.example.stretchy.app.di
 
 import android.app.Activity
 import android.app.Application
 import com.example.stretchy.app.StretchyApp
-import com.example.stretchy.app.di.AppModule
 import com.example.stretchy.app.di.scope.ApplicationScope
 import com.example.stretchy.repository.Repository
 import dagger.BindsInstance
