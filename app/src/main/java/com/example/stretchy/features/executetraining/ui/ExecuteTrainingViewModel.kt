@@ -29,18 +29,16 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
     fun init(trainingId: Long) {
         _uiState.value = ExecuteTrainingUiState.Loading
         viewModelScope.launch {
-            //       val activitiesList = repository.getActivitiesForTraining("someId")
             val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
             var trainingProgressPercent = 0f
             val totalNumberOfExercises = getTotalExercisesNumber(trainingWithActivities)
-            //     if (activitiesList.isEmpty()) {
             if (trainingWithActivities.activities.isEmpty()) {
                 _uiState.value = ExecuteTrainingUiState.Error
             } else {
                 trainingWithActivities.activities.forEachIndexed { index, exercise ->
                     timer.setSeconds(exercise.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                        if (exercise == activitiesList[0] && !isPaused && !startDateSaved) {
+                        if (exercise == trainingWithActivities.activities[0] && !isPaused && !startDateSaved) {
                             val startDate = Calendar.getInstance()
                             Log.i("Start date", "Started on ${startDate.time}")
                             startDateMs = startDate.timeInMillis
@@ -56,7 +54,8 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
                                         exercise.name,
                                         nextExerciseName,
                                         currentSeconds,
-                                        exercise.duration
+                                        exercise.duration,
+                                        trainingProgressPercent.toInt()
                                     )
                                 )
                             }
@@ -67,17 +66,17 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
                                     ActivityItem.Break(
                                         nextExerciseName!!,
                                         currentSeconds,
-                                        activity.duration,
+                                        exercise.duration,
                                         trainingProgressPercent.toInt()
                                     )
                                 )
                             }
                         }
                     }
-                    if (activity is ActivityDomain.ExerciseDomain) {
+                    if (exercise.activityType == ActivityType.STRETCH) {
                         trainingProgressPercent += 1 / totalNumberOfExercises * 100
                     }
-                    if (activitiesList.getOrNull(index + 1) == null) {
+                    if (trainingWithActivities.activities.getOrNull(index + 1) == null) {
                         val currentTime = Calendar.getInstance()
                         val seconds = (currentTime.timeInMillis - startDateMs) / 1000
                         _uiState.value =
@@ -107,7 +106,7 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
     private fun getTotalExercisesNumber(training: TrainingWithActivity): Float {
         var activities = 0f
         training.activities.forEach { activity ->
-            if (activity is ActivityType.STRETCH) {
+            if (activity.activityType == ActivityType.STRETCH) {
                 activities++
             }
         }
