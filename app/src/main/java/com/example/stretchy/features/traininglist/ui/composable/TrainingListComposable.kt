@@ -26,9 +26,10 @@ import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 
 @Composable
-fun TrainingsComposable(
+fun TrainingListComposable(
+    viewModel: TrainingListViewModel,
     navController: NavController,
-    exercisePlansViewModel: TrainingListViewModel = viewModel()
+    exercisePlansViewModel: TrainingListViewModel? = null
 ) {
     Scaffold(
         floatingActionButton = {
@@ -52,7 +53,7 @@ fun TrainingsComposable(
                     )
                 }
 
-                when (val state = exercisePlansViewModel.uiState.collectAsState().value) {
+                when (val state = exercisePlansViewModel?.uiState?.collectAsState()?.value) {
                     is TrainingListUiState.Empty ->
                         Column(
                             modifier = Modifier.fillMaxSize(),

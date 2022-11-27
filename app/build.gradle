@@ -1,6 +1,7 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
 }
 
 android {
@@ -31,6 +32,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = '1.8'
+        freeCompilerArgs = ['-Xjvm-default=compatibility']
     }
     buildFeatures {
         viewBinding true
@@ -51,8 +53,10 @@ dependencies {
     implementation jetpackCompose
     implementation coroutines
     implementation dagger
+    implementation room
 
-    annotationProcessor daggerAnnotationProcessor
+    kapt roomKapt
+    kapt daggerAnnotationProcessor
     runtimeOnly coroutinesRunTime
 
     testImplementation test

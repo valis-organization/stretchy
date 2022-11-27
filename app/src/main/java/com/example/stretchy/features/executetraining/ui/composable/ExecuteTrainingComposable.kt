@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
@@ -31,7 +30,9 @@ import com.example.stretchy.theme.LapisLazuli
 import kotlin.math.*
 
 @Composable
-fun ExecuteTrainingComposable(viewModel: ExecuteTrainingViewModel = viewModel()) {
+fun ExecuteTrainingComposable(
+    viewModel: ExecuteTrainingViewModel
+) {
     var disableExerciseAnimation = true
     Surface(modifier = Modifier
         .fillMaxSize()
