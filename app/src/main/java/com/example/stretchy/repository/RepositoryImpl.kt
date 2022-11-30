@@ -12,8 +12,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
         training.activities.forEach { activity ->
             with(activity) {
                 val aId = generateActivityId()
-                db.activityDao()
-                    .add(ActivityEntity(aId, name, duration, activityType))
+                db.activityDao().add(ActivityEntity(aId, name, duration, activityType))
                 db.trainingWithActivitiesDao()
                     .insert(TrainingActivityEntity(tId, aId))
             }
@@ -24,29 +23,30 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
     }
 
     override suspend fun getTrainingsWithActivities(): List<TrainingWithActivity> =
-        db.trainingWithActivitiesDao().getTrainings().map { ta ->
-            map(ta)
+        db.trainingWithActivitiesDao().getTrainings().map { activity ->
+            map(activity)
         }
 
     override suspend fun getTrainingWithActivitiesById(id: Long): TrainingWithActivity {
-        val ta = db.trainingWithActivitiesDao().getTrainingsById(id)
-        return map(ta)
+        val activity = db.trainingWithActivitiesDao().getTrainingsById(id)
+        return map(activity)
     }
 
     private fun map(training: TrainingWithActivitiesEntity): TrainingWithActivity {
         val activitiesMapped: List<Activity> = training.activities
             .map {
-                Activity(it.activityId, it.name, it.duration, it.activityType)
+                Activity(it.name, it.duration, it.activityType).apply {
+                    this.activityId = it.activityId
+                }
             }
 
         with(training.training) {
             return TrainingWithActivity(
-                trainingId,
                 name,
                 trainingType,
                 finished,
                 activitiesMapped
-            )
+            ).apply { id = trainingId }
         }
     }
 

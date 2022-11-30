@@ -1,3 +1,3 @@
 package com.example.stretchy.features.createtraining.ui.data
 
-data class Exercises(val exerciseName: String)
+data class Exercise(val exerciseName: String)

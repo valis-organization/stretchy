@@ -7,6 +7,7 @@ import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
+import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,43 +18,45 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
     private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
-
+    private var tId: Long? = null
     private var isPaused = true
 
     fun init(trainingId: Long) {
-        _uiState.value = ExecuteTrainingUiState.Loading
-        viewModelScope.launch {
+        if (tId != trainingId) {
+            tId = trainingId
+            _uiState.value = ExecuteTrainingUiState.Loading
+            viewModelScope.launch {
 
-            val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
-            if (trainingWithActivities.activities.isEmpty()) {
-                _uiState.value = ExecuteTrainingUiState.Error
-            } else {
-                trainingWithActivities.activities.forEachIndexed { index, exercise ->
-                    timer.setSeconds(exercise.duration)
-                    timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                        when (exercise.activityType) {
-                            ActivityType.STRETCH -> {
-                                val nextExerciseName =
-                                    trainingWithActivities.activities.getOrNull(index + 2)?.name
-                                _uiState.value = ExecuteTrainingUiState.Success(
-                                    ActivityItem.Exercise(
-                                        exercise.name,
-                                        nextExerciseName,
-                                        currentSeconds,
-                                        exercise.duration
+                val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+                if (trainingWithActivities.activities.isEmpty()) {
+                    _uiState.value = ExecuteTrainingUiState.Error
+                } else {
+                    val exercisesWithBreaks = getExercisesWithBreak(trainingWithActivities.activities)
+                    exercisesWithBreaks.forEachIndexed { index, exercise ->
+                        timer.setSeconds(exercise.duration)
+                        timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
+                            when (exercise.activityType) {
+                                ActivityType.STRETCH -> {
+                                    val nextExerciseName = exercisesWithBreaks.getOrNull(index + 2)?.name
+                                    _uiState.value = ExecuteTrainingUiState.Success(
+                                        ActivityItem.Exercise(
+                                            exercise.name,
+                                            nextExerciseName,
+                                            currentSeconds,
+                                            exercise.duration
+                                        )
                                     )
-                                )
-                            }
-                            ActivityType.BREAK -> {
-                                val nextExerciseName =
-                                    trainingWithActivities.activities.getOrNull(index + 1)?.name
-                                _uiState.value = ExecuteTrainingUiState.Success(
-                                    ActivityItem.Break(
-                                        nextExerciseName!!,
-                                        currentSeconds,
-                                        exercise.duration
+                                }
+                                ActivityType.BREAK -> {
+                                    val nextExerciseName = exercisesWithBreaks.getOrNull(index + 1)?.name
+                                    _uiState.value = ExecuteTrainingUiState.Success(
+                                        ActivityItem.Break(
+                                            nextExerciseName!!,
+                                            currentSeconds,
+                                            exercise.duration
+                                        )
                                     )
-                                )
+                                }
                             }
                         }
                     }
@@ -72,6 +75,17 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
             Log.i(TIMER_LOG_TAG, "Timer is resumed.")
             timer.start()
         }
+    }
+
+    private fun getExercisesWithBreak(training: List<Activity>): List<Activity> {
+        val exercisesWithBreaks: MutableList<Activity> = mutableListOf()
+        training.forEachIndexed { i, exercise ->
+            exercisesWithBreaks.add(exercise)
+            if (i != training.lastIndex) {
+                exercisesWithBreaks.add(Activity(BREAK, 5, ActivityType.BREAK))
+            }
+        }
+        return exercisesWithBreaks
     }
 
     companion object {

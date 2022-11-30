@@ -12,7 +12,7 @@ sealed class ActivityItem(
     open val totalTime: Int,
 ) {
     data class Exercise(
-        val exerciseName: String,
+        val name: String,
         override val nextExercise: String?,
         override val currentTime: Float,
         override val totalTime: Int

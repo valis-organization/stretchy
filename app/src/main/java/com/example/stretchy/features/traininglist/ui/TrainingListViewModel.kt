@@ -10,16 +10,12 @@ import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class TrainingListViewModel(repository: Repository) : ViewModel() {
+class TrainingListViewModel(val repository: Repository) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState
 
-    @Inject
-    lateinit var repository: Repository
-
-    private fun fetchTrainingList() {
+    fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
         viewModelScope.launch {
             val trainingWithActivityList = repository.getTrainingsWithActivities()
@@ -38,7 +34,7 @@ class TrainingListViewModel(repository: Repository) : ViewModel() {
             duration += it.duration
         }
         return Training(
-            this.trainingId.toString(),
+            this.id.toString(),
             this.name,
             this.activities.size,
             duration,

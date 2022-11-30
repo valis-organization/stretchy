@@ -1,6 +1,7 @@
 package com.example.stretchy.features.traininglist.ui.composable
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -21,13 +22,14 @@ import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
+import com.example.stretchy.theme.White80
 
 @Composable
 fun TrainingListComposable(
     viewModel: TrainingListViewModel,
     navController: NavController,
-    exercisePlansViewModel: TrainingListViewModel? = null
 ) {
+    viewModel.fetchTrainingList()
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
@@ -38,7 +40,7 @@ fun TrainingListComposable(
         Box(
             modifier = Modifier
                 .padding(contentPadding)
-                .background(Color.LightGray)
+                .background(White80)
                 .fillMaxSize()
         ) {
             Column(modifier = Modifier.padding(top = 24.dp)) {
@@ -49,8 +51,7 @@ fun TrainingListComposable(
                         fontWeight = FontWeight.Bold
                     )
                 }
-
-                when (val state = exercisePlansViewModel?.uiState?.collectAsState()?.value) {
+                when (val state = viewModel.uiState.collectAsState().value) {
                     is TrainingListUiState.Empty ->
                         Column(
                             modifier = Modifier.fillMaxSize(),
@@ -78,7 +79,10 @@ fun TrainingListComposable(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is TrainingListUiState.Loaded -> TrainingListComposable(state.trainings)
+                    is TrainingListUiState.Loaded -> TrainingListComposable(
+                        state.trainings,
+                        navController
+                    )
                 }
             }
         }
@@ -86,19 +90,23 @@ fun TrainingListComposable(
 }
 
 @Composable
-private fun TrainingListComposable(trainingList: List<Training>) {
+private fun TrainingListComposable(trainingList: List<Training>, navController: NavController) {
     LazyColumn {
         items(trainingList) { exercise ->
-            TrainingComposable(item = exercise)
+            TrainingComposable(item = exercise, navController)
         }
     }
 }
 
 @Composable
-private fun TrainingComposable(item: Training) {
+private fun TrainingComposable(item: Training, navController: NavController) {
     Spacer(modifier = Modifier.height(24.dp))
     Column(
         modifier = Modifier
+            .clickable {
+                navController.navigate("trainingList?id=${item.id}")
+
+            }
             .background(color = Color.White)
             .fillMaxWidth()
             .height(152.dp)

@@ -23,6 +23,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun trainingWithActivitiesDao(): TrainingWithActivitiesDao
 
     companion object{
-        const val NAME = "streachy_app"
+        const val NAME = "stretchydb"
     }
 }
