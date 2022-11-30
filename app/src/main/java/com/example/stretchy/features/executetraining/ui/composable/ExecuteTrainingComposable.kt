@@ -18,7 +18,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
@@ -28,8 +27,10 @@ import kotlin.math.*
 
 @Composable
 fun ExecuteTrainingComposable(
-    viewModel: ExecuteTrainingViewModel
+    viewModel: ExecuteTrainingViewModel,
+    trainingId: String,
 ) {
+    viewModel.init(trainingId.toLong())
     Surface(modifier = Modifier
         .fillMaxSize()
         .clickable(
@@ -57,7 +58,7 @@ fun ExecuteTrainingComposable(
                         when (val item = state.activityItem) {
                             is ActivityItem.Exercise -> {
                                 ExerciseComposable(
-                                    exerciseName = item.exerciseName,
+                                    exerciseName = item.name,
                                     nextExerciseName = item.nextExercise,
                                     currentTime = item.currentTime,
                                     totalTime = item.totalTime
@@ -136,6 +137,21 @@ fun TimerComposable(
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 10.dp
 ) {
+    fun toCounterText(seconds: Int): String {
+        return if (seconds <= 59) {
+            seconds.toString()
+        } else {
+            val minutes = seconds / 60
+            val s = seconds % 60
+            val secStr = if (s <= 9) {
+                "0$s"
+            } else {
+                s
+            }
+            "$minutes:$secStr"
+        }
+    }
+
     val percentageOfTimer = (currentSeconds / totalSeconds)
     val sweepAngle = 250f
 
@@ -151,8 +167,10 @@ fun TimerComposable(
                 style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
             )
         }
+        val sec = (ceil((currentSeconds) / 1000)).toInt()
+
         Text(
-            text = (ceil((currentSeconds) / 1000)).toInt().toString(),
+            text = toCounterText(sec),
             fontSize = 100.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
