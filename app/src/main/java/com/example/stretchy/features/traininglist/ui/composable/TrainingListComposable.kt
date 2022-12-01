@@ -1,5 +1,6 @@
 package com.example.stretchy.features.traininglist.ui.composable
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,10 +9,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -23,6 +26,9 @@ import com.example.stretchy.Screen
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.theme.White80
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun TrainingListComposable(
@@ -34,8 +40,19 @@ fun TrainingListComposable(
             FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
             }
+        },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text =  stringResource(id = R.string.app_name))
+                },
+                actions = {
+                    Menu(viewModel)
+                }
+            )
         }
     ) { contentPadding ->
+
         Box(
             modifier = Modifier
                 .padding(contentPadding)
@@ -83,6 +100,48 @@ fun TrainingListComposable(
                         navController
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun Menu(viewModel: TrainingListViewModel) {
+    val context = LocalContext.current
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+    IconButton(
+        onClick = {
+            expanded = true
+        }
+    ) {
+        Icon(
+            imageVector = Icons.Filled.MoreVert,
+            contentDescription = "menu",
+            tint = Color.White
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                onClick = {
+                    expanded = false
+                    CoroutineScope(Dispatchers.Default).launch { viewModel.import() }
+                    Toast.makeText(context, R.string.import_trainings, Toast.LENGTH_LONG).show()
+                }
+            ) {
+                Text(text = stringResource(id = R.string.import_trainings))
+            }
+            DropdownMenuItem(
+                onClick = {
+                    expanded = false
+                    viewModel.export()
+                    Toast.makeText(context,R.string.export_trainings, Toast.LENGTH_LONG).show()
+                }
+            ) {
+                Text(text = stringResource(id = R.string.export_trainings))
             }
         }
     }

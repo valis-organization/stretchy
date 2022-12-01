@@ -16,4 +16,6 @@
     <string name="training_name">Training name</string>
     <string name="name">Name:</string>
     <string name="create_training">Create training!</string>
+    <string name="import_trainings">Import</string>
+    <string name="export_trainings">Export</string>
 </resources>
