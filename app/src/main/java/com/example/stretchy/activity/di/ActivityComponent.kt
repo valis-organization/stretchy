@@ -13,7 +13,6 @@ import dagger.Component
 @ActivityScope
 @Component(
     dependencies = [AppComponent::class],
-    modules = [ViewModelsModule::class]
 )
 interface ActivityComponent {
     @Component.Factory

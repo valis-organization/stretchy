@@ -29,7 +29,6 @@ fun TrainingListComposable(
     viewModel: TrainingListViewModel,
     navController: NavController,
 ) {
-    viewModel.fetchTrainingList()
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
@@ -104,7 +103,7 @@ private fun TrainingComposable(item: Training, navController: NavController) {
     Column(
         modifier = Modifier
             .clickable {
-                navController.navigate("trainingList?id=${item.id}")
+                navController.navigate("executeTraining?id=${item.id}")
 
             }
             .background(color = Color.White)

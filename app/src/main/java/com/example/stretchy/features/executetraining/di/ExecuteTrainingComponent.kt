@@ -20,7 +20,7 @@ interface ExecuteTrainingComponent {
         ): ExecuteTrainingComponent
     }
 
-    fun executeTrainingVmProvider(): Provider<ExecuteTrainingViewModel>
+    fun viewModelProvider(): Provider<ExecuteTrainingViewModel>
 
     companion object {
         fun create(
