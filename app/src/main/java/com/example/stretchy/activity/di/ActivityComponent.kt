@@ -1,10 +1,11 @@
 package com.example.stretchy.activity.di
 
-import android.app.Activity
+import androidx.activity.ComponentActivity
 import com.example.stretchy.activity.MainActivity
 import com.example.stretchy.activity.di.scope.ActivityScope
 import com.example.stretchy.app.di.AppComponent
 import com.example.stretchy.app.di.AppComponent.Companion.appComponent
+import com.example.stretchy.repository.Repository
 import dagger.BindsInstance
 import dagger.Component
 
@@ -19,11 +20,14 @@ interface ActivityComponent {
     interface Factory {
         fun create(
             appComponent: AppComponent,
-            @BindsInstance activity: Activity
+            @BindsInstance activity: ComponentActivity
         ): ActivityComponent
     }
 
     fun inject(activity: MainActivity)
+
+    fun repository(): Repository
+    fun activity(): ComponentActivity
 
     companion object {
         fun create(activity: MainActivity): ActivityComponent =

@@ -14,49 +14,45 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
-class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
+class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
     private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
-    private var tId: Long? = null
     private var isPaused = true
 
-    fun init(trainingId: Long) {
-        if (tId != trainingId) {
-            tId = trainingId
-            _uiState.value = ExecuteTrainingUiState.Loading
-            viewModelScope.launch {
+    init {
+        _uiState.value = ExecuteTrainingUiState.Loading
+        viewModelScope.launch {
 
-                val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
-                if (trainingWithActivities.activities.isEmpty()) {
-                    _uiState.value = ExecuteTrainingUiState.Error
-                } else {
-                    val exercisesWithBreaks = getExercisesWithBreak(trainingWithActivities.activities)
-                    exercisesWithBreaks.forEachIndexed { index, exercise ->
-                        timer.setSeconds(exercise.duration)
-                        timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                            when (exercise.activityType) {
-                                ActivityType.STRETCH -> {
-                                    val nextExerciseName = exercisesWithBreaks.getOrNull(index + 2)?.name
-                                    _uiState.value = ExecuteTrainingUiState.Success(
-                                        ActivityItem.Exercise(
-                                            exercise.name,
-                                            nextExerciseName,
-                                            currentSeconds,
-                                            exercise.duration
-                                        )
+            val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+            if (trainingWithActivities.activities.isEmpty()) {
+                _uiState.value = ExecuteTrainingUiState.Error
+            } else {
+                val exercisesWithBreaks = getExercisesWithBreak(trainingWithActivities.activities)
+                exercisesWithBreaks.forEachIndexed { index, exercise ->
+                    timer.setSeconds(exercise.duration)
+                    timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
+                        when (exercise.activityType) {
+                            ActivityType.STRETCH -> {
+                                val nextExerciseName = exercisesWithBreaks.getOrNull(index + 2)?.name
+                                _uiState.value = ExecuteTrainingUiState.Success(
+                                    ActivityItem.Exercise(
+                                        exercise.name,
+                                        nextExerciseName,
+                                        currentSeconds,
+                                        exercise.duration
                                     )
-                                }
-                                ActivityType.BREAK -> {
-                                    val nextExerciseName = exercisesWithBreaks.getOrNull(index + 1)?.name
-                                    _uiState.value = ExecuteTrainingUiState.Success(
-                                        ActivityItem.Break(
-                                            nextExerciseName!!,
-                                            currentSeconds,
-                                            exercise.duration
-                                        )
+                                )
+                            }
+                            ActivityType.BREAK -> {
+                                val nextExerciseName = exercisesWithBreaks.getOrNull(index + 1)?.name
+                                _uiState.value = ExecuteTrainingUiState.Success(
+                                    ActivityItem.Break(
+                                        nextExerciseName!!,
+                                        currentSeconds,
+                                        exercise.duration
                                     )
-                                }
+                                )
                             }
                         }
                     }
