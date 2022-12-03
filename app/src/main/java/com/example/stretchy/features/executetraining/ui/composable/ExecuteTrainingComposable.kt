@@ -28,9 +28,7 @@ import kotlin.math.*
 @Composable
 fun ExecuteTrainingComposable(
     viewModel: ExecuteTrainingViewModel,
-    trainingId: String,
 ) {
-    viewModel.init(trainingId.toLong())
     Surface(modifier = Modifier
         .fillMaxSize()
         .clickable(

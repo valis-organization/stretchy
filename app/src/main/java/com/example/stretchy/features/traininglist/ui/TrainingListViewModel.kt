@@ -15,7 +15,7 @@ class TrainingListViewModel(val repository: Repository) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState
 
-    fun fetchTrainingList() {
+    init {
         _uiState.value = TrainingListUiState.Loading
         viewModelScope.launch {
             val trainingWithActivityList = repository.getTrainingsWithActivities()
