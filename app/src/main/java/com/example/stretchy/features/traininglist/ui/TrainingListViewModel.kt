@@ -13,11 +13,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class TrainingListViewModel(val repository: Repository, val import: Import, private val export: Export) : ViewModel() {
+class TrainingListViewModel(
+    val repository: Repository,
+    val import: Import,
+    private val export: Export
+) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState
 
     init {
+        fetchTrainingList()
+    }
+
+    private fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
         viewModelScope.launch {
             val trainingWithActivityList = repository.getTrainingsWithActivities()
@@ -29,15 +37,16 @@ class TrainingListViewModel(val repository: Repository, val import: Import, priv
             }
         }
     }
+
     suspend fun import() {
-        viewModelScope.launch{
+        viewModelScope.launch {
             import.addSavedDataToDb()
         }.join()
-       fetchTrainingList()
+        fetchTrainingList()
     }
 
     fun export() {
-        viewModelScope.launch{
+        viewModelScope.launch {
             export.saveDataInFile()
         }
     }

@@ -1,7 +1,5 @@
-package com.example.stretchy.activity.di
+package com.example.stretchy.features.datatransport
 
-import com.example.stretchy.features.datatransport.Export
-import com.example.stretchy.features.datatransport.Import
 import com.example.stretchy.repository.Repository
 import dagger.Module
 import dagger.Provides
