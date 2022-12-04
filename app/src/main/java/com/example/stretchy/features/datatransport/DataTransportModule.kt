@@ -7,8 +7,8 @@ import dagger.Provides
 @Module
 class DataTransportModule {
     @Provides
-    fun provideDataImporter(repository: Repository) = DataImporter(repository)
+    fun provideDataImporter(repository: Repository) = DataImporterImporterImpl(repository)
 
     @Provides
-    fun provideDataExporter(repository: Repository) = DataExporter(repository)
+    fun provideDataExporter(repository: Repository) = DataExporterExporterImpl(repository)
 }

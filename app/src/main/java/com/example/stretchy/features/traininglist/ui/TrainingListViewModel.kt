@@ -3,8 +3,8 @@ package com.example.stretchy.features.traininglist.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.features.datatransport.DataExporter
-import com.example.stretchy.features.datatransport.DataImporter
+import com.example.stretchy.features.datatransport.DataExporterExporterImpl
+import com.example.stretchy.features.datatransport.DataImporterImporterImpl
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.repository.Repository
@@ -15,8 +15,8 @@ import kotlinx.coroutines.launch
 
 class TrainingListViewModel(
     val repository: Repository,
-    private val dataImporter: DataImporter,
-    private val dataExporter: DataExporter
+    private val dataImporterImpl: DataImporterImporterImpl,
+    private val dataExporterImpl: DataExporterExporterImpl
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState
@@ -40,14 +40,14 @@ class TrainingListViewModel(
 
     suspend fun import() {
         viewModelScope.launch {
-            dataImporter.addSavedDataToDb()
+            dataImporterImpl.addSavedDataToDb()
         }.join()
         fetchTrainingList()
     }
 
     fun export() {
         viewModelScope.launch {
-            dataExporter.saveDataInFile()
+            dataExporterImpl.saveDataInFile()
         }
     }
 
