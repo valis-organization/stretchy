@@ -9,7 +9,7 @@ import javax.inject.Provider
 @TrainingListScope
 @Component(
     dependencies = [ActivityComponent::class],
-    modules = [TrainingListModule::class,DataTransportModule::class]
+    modules = [TrainingListModule::class, DataTransportModule::class]
 )
 interface TrainingListComponent {
     @Component.Factory

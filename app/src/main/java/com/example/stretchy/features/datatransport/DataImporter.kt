@@ -10,9 +10,9 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 
-class Import(val repository: Repository) : ImportSavedData {
+class DataImporter(val repository: Repository) : ImportSavedData {
     private val gson = Gson()
-    private val dataFile = File(dataTransportFilePath(), dataTransportFileName())
+    private val dataFile = File(dataTransportFilePath, dataTransportFileName)
 
     override fun addSavedDataToDb() {
         val trainingsWithActivity = object : TypeToken<List<TrainingWithActivity>>() {}.type

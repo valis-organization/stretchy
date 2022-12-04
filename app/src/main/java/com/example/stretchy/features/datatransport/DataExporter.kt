@@ -7,18 +7,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
 
-class Export(val repository: Repository) : ExportSavedData {
+class DataExporter(val repository: Repository) : ExportSavedData {
     private val gson = GsonBuilder().setPrettyPrinting().create()
-    private val dataFile = File(dataTransportFilePath(), dataTransportFileName())
+    private val dataFile = File(dataTransportFilePath, dataTransportFileName)
 
     override suspend fun saveDataInFile() {
         CoroutineScope(Dispatchers.Main).launch {
-            val data = getSavedDataFromDb()
+            val data = getSavedData()
             dataFile.writeText(data!!)
         }
     }
 
-    private suspend fun getSavedDataFromDb(): String? {
+    private suspend fun getSavedData(): String? {
         var data: String? = null
         CoroutineScope(Dispatchers.Main).launch {
             data = gson.toJson(repository.getTrainingsWithActivities())
