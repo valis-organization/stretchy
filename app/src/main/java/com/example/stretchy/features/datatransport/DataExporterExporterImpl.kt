@@ -12,10 +12,8 @@ class DataExporterExporterImpl(val repository: Repository) : DataExporter {
     private val dataFile = File(dataTransportFilePath, dataTransportFileName)
 
     override suspend fun saveDataInFile() {
-        CoroutineScope(Dispatchers.Main).launch {
-            val data = getSavedData()
-            dataFile.writeText(data!!)
-        }
+        val data = getSavedData()
+        dataFile.writeText(data!!)
     }
 
     private suspend fun getSavedData(): String? {

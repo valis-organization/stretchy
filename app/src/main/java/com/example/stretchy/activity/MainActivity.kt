@@ -26,34 +26,34 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityComponent = ActivityComponent.create(this)
-
-        if(!permissionsGranted()){
-            askForPermissions()
-        }
         setContent {
-            Navigation(activityComponent)
+            Navigation(
+                activityComponent,
+                {
+                    askForDataTransportPermissions(WRITE_EXTERNAL_STORAGE)
+                },
+                {
+                    askForDataTransportPermissions(READ_EXTERNAL_STORAGE)
+                }
+            )
         }
     }
 
     @Preview(showBackground = true)
     @Composable
     fun DefaultPreview() {
-        Navigation(activityComponent)
+        Navigation(
+            activityComponent,
+            {
+                askForDataTransportPermissions(WRITE_EXTERNAL_STORAGE)
+            },
+            {
+                askForDataTransportPermissions(READ_EXTERNAL_STORAGE)
+            }
+        )
     }
 
-    private fun permissionsGranted(): Boolean {
-        return if (SDK_INT >= Build.VERSION_CODES.R) {
-            Environment.isExternalStorageManager()
-        } else {
-            val result =
-                ContextCompat.checkSelfPermission(this, READ_EXTERNAL_STORAGE)
-            val result1 =
-                ContextCompat.checkSelfPermission(this, WRITE_EXTERNAL_STORAGE)
-            result == PackageManager.PERMISSION_GRANTED && result1 == PackageManager.PERMISSION_GRANTED
-        }
-    }
-
-    private fun askForPermissions() {
+    private fun askForDataTransportPermissions(permission: String) {
         if (SDK_INT >= Build.VERSION_CODES.R) {
             val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
             intent.data = Uri.parse("package:" + applicationContext.packageName)
@@ -62,8 +62,7 @@ class MainActivity : ComponentActivity() {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(
-                    WRITE_EXTERNAL_STORAGE,
-                    READ_EXTERNAL_STORAGE
+                    permission
                 ),
                 100
             )
