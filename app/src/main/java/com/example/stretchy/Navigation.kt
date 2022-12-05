@@ -22,6 +22,8 @@ import com.example.stretchy.features.traininglist.ui.composable.TrainingListComp
 @Composable
 fun Navigation(
     activityComponent: ActivityComponent,
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Screen.ExercisePlansScreen.route) {
@@ -32,7 +34,9 @@ fun Navigation(
             )
             TrainingListComposable(
                 navController = navController,
-                viewModel = vm
+                viewModel = vm,
+                onExportClick = onExportClick,
+                onImportClick = onImportClick
             )
         }
         composable(route = Screen.ExerciseCreatorScreen.route) {

@@ -1,5 +1,12 @@
 package com.example.stretchy.features.traininglist.ui.composable
 
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+import android.content.Context
+import android.content.pm.PackageManager
+import android.os.Build
+import android.os.Environment
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -8,14 +15,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.startActivity
 import androidx.navigation.NavController
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.R
@@ -23,19 +35,35 @@ import com.example.stretchy.Screen
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.theme.White80
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @Composable
 fun TrainingListComposable(
     viewModel: TrainingListViewModel,
     navController: NavController,
+    onExportClick: () -> Unit,
+    onImportClick: () -> Unit,
 ) {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
             }
+        },
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(text = stringResource(id = R.string.app_name))
+                },
+                actions = {
+                    Menu(viewModel, onExportClick, onImportClick)
+                }
+            )
         }
     ) { contentPadding ->
+
         Box(
             modifier = Modifier
                 .padding(contentPadding)
@@ -83,6 +111,58 @@ fun TrainingListComposable(
                         navController
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportClick: () -> Unit) {
+    val context = LocalContext.current
+    var expanded by remember {
+        mutableStateOf(false)
+    }
+    IconButton(
+        onClick = {
+            expanded = true
+        }
+    ) {
+        Icon(
+            imageVector = Icons.Filled.MoreVert,
+            contentDescription = "menu",
+            tint = Color.White
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                onClick = {
+                    expanded = false
+                    if (isPermissionsGranted(context, READ_EXTERNAL_STORAGE)) {
+                        CoroutineScope(Dispatchers.Default).launch {
+                            viewModel.import()
+                        }
+                    } else {
+                        onImportClick()
+                    }
+                    Toast.makeText(context, R.string.import_trainings, Toast.LENGTH_LONG).show()
+                }
+            ) {
+                Text(text = stringResource(id = R.string.import_trainings))
+            }
+            DropdownMenuItem(
+                onClick = {
+                    expanded = false
+                    if (isPermissionsGranted(context, WRITE_EXTERNAL_STORAGE)) {
+                        viewModel.export()
+                    } else {
+                        onExportClick()
+                    }
+                    Toast.makeText(context, R.string.export_trainings, Toast.LENGTH_LONG).show()
+                }
+            ) {
+                Text(text = stringResource(id = R.string.export_trainings))
             }
         }
     }
@@ -154,4 +234,14 @@ private fun TrainingComposable(item: Training, navController: NavController) {
 private fun convertSecondsToMinutes(seconds: Int): String {
     val minutes = seconds / 60
     return "$minutes m ${seconds % 60}s"
+}
+
+private fun isPermissionsGranted(context: Context, permission: String): Boolean {
+    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        Environment.isExternalStorageManager()
+    } else {
+        val result =
+            ContextCompat.checkSelfPermission(context, permission)
+        result == PackageManager.PERMISSION_GRANTED
+    }
 }

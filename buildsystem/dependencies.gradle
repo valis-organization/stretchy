@@ -70,4 +70,9 @@ ext {
     roomKapt = [
             "androidx.room:room-compiler:$roomVersion"
     ]
+
+    gsonVersion = "2.10"
+    gson = [
+            "com.google.code.gson:gson:$gsonVersion"
+    ]
 }
