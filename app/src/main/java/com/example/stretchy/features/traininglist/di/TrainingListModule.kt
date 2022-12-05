@@ -1,7 +1,7 @@
 package com.example.stretchy.features.traininglist.di
 
-import com.example.stretchy.features.datatransport.DataExporterExporterImpl
-import com.example.stretchy.features.datatransport.DataImporterImporterImpl
+import com.example.stretchy.features.datatransport.DataExporterImpl
+import com.example.stretchy.features.datatransport.DataImporterImpl
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.repository.Repository
 import dagger.Module
@@ -12,8 +12,8 @@ class TrainingListModule {
     @Provides
     fun provideTrainingListViewModel(
         repository: Repository,
-        dataImporterImpl: DataImporterImporterImpl,
-        dataExporterImpl: DataExporterExporterImpl
+        dataImporterImpl: DataImporterImpl,
+        dataExporterImpl: DataExporterImpl
     ) =
         TrainingListViewModel(repository, dataImporterImpl, dataExporterImpl)
 }

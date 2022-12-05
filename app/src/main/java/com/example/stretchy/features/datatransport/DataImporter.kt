@@ -1,5 +1,5 @@
 package com.example.stretchy.features.datatransport
 
 interface DataImporter {
-    suspend fun addSavedDataToDb()
+    suspend fun importData()
 }
