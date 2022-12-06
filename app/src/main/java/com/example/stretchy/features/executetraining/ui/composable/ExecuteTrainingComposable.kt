@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
@@ -31,8 +32,10 @@ import kotlin.math.*
 
 @Composable
 fun ExecuteTrainingComposable(
-    viewModel: ExecuteTrainingViewModel
+    viewModel: ExecuteTrainingViewModel,
+    navController: NavController
 ) {
+    var initialProgressBarValue = -540f
     var disableExerciseAnimation = true
     Surface(modifier = Modifier
         .fillMaxSize()
@@ -66,7 +69,9 @@ fun ExecuteTrainingComposable(
                                     currentExerciseTime = item.currentTime,
                                     totalExerciseTime = item.totalExerciseTime,
                                     trainingProgressPercent = item.trainingProgressPercent,
-                                    disableExerciseAnimation = disableExerciseAnimation
+                                    disableExerciseAnimation = disableExerciseAnimation,
+                                    initialProgressBarValue = initialProgressBarValue,
+                                    onExerciseEnd = { initialProgressBarValue = it }
                                 )
                                 disableExerciseAnimation = false
                             }
@@ -74,7 +79,9 @@ fun ExecuteTrainingComposable(
                                 nextExerciseName = item.nextExercise,
                                 currentTime = item.currentTime,
                                 totalTime = item.totalExerciseTime,
-                                trainingProgressPercent = item.trainingProgressPercent
+                                trainingProgressPercent = item.trainingProgressPercent,
+                                initialProgressBarValue = initialProgressBarValue,
+                                onExerciseEnd = { initialProgressBarValue = it }
                             )
                         }
                     }
@@ -85,8 +92,9 @@ fun ExecuteTrainingComposable(
                     )
                     is ExecuteTrainingUiState.TrainingCompleted -> TrainingSummaryComposable(
                         numberOfExercises = 4,
-                        timeSpent = state.timeSpent
-                        )
+                        timeSpent = state.timeSpent,
+                        navController = navController
+                    )
                 }
             }
         }
@@ -98,7 +106,9 @@ fun BreakComposable(
     nextExerciseName: String,
     currentTime: Float,
     totalTime: Int,
-    trainingProgressPercent: Int
+    trainingProgressPercent: Int,
+    initialProgressBarValue : Float,
+    onExerciseEnd: (initialProgressBarValue: Float) -> Unit
 ) {
     var visible by remember { mutableStateOf(false) }
     Text(
@@ -124,7 +134,7 @@ fun BreakComposable(
     )
     Spacer(modifier = Modifier.height(44.dp))
     Text(text = "", fontSize = 24.sp) //space filler to match ExerciseComposable
-    ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
+    ProgressBarComposable(percentageOfTimer = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
     visible = true
 }
 
@@ -135,7 +145,9 @@ fun ExerciseComposable(
     currentExerciseTime: Float,
     totalExerciseTime: Int,
     trainingProgressPercent: Int,
-    disableExerciseAnimation : Boolean
+    disableExerciseAnimation: Boolean,
+    onExerciseEnd: (initialProgressBarValue: Float) -> Unit,
+    initialProgressBarValue: Float
 ) {
     var visible by remember { mutableStateOf(disableExerciseAnimation) }
     if (!visible) {
@@ -161,7 +173,7 @@ fun ExerciseComposable(
             fontWeight = FontWeight.Bold,
             color = Color.LightGray
         )
-    }else{
+    } else {
         Text(
             text = "",
             fontSize = 16.sp
@@ -177,7 +189,7 @@ fun ExerciseComposable(
     ) {
         Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
-    ProgressBarComposable(percentageOfTimer = trainingProgressPercent)
+    ProgressBarComposable(percentageOfTimer = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
     visible = true
 }
 
@@ -239,28 +251,29 @@ fun TimerComposable(
     }
 }
 
-var initialValue = -540f
-
 @Composable
 fun ProgressBarComposable(
     percentageOfTimer: Int,
     modifier: Modifier = Modifier,
-    strokeWidth: Dp = 8.dp
+    strokeWidth: Dp = 8.dp,
+    initialValue: Float,
+    onExerciseEnd: (initialProgressBarValue: Float) -> Unit
 ) {
     val heightPos = 260f
     val startPos = -540f
     val progressBarStart = Offset(startPos, heightPos)
     // Animation properties
+    val targetProgressBarValue = ((2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos)
     val animateLine = remember { androidx.compose.animation.core.Animatable(initialValue) }
     LaunchedEffect(animateLine) {
         animateLine.animateTo(
-            targetValue = ((2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos),
+            targetValue = targetProgressBarValue,
             animationSpec = tween(
                 durationMillis = 1000,
                 easing = LinearEasing
             ),
         )
-        initialValue = ((2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos)
+        onExerciseEnd(targetProgressBarValue)
     }
 
     Canvas(modifier = modifier) {

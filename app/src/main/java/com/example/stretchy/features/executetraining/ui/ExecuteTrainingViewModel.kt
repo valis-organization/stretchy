@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.common.convertSecondsToMinutes
-import com.example.stretchy.repository.ActivityDomain
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem

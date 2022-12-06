@@ -15,10 +15,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import com.example.stretchy.Screen
 import com.example.stretchy.theme.BananaMania
 
 @Composable
-fun TrainingSummaryComposable(numberOfExercises: Int, timeSpent: String) {
+fun TrainingSummaryComposable(numberOfExercises: Int, timeSpent: String,navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -54,7 +56,7 @@ fun TrainingSummaryComposable(numberOfExercises: Int, timeSpent: String) {
             Spacer(modifier = Modifier.height(260.dp))
             Card(
                 modifier = Modifier
-                    .clickable { /*TODO*/ }
+                    .clickable { navController.navigate(Screen.TrainingListScreen.route) }
                     .height(80.dp)
                     .fillMaxWidth()
                     .padding(12.dp),
