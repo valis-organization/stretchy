@@ -54,6 +54,7 @@ dependencies {
     implementation coroutines
     implementation dagger
     implementation room
+    implementation gson
 
     kapt roomKapt
     kapt daggerAnnotationProcessor

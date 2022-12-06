@@ -2,24 +2,34 @@ package com.example.stretchy.features.createtraining.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stretchy.features.executetraining.ui.data.ActivityItem
+import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.traininglist.ui.data.Training
+import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
+import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class CreateTrainingViewModel(database: Repository) : ViewModel() {
+class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
         MutableStateFlow(CreateTrainingUiState.Init)
     val uiState: StateFlow<CreateTrainingUiState> = _uiState
-    private val activities: MutableList<ActivityItem> = mutableListOf()
 
     private var name: String? = null
     private var type: Training.Type = Training.Type.STRETCHING
+    private val currentList = mutableListOf<Activity>()
 
-    fun addActivity(activityItem: ActivityItem) {
-        activities.add(activityItem)
+    fun addActivity(activityItem: Activity) {
+        currentList.add(activityItem)
+        viewModelScope.launch {
+            _uiState.emit(
+                CreateTrainingUiState.Success(
+                    isCreateTrainingButtonVisible(),
+                    currentList
+                )
+            )
+        }
     }
 
     fun setTrainingName(trainingName: String) {
@@ -30,13 +40,11 @@ class CreateTrainingViewModel(database: Repository) : ViewModel() {
         viewModelScope.launch {
             if (name == null) {
                 _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName))
-            } else if (activities.size < 2) {
+            } else if (currentActivitySizeList() < 2) {
                 _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.NotEnoughExercises))
             } else {
                 try {
-                    composeTraining()
                     saveTraining()
-                    _uiState.emit(CreateTrainingUiState.Done)
                 } catch (ex: Exception) {
                     _uiState.emit(
                         CreateTrainingUiState.Error(
@@ -50,26 +58,22 @@ class CreateTrainingViewModel(database: Repository) : ViewModel() {
         }
     }
 
-    private fun composeTraining() {
-        if (type == Training.Type.STRETCHING) {
-            activities.forEach {
-                if (it is ActivityItem.Break) {
-                    throw Exception("BUG!, It should not be possible to create Break by hand with Streching program")
-                }
-            }
-        }
-    }
+    private fun isCreateTrainingButtonVisible() =
+        !name.isNullOrBlank() && currentActivitySizeList() >= 1
+
+    private fun currentActivitySizeList(): Int =
+        (_uiState.value as? CreateTrainingUiState.Success)?.training?.size ?: 0
 
     private fun saveTraining() {
-
-    }
-
-    fun replaceActivities(firstPos: Int, secondPos: Int) {
-        val firstToReplace = activities[firstPos]
-        activities[firstPos] = activities[secondPos]
-        activities[secondPos] = firstToReplace
         viewModelScope.launch {
-            _uiState.emit(CreateTrainingUiState.Success(activities))
+            val success = (_uiState.value as? CreateTrainingUiState.Success)
+            if (success != null) {
+                repository.addTrainingWithActivities(TrainingWithActivity(name!!,TrainingType.STRETCH,true,currentList))
+                currentList.clear()
+                _uiState.emit(CreateTrainingUiState.Done)
+            } else {
+                //todo toast
+            }
         }
     }
 }

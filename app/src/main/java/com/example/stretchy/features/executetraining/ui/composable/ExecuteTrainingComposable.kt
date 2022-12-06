@@ -61,7 +61,7 @@ fun ExecuteTrainingComposable(
                         when (val item = state.activityItem) {
                             is ActivityItem.Exercise -> {
                                 ExerciseComposable(
-                                    exerciseName = item.exerciseName,
+                                    exerciseName = item.name,
                                     nextExerciseName = item.nextExercise,
                                     currentExerciseTime = item.currentTime,
                                     totalExerciseTime = item.totalExerciseTime,
@@ -161,6 +161,11 @@ fun ExerciseComposable(
             fontWeight = FontWeight.Bold,
             color = Color.LightGray
         )
+    }else{
+        Text(
+            text = "",
+            fontSize = 16.sp
+        )
     }
     Spacer(modifier = Modifier.height(8.dp))
     if (!visible) {
@@ -184,6 +189,21 @@ fun TimerComposable(
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 10.dp
 ) {
+    fun toCounterText(seconds: Int): String {
+        return if (seconds <= 59) {
+            seconds.toString()
+        } else {
+            val minutes = seconds / 60
+            val s = seconds % 60
+            val secStr = if (s <= 9) {
+                "0$s"
+            } else {
+                s
+            }
+            "$minutes:$secStr"
+        }
+    }
+
     val percentageOfTimer = (currentSeconds / totalSeconds)
     val sweepAngle = 250f
 
@@ -199,15 +219,17 @@ fun TimerComposable(
                 style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
             )
         }
+        val sec = (ceil((currentSeconds) / 1000)).toInt()
+
         AnimatedContent(
-            targetState = (ceil((currentSeconds) / 1000)).toInt().toString(),
+            targetState = sec.toString(),
             transitionSpec = {
                 fadeIn(animationSpec = tween(150, 150)) with
                         fadeOut(animationSpec = tween(150))
             }
         ) { seconds ->
             Text(
-                text = seconds,
+                text = toCounterText(seconds.toInt()),
                 fontSize = 100.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,

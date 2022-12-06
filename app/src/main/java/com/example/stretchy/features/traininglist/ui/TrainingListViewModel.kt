@@ -3,6 +3,8 @@ package com.example.stretchy.features.traininglist.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.TrainingType
+import com.example.stretchy.features.datatransport.DataExporterImpl
+import com.example.stretchy.features.datatransport.DataImporterImpl
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.repository.Repository
@@ -10,14 +12,18 @@ import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-class TrainingListViewModel(repository: Repository) : ViewModel() {
+class TrainingListViewModel(
+    val repository: Repository,
+    private val dataImporterImpl: DataImporterImpl,
+    private val dataExporterImpl: DataExporterImpl
+) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState
 
-    @Inject
-    lateinit var repository: Repository
+    init {
+        fetchTrainingList()
+    }
 
     private fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
@@ -32,13 +38,26 @@ class TrainingListViewModel(repository: Repository) : ViewModel() {
         }
     }
 
+    suspend fun import() {
+        viewModelScope.launch {
+            dataImporterImpl.importData()
+        }
+        fetchTrainingList()
+    }
+
+    fun export() {
+        viewModelScope.launch {
+            dataExporterImpl.exportData()
+        }
+    }
+
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
         this.activities.forEach {
             duration += it.duration
         }
         return Training(
-            this.trainingId.toString(),
+            this.id.toString(),
             this.name,
             this.activities.size,
             duration,

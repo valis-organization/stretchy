@@ -30,8 +30,11 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
+import com.example.stretchy.database.data.ActivityType
+import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
 import com.example.stretchy.features.createtraining.ui.CreateTrainingViewModel
-import com.example.stretchy.features.createtraining.ui.data.Exercises
+import com.example.stretchy.features.createtraining.ui.data.Exercise
+import com.example.stretchy.repository.Activity
 import com.example.stretchy.theme.DarkGray
 
 @Composable
@@ -39,7 +42,6 @@ fun CreateTrainingComposable(
     navController: NavController,
     viewModel: CreateTrainingViewModel
 ) {
-    val temp = remember { mutableStateListOf<Exercises>() }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -49,21 +51,30 @@ fun CreateTrainingComposable(
             Modifier
                 .padding(top = 16.dp)
         ) {
-            TrainingName()
+            TrainingName(viewModel)
             Spacer(modifier = Modifier.height(24.dp))
-            ExerciseList(exercises = temp)
-            CreateSequence(temp)
+            when (val state = viewModel.uiState.collectAsState().value) {
+                is CreateTrainingUiState.Success -> {
+                    ExerciseList(exercises = state.training)
+                }
+                else -> {
+                    ExerciseList(emptyList())
+                }
+            }
+            CreateExerciseWidget(viewModel)
         }
         Spacer(modifier = Modifier.height(200.dp))
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            Button(modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp), onClick = {
-                navController.navigate(
-                    Screen.ExercisePlansScreen.route
-                )
-            }) {
-                //send exercises list to db
+            Button(
+                //   enabled = viewModel.uiState.collectAsState().value.createTrainingButtonVisible,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                onClick = {
+                    viewModel.createTraining()
+                    navController.navigate(Screen.ExercisePlansScreen.route)
+                }
+            ) {
                 Text(stringResource(id = R.string.create_training))
             }
         }
@@ -71,19 +82,19 @@ fun CreateTrainingComposable(
 }
 
 @Composable
-private fun ExerciseList(exercises: MutableList<Exercises>) {
+private fun ExerciseList(exercises: List<Activity>) {
     LazyColumn(
         modifier = Modifier.heightIn(0.dp, 240.dp),
         verticalArrangement = Arrangement.Top
     ) {
         items(exercises) { exercise ->
-            ExerciseItem(item = exercise)
+            ExerciseItem(item = Exercise(exercise.name))
         }
     }
 }
 
 @Composable
-private fun ExerciseItem(item: Exercises) {
+private fun ExerciseItem(item: Exercise) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -98,7 +109,7 @@ private fun ExerciseItem(item: Exercises) {
 }
 
 @Composable
-fun CreateSequence(temp: MutableList<Exercises>) {
+fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
     var visible by remember { mutableStateOf(false) }
     val sliderMaxValue = 300
     var sliderValue: Int by remember { mutableStateOf(10) }
@@ -164,9 +175,13 @@ fun CreateSequence(temp: MutableList<Exercises>) {
                 onClick = {
                     if (exerciseName.isNotEmpty() && sliderValue != 0) {
                         visible = !visible
-                        temp.add(Exercises(exerciseName))
-                        sliderValue = 10
-                        exerciseDuration = 10
+                        viewModel.addActivity(
+                            Activity(
+                                exerciseName,
+                                exerciseDuration,
+                                ActivityType.STRETCH
+                            )
+                        )
                         Toast.makeText(context, "Exercise added", Toast.LENGTH_LONG).show()
                     } else {
                         Toast.makeText(
@@ -226,13 +241,11 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
         {
             Text(text = "+10")
         }
-
-
     }
 }
 
 @Composable
-fun TrainingName() {
+fun TrainingName(viewModel: CreateTrainingViewModel) {
     var trainingName by remember { mutableStateOf("") }
 
     TextField(
@@ -249,6 +262,7 @@ fun TrainingName() {
         singleLine = true,
         onValueChange = {
             trainingName = it
+            viewModel.setTrainingName(it)
         }
     )
 }

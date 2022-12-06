@@ -9,6 +9,7 @@ import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
+import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,7 +18,7 @@ import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import java.util.*
 
-class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
+class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
     private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
     private var startDateSaved = false
@@ -26,16 +27,18 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
     private var isPaused = true
     private var startDateMs = 0L
 
-    fun init(trainingId: Long) {
+    init {
         _uiState.value = ExecuteTrainingUiState.Loading
         viewModelScope.launch {
+
             val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
             var trainingProgressPercent = 0f
             val totalNumberOfExercises = getTotalExercisesNumber(trainingWithActivities)
             if (trainingWithActivities.activities.isEmpty()) {
                 _uiState.value = ExecuteTrainingUiState.Error
             } else {
-                trainingWithActivities.activities.forEachIndexed { index, exercise ->
+                val exercisesWithBreaks = getExercisesWithBreak(trainingWithActivities.activities)
+                exercisesWithBreaks.forEachIndexed { index, exercise ->
                     timer.setSeconds(exercise.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
                         if (exercise == trainingWithActivities.activities[0] && !isPaused && !startDateSaved) {
@@ -47,8 +50,7 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
 
                         when (exercise.activityType) {
                             ActivityType.STRETCH -> {
-                                val nextExerciseName =
-                                    trainingWithActivities.activities.getOrNull(index + 2)?.name
+                                val nextExerciseName = exercisesWithBreaks.getOrNull(index + 2)?.name
                                 _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Exercise(
                                         exercise.name,
@@ -60,8 +62,7 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
                                 )
                             }
                             ActivityType.BREAK -> {
-                                val nextExerciseName =
-                                    trainingWithActivities.activities.getOrNull(index + 1)?.name
+                                val nextExerciseName = exercisesWithBreaks.getOrNull(index + 1)?.name
                                 _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Break(
                                         nextExerciseName!!,
@@ -111,6 +112,17 @@ class ExecuteTrainingViewModel(val repository: Repository) : ViewModel() {
             }
         }
         return activities
+    }
+
+    private fun getExercisesWithBreak(training: List<Activity>): List<Activity> {
+        val exercisesWithBreaks: MutableList<Activity> = mutableListOf()
+        training.forEachIndexed { i, exercise ->
+            exercisesWithBreaks.add(exercise)
+            if (i != training.lastIndex) {
+                exercisesWithBreaks.add(Activity(BREAK, 5, ActivityType.BREAK))
+            }
+        }
+        return exercisesWithBreaks
     }
 
     companion object {
