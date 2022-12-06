@@ -32,7 +32,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
 
             val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
             var trainingProgressPercent = 0f
-            val totalNumberOfExercises = getTotalExercisesNumber(trainingWithActivities)
             if (trainingWithActivities.activities.isEmpty()) {
                 _uiState.value = ExecuteTrainingUiState.Error
             } else {
@@ -74,7 +73,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                         }
                     }
                     if (exercise.activityType == ActivityType.STRETCH) {
-                        trainingProgressPercent += 1 / totalNumberOfExercises * 100
+                        trainingProgressPercent += 1 / trainingWithActivities.activities.size.toFloat() * 100
                     }
                     if (trainingWithActivities.activities.getOrNull(index + 1) == null) {
                         val currentTime = Calendar.getInstance()
@@ -101,16 +100,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             Log.i(TIMER_LOG_TAG, "Timer is resumed.")
             timer.start()
         }
-    }
-
-    private fun getTotalExercisesNumber(training: TrainingWithActivity): Float {
-        var activities = 0f
-        training.activities.forEach { activity ->
-            if (activity.activityType == ActivityType.STRETCH) {
-                activities++
-            }
-        }
-        return activities
     }
 
     private fun getExercisesWithBreak(training: List<Activity>): List<Activity> {
