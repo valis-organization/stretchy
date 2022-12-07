@@ -20,7 +20,7 @@ import com.example.stretchy.Screen
 import com.example.stretchy.theme.BananaMania
 
 @Composable
-fun TrainingSummaryComposable(numberOfExercises: Int, timeSpent: String,navController: NavController) {
+fun TrainingSummaryComposable(numberOfExercises: Int, currentTrainingTime: String, navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -47,7 +47,7 @@ fun TrainingSummaryComposable(numberOfExercises: Int, timeSpent: String,navContr
             )
             Spacer(modifier = Modifier.height(36.dp))
             Text(
-                text = "Time spent: $timeSpent",
+                text = "Time spent: $currentTrainingTime",
                 fontSize = 28.sp,
                 textAlign = TextAlign.Start,
                 color = Color.White,

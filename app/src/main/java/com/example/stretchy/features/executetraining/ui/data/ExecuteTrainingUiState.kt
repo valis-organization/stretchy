@@ -3,7 +3,7 @@ package com.example.stretchy.features.executetraining.ui.data
 sealed class ExecuteTrainingUiState {
     object Loading : ExecuteTrainingUiState()
     object Error : ExecuteTrainingUiState()
-    class TrainingCompleted(val timeSpent : String) : ExecuteTrainingUiState()
+    class TrainingCompleted(val timeSpent : String,val numberOfExercises : Int) : ExecuteTrainingUiState()
     class Success(val activityItem: ActivityItem) : ExecuteTrainingUiState()
 }
 

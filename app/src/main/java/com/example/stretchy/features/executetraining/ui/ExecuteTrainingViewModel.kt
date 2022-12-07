@@ -10,7 +10,6 @@ import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
-import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
@@ -20,11 +19,11 @@ import java.util.*
 class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
     private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
-    private var startDateSaved = false
+    private var startingTimeStampSaved = false
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
 
     private var isPaused = true
-    private var startDateMs = 0L
+    private var startingTimeStamp = 0L
 
     init {
         _uiState.value = ExecuteTrainingUiState.Loading
@@ -39,16 +38,13 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 exercisesWithBreaks.forEachIndexed { index, exercise ->
                     timer.setSeconds(exercise.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                        if (exercise == trainingWithActivities.activities[0] && !isPaused && !startDateSaved) {
-                            val startDate = Calendar.getInstance()
-                            Log.i("Start date", "Started on ${startDate.time}")
-                            startDateMs = startDate.timeInMillis
-                            startDateSaved = true
+                        if (!isStartingTimeStampSaved()) {
+                            saveStartingTimeStamp()
                         }
-
                         when (exercise.activityType) {
                             ActivityType.STRETCH -> {
-                                val nextExerciseName = exercisesWithBreaks.getOrNull(index + 2)?.name
+                                val nextExerciseName =
+                                    exercisesWithBreaks.getOrNull(index + 2)?.name
                                 _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Exercise(
                                         exercise.name,
@@ -60,7 +56,8 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                                 )
                             }
                             ActivityType.BREAK -> {
-                                val nextExerciseName = exercisesWithBreaks.getOrNull(index + 1)?.name
+                                val nextExerciseName =
+                                    exercisesWithBreaks.getOrNull(index + 1)?.name
                                 _uiState.value = ExecuteTrainingUiState.Success(
                                     ActivityItem.Break(
                                         nextExerciseName!!,
@@ -77,12 +74,13 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                     }
                     if (trainingWithActivities.activities.getOrNull(index + 1) == null) {
                         val currentTime = Calendar.getInstance()
-                        val seconds = (currentTime.timeInMillis - startDateMs) / 1000
+                        val seconds = (currentTime.timeInMillis - startingTimeStamp) / 1000
                         _uiState.value =
                             ExecuteTrainingUiState.TrainingCompleted(
                                 timeSpent = convertSecondsToMinutes(
                                     seconds
-                                )
+                                ),
+                                numberOfExercises = trainingWithActivities.activities.size
                             )
                     }
                 }
@@ -111,6 +109,17 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             }
         }
         return exercisesWithBreaks
+    }
+
+    private fun isStartingTimeStampSaved(): Boolean {
+        return isPaused && startingTimeStampSaved
+    }
+
+    private fun saveStartingTimeStamp() {
+        val startDate = Calendar.getInstance()
+        Log.i("Start date", "Started on ${startDate.time}")
+        startingTimeStamp = startDate.timeInMillis
+        startingTimeStampSaved = true
     }
 
     companion object {

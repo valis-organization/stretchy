@@ -91,8 +91,8 @@ fun ExecuteTrainingComposable(
                         fontWeight = FontWeight.Bold
                     )
                     is ExecuteTrainingUiState.TrainingCompleted -> TrainingSummaryComposable(
-                        numberOfExercises = 4,
-                        timeSpent = state.timeSpent,
+                        numberOfExercises = state.numberOfExercises,
+                        currentTrainingTime = state.timeSpent,
                         navController = navController
                     )
                 }
@@ -110,18 +110,18 @@ fun BreakComposable(
     initialProgressBarValue : Float,
     onExerciseEnd: (initialProgressBarValue: Float) -> Unit
 ) {
-    var visible by remember { mutableStateOf(false) }
+    var animatedContentVisibility by remember { mutableStateOf(false) } //if set to true fade-in animations appear
     Text(
         text = "Prepare to next Exercise:",
         fontSize = 16.sp,
         color = Color.LightGray,
         fontWeight = FontWeight.Bold
     )
-    if (!visible) {
+    if (!animatedContentVisibility) {
         Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
     AnimatedVisibility(
-        visible = visible,
+        visible = animatedContentVisibility,
         enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
     ) {
         Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
@@ -134,8 +134,8 @@ fun BreakComposable(
     )
     Spacer(modifier = Modifier.height(44.dp))
     Text(text = "", fontSize = 24.sp) //space filler to match ExerciseComposable
-    ProgressBarComposable(percentageOfTimer = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
-    visible = true
+    ProgressBarComposable(trainingPercentage = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
+    animatedContentVisibility = true
 }
 
 @Composable
@@ -149,12 +149,12 @@ fun ExerciseComposable(
     onExerciseEnd: (initialProgressBarValue: Float) -> Unit,
     initialProgressBarValue: Float
 ) {
-    var visible by remember { mutableStateOf(disableExerciseAnimation) }
-    if (!visible) {
+    var animatedContentVisibility by remember { mutableStateOf(disableExerciseAnimation) } //if set to true fade-in animations appear
+    if (!animatedContentVisibility) {
         Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
     }
     AnimatedVisibility(
-        visible = visible,
+        visible = animatedContentVisibility,
         enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
     ) {
         Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
@@ -180,17 +180,17 @@ fun ExerciseComposable(
         )
     }
     Spacer(modifier = Modifier.height(8.dp))
-    if (!visible) {
+    if (!animatedContentVisibility) {
         Text(text = "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
     AnimatedVisibility(
-        visible = visible,
+        visible = animatedContentVisibility,
         enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
     ) {
         Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
     }
-    ProgressBarComposable(percentageOfTimer = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
-    visible = true
+    ProgressBarComposable(trainingPercentage = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
+    animatedContentVisibility = true
 }
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -253,7 +253,7 @@ fun TimerComposable(
 
 @Composable
 fun ProgressBarComposable(
-    percentageOfTimer: Int,
+    trainingPercentage: Int,
     modifier: Modifier = Modifier,
     strokeWidth: Dp = 8.dp,
     initialValue: Float,
@@ -263,7 +263,7 @@ fun ProgressBarComposable(
     val startPos = -540f
     val progressBarStart = Offset(startPos, heightPos)
     // Animation properties
-    val targetProgressBarValue = ((2 * -startPos * (percentageOfTimer.toFloat() / 100)) + startPos)
+    val targetProgressBarValue = ((2 * -startPos * (trainingPercentage.toFloat() / 100)) + startPos)
     val animateLine = remember { androidx.compose.animation.core.Animatable(initialValue) }
     LaunchedEffect(animateLine) {
         animateLine.animateTo(
@@ -287,4 +287,9 @@ fun ProgressBarComposable(
             strokeWidth = strokeWidth.toPx()
         )
     }
+}
+
+@Composable
+fun TextSpacer(size: Dp){
+    Text("", Modifier.size(size))
 }
