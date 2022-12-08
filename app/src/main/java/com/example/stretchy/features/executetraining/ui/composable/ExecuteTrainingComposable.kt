@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -117,8 +118,8 @@ fun BreakComposable(
         color = Color.LightGray,
         fontWeight = FontWeight.Bold
     )
-    if (!animatedContentVisibility) {
-        Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+    if (!animatedContentVisibility) {  //prevents "screen jumping" due to invisible texts
+        TextSpacer(fontSize = 32.sp)
     }
     AnimatedVisibility(
         visible = animatedContentVisibility,
@@ -133,7 +134,7 @@ fun BreakComposable(
         currentSeconds = currentTime
     )
     Spacer(modifier = Modifier.height(44.dp))
-    Text(text = "", fontSize = 24.sp) //space filler to match ExerciseComposable
+    TextSpacer(fontSize = 24.sp)
     ProgressBarComposable(trainingPercentage = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
     animatedContentVisibility = true
 }
@@ -151,7 +152,7 @@ fun ExerciseComposable(
 ) {
     var animatedContentVisibility by remember { mutableStateOf(disableExerciseAnimation) } //if set to true fade-in animations appear
     if (!animatedContentVisibility) {
-        Text(text = "", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+        TextSpacer(fontSize = 32.sp)
     }
     AnimatedVisibility(
         visible = animatedContentVisibility,
@@ -174,10 +175,7 @@ fun ExerciseComposable(
             color = Color.LightGray
         )
     } else {
-        Text(
-            text = "",
-            fontSize = 16.sp
-        )
+     TextSpacer(fontSize = 16.sp)
     }
     Spacer(modifier = Modifier.height(8.dp))
     if (!animatedContentVisibility) {
@@ -290,6 +288,6 @@ fun ProgressBarComposable(
 }
 
 @Composable
-fun TextSpacer(size: Dp){
-    Text("", Modifier.size(size))
+fun TextSpacer(fontSize: TextUnit){
+    Text("",fontSize = fontSize)
 }
