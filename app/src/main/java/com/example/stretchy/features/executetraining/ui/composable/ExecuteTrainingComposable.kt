@@ -1,6 +1,7 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
 import androidx.compose.animation.*
+import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
@@ -125,7 +126,7 @@ fun BreakComposable(
         }
         AnimatedVisibility(
             visible = showAnimation,
-            enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+            enter = textFadeInProperties()
         ) {
             Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
         }
@@ -164,7 +165,7 @@ fun ExerciseComposable(
         }
         AnimatedVisibility(
             visible = showAnimation,
-            enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+            enter = textFadeInProperties()
         ) {
             Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
         }
@@ -191,7 +192,7 @@ fun ExerciseComposable(
         }
         AnimatedVisibility(
             visible = showAnimation,
-            enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+            enter = textFadeInProperties()
         ) {
             Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
@@ -295,4 +296,8 @@ fun TrainingProgressBar(
 @Composable
 fun TextSpacer(fontSize: TextUnit) {
     Text("", fontSize = fontSize)
+}
+
+private fun textFadeInProperties() : EnterTransition {
+    return fadeIn(initialAlpha = 0f, animationSpec = tween(500))
 }
