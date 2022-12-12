@@ -51,7 +51,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                                         nextExerciseName,
                                         currentSeconds,
                                         exercise.duration,
-                                        trainingProgressPercent.toInt()
+                                        trainingProgressPercent
                                     )
                                 )
                             }
@@ -63,21 +63,21 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                                         nextExerciseName!!,
                                         currentSeconds,
                                         exercise.duration,
-                                        trainingProgressPercent.toInt()
+                                        trainingProgressPercent
                                     )
                                 )
                             }
                         }
                     }
                     if (exercise.activityType == ActivityType.STRETCH) {
-                        trainingProgressPercent += 1 / trainingWithActivities.activities.size.toFloat() * 100
+                        trainingProgressPercent += 1 / trainingWithActivities.activities.size.toFloat()
                     }
                     if (trainingWithActivities.activities.getOrNull(index + 1) == null) {
                         val currentTime = Calendar.getInstance()
                         val seconds = (currentTime.timeInMillis - startingTimeStamp) / 1000
                         _uiState.value =
                             ExecuteTrainingUiState.TrainingCompleted(
-                                timeSpent = convertSecondsToMinutes(
+                                currentTrainingTime = convertSecondsToMinutes(
                                     seconds
                                 ),
                                 numberOfExercises = trainingWithActivities.activities.size

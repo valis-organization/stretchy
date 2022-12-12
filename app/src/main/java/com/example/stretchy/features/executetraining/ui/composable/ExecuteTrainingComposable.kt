@@ -1,9 +1,7 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -95,7 +93,7 @@ fun ExecuteTrainingComposable(
                 )
                 is ExecuteTrainingUiState.TrainingCompleted -> TrainingSummaryComposable(
                     numberOfExercises = state.numberOfExercises,
-                    currentTrainingTime = state.timeSpent,
+                    currentTrainingTime = state.currentTrainingTime,
                     navController = navController
                 )
             }
@@ -108,7 +106,7 @@ fun BreakComposable(
     nextExerciseName: String,
     currentTime: Float,
     totalTime: Int,
-    trainingProgressPercent: Int
+    trainingProgressPercent: Float
 ) {
     var showAnimation by remember { mutableStateOf(false) } //if set to true fade-in animations appear
     Column(
@@ -140,7 +138,7 @@ fun BreakComposable(
         TextSpacer(fontSize = 40.sp)
     }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        AnimatedTrainingProgressBar(percentage = trainingProgressPercent.toFloat() / 100)
+        AnimatedTrainingProgressBar(percentage = trainingProgressPercent)
     }
     showAnimation = true
 }
@@ -151,8 +149,8 @@ fun ExerciseComposable(
     nextExerciseName: String?,
     currentTime: Float,
     totalTime: Int,
-    trainingProgressPercent: Int,
-    disableExerciseAnimation: Boolean,
+    trainingProgressPercent: Float,
+    disableExerciseAnimation: Boolean
 ) {
     var showAnimation by remember { mutableStateOf(disableExerciseAnimation) } //if set to true fade-in animations appear
     Column(
@@ -198,7 +196,7 @@ fun ExerciseComposable(
         }
     }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-        TrainingProgressBar(percentage = trainingProgressPercent.toFloat() / 100)
+        TrainingProgressBar(percentage = trainingProgressPercent)
     }
     showAnimation = true
 }
@@ -263,8 +261,11 @@ fun TimerComposable(
 
 @Composable
 fun AnimatedTrainingProgressBar(percentage: Float) {
-    val initialValue by remember { mutableStateOf(1f * percentage) }
-    val animateLine = remember { androidx.compose.animation.core.Animatable(initialValue) }
+    val initialProgressBarPosition =
+        1f * percentage //0f - start of the progress bar, 1f - target position
+    val animateLine =
+        remember { androidx.compose.animation.core.Animatable(initialProgressBarPosition) }
+
     LaunchedEffect(animateLine) {
         animateLine.animateTo(
             targetValue = 1f,
@@ -274,12 +275,12 @@ fun AnimatedTrainingProgressBar(percentage: Float) {
             ),
         )
     }
-    TrainingProgressBar(percentage = percentage, fillingAmount = animateLine.value)
+    TrainingProgressBar(percentage = percentage, progressBarFillingAmount = animateLine.value)
 }
 
 @Composable
 fun TrainingProgressBar(
-    fillingAmount: Float = 1f, // Used for animations
+    progressBarFillingAmount: Float = 1f, // Used for animations
     percentage: Float
 ) {
     val thickness = 16.dp
@@ -287,7 +288,7 @@ fun TrainingProgressBar(
         drawLine(
             color = Color(LapisLazuli.toArgb()),
             start = Offset.Zero,
-            end = Offset(fillingAmount * (size.width * percentage), 0f),
+            end = Offset(progressBarFillingAmount * (size.width * percentage), 0f),
             strokeWidth = thickness.toPx()
         )
     }
@@ -298,6 +299,6 @@ fun TextSpacer(fontSize: TextUnit) {
     Text("", fontSize = fontSize)
 }
 
-private fun textFadeInProperties() : EnterTransition {
+private fun textFadeInProperties(): EnterTransition {
     return fadeIn(initialAlpha = 0f, animationSpec = tween(500))
 }

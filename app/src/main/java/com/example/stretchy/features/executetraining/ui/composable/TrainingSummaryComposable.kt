@@ -20,7 +20,11 @@ import com.example.stretchy.Screen
 import com.example.stretchy.theme.BananaMania
 
 @Composable
-fun TrainingSummaryComposable(numberOfExercises: Int, currentTrainingTime: String, navController: NavController) {
+fun TrainingSummaryComposable(
+    numberOfExercises: Int,
+    currentTrainingTime: String,
+    navController: NavController
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
