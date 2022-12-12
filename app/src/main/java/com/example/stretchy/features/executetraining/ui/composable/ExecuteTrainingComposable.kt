@@ -2,18 +2,22 @@ package com.example.stretchy.features.executetraining.ui.composable
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Arrangement.Center
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
@@ -29,74 +33,70 @@ import com.example.stretchy.features.executetraining.ui.data.ActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
 import com.example.stretchy.theme.AzureBlue
 import com.example.stretchy.theme.LapisLazuli
-import kotlin.math.*
+import kotlin.math.ceil
 
 @Composable
 fun ExecuteTrainingComposable(
     viewModel: ExecuteTrainingViewModel,
     navController: NavController
 ) {
-    var initialProgressBarValue = -540f
-    var disableExerciseAnimation = true
-    Surface(modifier = Modifier
-        .fillMaxSize()
-        .clickable(
-            interactionSource = remember { MutableInteractionSource() },
-            indication = null
-        ) {
-            viewModel.toggleStartStopTimer()
-        }) {
+    var disableExerciseAnimation =
+        true //The first exercise cannot be animated because at the beginning of training the timer is stopped
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(Color.White),
+        verticalArrangement = Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         Box(
+            modifier = Modifier.clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
+            ) {
+                viewModel.toggleStartStopTimer()
+            },
             contentAlignment = Alignment.Center
         )
         {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                when (val state = viewModel.uiState.collectAsState().value) {
-                    is ExecuteTrainingUiState.Loading ->
-                        Text(
-                            text = stringResource(id = R.string.loading),
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    is ExecuteTrainingUiState.Success -> {
-                        when (val item = state.activityItem) {
-                            is ActivityItem.Exercise -> {
-                                ExerciseComposable(
-                                    exerciseName = item.name,
-                                    nextExerciseName = item.nextExercise,
-                                    currentExerciseTime = item.currentTime,
-                                    totalExerciseTime = item.totalExerciseTime,
-                                    trainingProgressPercent = item.trainingProgressPercent,
-                                    disableExerciseAnimation = disableExerciseAnimation,
-                                    initialProgressBarValue = initialProgressBarValue,
-                                    onExerciseEnd = { initialProgressBarValue = it }
-                                )
-                                disableExerciseAnimation = false
-                            }
-                            is ActivityItem.Break -> BreakComposable(
+            when (val state = viewModel.uiState.collectAsState().value) {
+                is ExecuteTrainingUiState.Loading ->
+                    Text(
+                        text = stringResource(id = R.string.loading),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                is ExecuteTrainingUiState.Success -> {
+                    when (val item = state.activityItem) {
+                        is ActivityItem.Exercise -> {
+                            ExerciseComposable(
+                                exerciseName = item.name,
                                 nextExerciseName = item.nextExercise,
                                 currentTime = item.currentTime,
                                 totalTime = item.totalExerciseTime,
                                 trainingProgressPercent = item.trainingProgressPercent,
-                                initialProgressBarValue = initialProgressBarValue,
-                                onExerciseEnd = { initialProgressBarValue = it }
+                                disableExerciseAnimation = disableExerciseAnimation
                             )
+                            disableExerciseAnimation = false
                         }
+                        is ActivityItem.Break -> BreakComposable(
+                            nextExerciseName = item.nextExercise,
+                            currentTime = item.currentTime,
+                            totalTime = item.totalExerciseTime,
+                            trainingProgressPercent = item.trainingProgressPercent
+                        )
                     }
-                    ExecuteTrainingUiState.Error -> Text(
-                        text = stringResource(id = R.string.error),
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    is ExecuteTrainingUiState.TrainingCompleted -> TrainingSummaryComposable(
-                        numberOfExercises = state.numberOfExercises,
-                        currentTrainingTime = state.timeSpent,
-                        navController = navController
-                    )
                 }
+                ExecuteTrainingUiState.Error -> Text(
+                    text = stringResource(id = R.string.error),
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                is ExecuteTrainingUiState.TrainingCompleted -> TrainingSummaryComposable(
+                    numberOfExercises = state.numberOfExercises,
+                    currentTrainingTime = state.timeSpent,
+                    navController = navController
+                )
             }
         }
     }
@@ -107,88 +107,99 @@ fun BreakComposable(
     nextExerciseName: String,
     currentTime: Float,
     totalTime: Int,
-    trainingProgressPercent: Int,
-    initialProgressBarValue : Float,
-    onExerciseEnd: (initialProgressBarValue: Float) -> Unit
+    trainingProgressPercent: Int
 ) {
-    var animatedContentVisibility by remember { mutableStateOf(false) } //if set to true fade-in animations appear
-    Text(
-        text = "Prepare to next Exercise:",
-        fontSize = 16.sp,
-        color = Color.LightGray,
-        fontWeight = FontWeight.Bold
-    )
-    if (!animatedContentVisibility) {  //prevents "screen jumping" due to invisible texts
-        TextSpacer(fontSize = 32.sp)
-    }
-    AnimatedVisibility(
-        visible = animatedContentVisibility,
-        enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+    var showAnimation by remember { mutableStateOf(false) } //if set to true fade-in animations appear
+    Column(
+        verticalArrangement = Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+        Text(
+            text = "Prepare to next Exercise:",
+            fontSize = 16.sp,
+            color = Color.LightGray,
+            fontWeight = FontWeight.Bold
+        )
+        if (!showAnimation) {  //prevents "screen jumping" due to invisible texts
+            TextSpacer(fontSize = 32.sp)
+        }
+        AnimatedVisibility(
+            visible = showAnimation,
+            enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+        ) {
+            Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(100.dp))
+        TimerComposable(
+            totalSeconds = totalTime.toFloat() * 1000,
+            modifier = Modifier.size(300.dp),
+            currentSeconds = currentTime
+        )
+        Spacer(modifier = Modifier.height(44.dp))
+        TextSpacer(fontSize = 40.sp)
     }
-    Spacer(modifier = Modifier.height(100.dp))
-    TimerComposable(
-        totalSeconds = totalTime.toFloat() * 1000,
-        modifier = Modifier.size(300.dp),
-        currentSeconds = currentTime
-    )
-    Spacer(modifier = Modifier.height(44.dp))
-    TextSpacer(fontSize = 24.sp)
-    ProgressBarComposable(trainingPercentage = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
-    animatedContentVisibility = true
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        AnimatedTrainingProgressBar(percentage = trainingProgressPercent.toFloat() / 100)
+    }
+    showAnimation = true
 }
 
 @Composable
 fun ExerciseComposable(
     exerciseName: String,
     nextExerciseName: String?,
-    currentExerciseTime: Float,
-    totalExerciseTime: Int,
+    currentTime: Float,
+    totalTime: Int,
     trainingProgressPercent: Int,
     disableExerciseAnimation: Boolean,
-    onExerciseEnd: (initialProgressBarValue: Float) -> Unit,
-    initialProgressBarValue: Float
 ) {
-    var animatedContentVisibility by remember { mutableStateOf(disableExerciseAnimation) } //if set to true fade-in animations appear
-    if (!animatedContentVisibility) {
-        TextSpacer(fontSize = 32.sp)
-    }
-    AnimatedVisibility(
-        visible = animatedContentVisibility,
-        enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+    var showAnimation by remember { mutableStateOf(disableExerciseAnimation) } //if set to true fade-in animations appear
+    Column(
+        verticalArrangement = Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-    }
-    Spacer(modifier = Modifier.height(100.dp))
-    TimerComposable(
-        totalSeconds = totalExerciseTime.toFloat() * 1000,
-        modifier = Modifier.size(300.dp),
-        currentSeconds = currentExerciseTime
-    )
-    Spacer(modifier = Modifier.height(36.dp))
-    if (!nextExerciseName.isNullOrBlank()) {
-        Text(
-            text = stringResource(id = R.string.nxt_exercise),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.LightGray
+        TextSpacer(fontSize = 16.sp)
+        if (!showAnimation) {
+            TextSpacer(fontSize = 32.sp)
+        }
+        AnimatedVisibility(
+            visible = showAnimation,
+            enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+        ) {
+            Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+        }
+        Spacer(modifier = Modifier.height(100.dp))
+        TimerComposable(
+            totalSeconds = totalTime.toFloat() * 1000,
+            modifier = Modifier.size(300.dp),
+            currentSeconds = currentTime
         )
-    } else {
-     TextSpacer(fontSize = 16.sp)
+        Spacer(modifier = Modifier.height(36.dp))
+        if (!nextExerciseName.isNullOrBlank()) {
+            Text(
+                text = stringResource(id = R.string.nxt_exercise),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.LightGray
+            )
+        } else {
+            TextSpacer(fontSize = 16.sp)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        if (!showAnimation) {
+            TextSpacer(fontSize = 24.sp)
+        }
+        AnimatedVisibility(
+            visible = showAnimation,
+            enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+        ) {
+            Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        }
     }
-    Spacer(modifier = Modifier.height(8.dp))
-    if (!animatedContentVisibility) {
-        Text(text = "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        TrainingProgressBar(percentage = trainingProgressPercent.toFloat() / 100)
     }
-    AnimatedVisibility(
-        visible = animatedContentVisibility,
-        enter = fadeIn(initialAlpha = 0f, animationSpec = tween(500))
-    ) {
-        Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-    }
-    ProgressBarComposable(trainingPercentage = trainingProgressPercent, initialValue = initialProgressBarValue, onExerciseEnd = onExerciseEnd)
-    animatedContentVisibility = true
+    showAnimation = true
 }
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -250,44 +261,38 @@ fun TimerComposable(
 }
 
 @Composable
-fun ProgressBarComposable(
-    trainingPercentage: Int,
-    modifier: Modifier = Modifier,
-    strokeWidth: Dp = 8.dp,
-    initialValue: Float,
-    onExerciseEnd: (initialProgressBarValue: Float) -> Unit
-) {
-    val heightPos = 260f
-    val startPos = -540f
-    val progressBarStart = Offset(startPos, heightPos)
-    // Animation properties
-    val targetProgressBarValue = ((2 * -startPos * (trainingPercentage.toFloat() / 100)) + startPos)
+fun AnimatedTrainingProgressBar(percentage: Float) {
+    val initialValue by remember { mutableStateOf(1f * percentage) }
     val animateLine = remember { androidx.compose.animation.core.Animatable(initialValue) }
     LaunchedEffect(animateLine) {
         animateLine.animateTo(
-            targetValue = targetProgressBarValue,
+            targetValue = 1f,
             animationSpec = tween(
                 durationMillis = 1000,
                 easing = LinearEasing
             ),
         )
-        onExerciseEnd(targetProgressBarValue)
     }
+    TrainingProgressBar(percentage = percentage, fillingAmount = animateLine.value)
+}
 
-    Canvas(modifier = modifier) {
+@Composable
+fun TrainingProgressBar(
+    fillingAmount: Float = 1f, // Used for animations
+    percentage: Float
+) {
+    val thickness = 16.dp
+    Canvas(Modifier.fillMaxWidth()) {
         drawLine(
             color = Color(LapisLazuli.toArgb()),
-            start = progressBarStart,
-            end = Offset(
-                animateLine.value,
-                heightPos
-            ),
-            strokeWidth = strokeWidth.toPx()
+            start = Offset.Zero,
+            end = Offset(fillingAmount * (size.width * percentage), 0f),
+            strokeWidth = thickness.toPx()
         )
     }
 }
 
 @Composable
-fun TextSpacer(fontSize: TextUnit){
-    Text("",fontSize = fontSize)
+fun TextSpacer(fontSize: TextUnit) {
+    Text("", fontSize = fontSize)
 }

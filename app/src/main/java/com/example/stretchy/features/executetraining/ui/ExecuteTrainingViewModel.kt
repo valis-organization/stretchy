@@ -38,7 +38,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 exercisesWithBreaks.forEachIndexed { index, exercise ->
                     timer.setSeconds(exercise.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                        if (!isStartingTimeStampSaved()) {
+                        if (!startingTimeStampSaved) {
                             saveStartingTimeStamp()
                         }
                         when (exercise.activityType) {
@@ -109,10 +109,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             }
         }
         return exercisesWithBreaks
-    }
-
-    private fun isStartingTimeStampSaved(): Boolean {
-        return isPaused && startingTimeStampSaved
     }
 
     private fun saveStartingTimeStamp() {
