@@ -26,8 +26,8 @@ fun Navigation(
     onImportClick: () -> Unit
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screen.ExercisePlansScreen.route) {
-        composable(route = Screen.ExercisePlansScreen.route) {
+    NavHost(navController = navController, startDestination = Screen.TrainingListScreen.route) {
+        composable(route = Screen.TrainingListScreen.route) {
             val vm = createTrainingListViewModel(
                 activityComponent,
                 LocalViewModelStoreOwner.current!!
@@ -59,7 +59,7 @@ fun Navigation(
                 LocalViewModelStoreOwner.current!!,
                 trainingId
             )
-            ExecuteTrainingComposable(vm)
+            ExecuteTrainingComposable(navController = navController, viewModel = vm)
         }
     }
 }

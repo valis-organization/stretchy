@@ -72,7 +72,7 @@ fun CreateTrainingComposable(
                     .padding(16.dp),
                 onClick = {
                     viewModel.createTraining()
-                    navController.navigate(Screen.ExercisePlansScreen.route)
+                    navController.navigate(Screen.TrainingListScreen.route)
                 }
             ) {
                 Text(stringResource(id = R.string.create_training))

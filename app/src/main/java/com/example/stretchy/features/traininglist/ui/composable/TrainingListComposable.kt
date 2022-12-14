@@ -32,6 +32,7 @@ import androidx.navigation.NavController
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.R
 import com.example.stretchy.Screen
+import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.theme.White80
@@ -169,23 +170,23 @@ fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportCl
 }
 
 @Composable
-private fun TrainingListComposable(trainingList: List<Training>, navController: NavController) {
+private fun TrainingListComposable(trainingList: List<Training>,navController: NavController) {
     LazyColumn {
         items(trainingList) { exercise ->
-            TrainingComposable(item = exercise, navController)
+            Box(modifier = Modifier.clickable {
+                navController.navigate("executeTraining?id=${exercise.id}")
+            }) {
+                TrainingComposable(item = exercise)
+            }
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-private fun TrainingComposable(item: Training, navController: NavController) {
-    Spacer(modifier = Modifier.height(24.dp))
+private fun TrainingComposable(item: Training) {
     Column(
         modifier = Modifier
-            .clickable {
-                navController.navigate("executeTraining?id=${item.id}")
-
-            }
             .background(color = Color.White)
             .fillMaxWidth()
             .height(152.dp)
@@ -222,7 +223,7 @@ private fun TrainingComposable(item: Training, navController: NavController) {
                 )
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = convertSecondsToMinutes(item.timeInSeconds),
+                    text = convertSecondsToMinutes(item.timeInSeconds.toLong()),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -231,10 +232,6 @@ private fun TrainingComposable(item: Training, navController: NavController) {
     }
 }
 
-private fun convertSecondsToMinutes(seconds: Int): String {
-    val minutes = seconds / 60
-    return "$minutes m ${seconds % 60}s"
-}
 
 private fun isPermissionsGranted(context: Context, permission: String): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
