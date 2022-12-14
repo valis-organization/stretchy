@@ -66,7 +66,6 @@ fun CreateTrainingComposable(
         Spacer(modifier = Modifier.height(200.dp))
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
             Button(
-                //   enabled = viewModel.uiState.collectAsState().value.createTrainingButtonVisible,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
@@ -110,10 +109,11 @@ private fun ExerciseItem(item: Exercise) {
 
 @Composable
 fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
+    val minExerciseDuration = 10
     var visible by remember { mutableStateOf(false) }
     val sliderMaxValue = 300
-    var sliderValue: Int by remember { mutableStateOf(10) }
-    var exerciseDuration: Int by remember { mutableStateOf(10) }
+    var sliderValue: Int by remember { mutableStateOf(minExerciseDuration) }
+    var exerciseDuration: Int by remember { mutableStateOf(minExerciseDuration) }
     var exerciseName = ""
     val context = LocalContext.current
     AnimatedVisibility(visible = !visible) {
@@ -183,6 +183,8 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                             )
                         )
                         Toast.makeText(context, "Exercise added", Toast.LENGTH_LONG).show()
+                        sliderValue = minExerciseDuration
+                        exerciseDuration = minExerciseDuration
                     } else {
                         Toast.makeText(
                             context,

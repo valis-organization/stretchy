@@ -5,7 +5,6 @@ sealed class ExecuteTrainingUiState {
     object Error : ExecuteTrainingUiState()
     class TrainingCompleted(val currentTrainingTime: String, val numberOfExercises: Int) :
         ExecuteTrainingUiState()
-
     class Success(val activityItem: ActivityItem) : ExecuteTrainingUiState()
 }
 

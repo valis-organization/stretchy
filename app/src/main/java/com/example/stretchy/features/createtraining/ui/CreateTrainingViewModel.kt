@@ -18,14 +18,15 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
 
     private var name: String? = null
     private var type: Training.Type = Training.Type.STRETCHING
-    private val currentList = mutableListOf<Activity>()
+    private val trainingExercisesList = mutableListOf<Activity>()
 
     fun addActivity(activityItem: Activity) {
-        currentList.add(activityItem)
+        trainingExercisesList.add(activityItem)
+        val currentList = mutableListOf<Activity>()
+        currentList.addAll(trainingExercisesList)
         viewModelScope.launch {
             _uiState.emit(
                 CreateTrainingUiState.Success(
-                    isCreateTrainingButtonVisible(),
                     currentList
                 )
             )
@@ -58,9 +59,6 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
         }
     }
 
-    private fun isCreateTrainingButtonVisible() =
-        !name.isNullOrBlank() && currentActivitySizeList() >= 1
-
     private fun currentActivitySizeList(): Int =
         (_uiState.value as? CreateTrainingUiState.Success)?.training?.size ?: 0
 
@@ -68,8 +66,15 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             val success = (_uiState.value as? CreateTrainingUiState.Success)
             if (success != null) {
-                repository.addTrainingWithActivities(TrainingWithActivity(name!!,TrainingType.STRETCH,true,currentList))
-                currentList.clear()
+                repository.addTrainingWithActivities(
+                    TrainingWithActivity(
+                        name!!,
+                        TrainingType.STRETCH,
+                        true,
+                        trainingExercisesList
+                    )
+                )
+                trainingExercisesList.clear()
                 _uiState.emit(CreateTrainingUiState.Done)
             } else {
                 //todo toast
