@@ -1,5 +1,6 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
+import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -8,13 +9,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.Arrangement.Center
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -27,18 +28,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
+import com.example.stretchy.features.executetraining.Speaker
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
-import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
 import com.example.stretchy.theme.AzureBlue
 import com.example.stretchy.theme.LapisLazuli
+import kotlinx.coroutines.launch
 import kotlin.math.ceil
+
 
 @Composable
 fun ExecuteTrainingComposable(
     viewModel: ExecuteTrainingViewModel,
+    speaker: Speaker,
     navController: NavController
-) {
+    ) {
+    val coroutineScope = rememberCoroutineScope()
     var disableExerciseAnimation =
         true //The first exercise cannot be animated because at the beginning of training the timer is stopped
     Column(
@@ -56,44 +61,58 @@ fun ExecuteTrainingComposable(
                 viewModel.toggleStartStopTimer()
             },
             contentAlignment = Alignment.Center
-        )
-        {
-            when (val state = viewModel.uiState.collectAsState().value) {
-                is ExecuteTrainingUiState.Loading ->
-                    Text(
-                        text = stringResource(id = R.string.loading),
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                is ExecuteTrainingUiState.Success -> {
-                    when (val item = state.activityItem) {
-                        is ActivityItem.Exercise -> {
-                            ExerciseComposable(
-                                exerciseName = item.name,
-                                nextExerciseName = item.nextExercise,
-                                currentTime = item.currentTime,
-                                totalTime = item.totalExerciseTime,
-                                trainingProgressPercent = item.trainingProgressPercent,
-                                disableExerciseAnimation = disableExerciseAnimation
-                            )
-                            disableExerciseAnimation = false
-                        }
-                        is ActivityItem.Break -> BreakComposable(
+        ) {
+            val state = viewModel.uiState.collectAsState().value
+            state.readExerciseNameEvent?.consume()?.let {
+                coroutineScope.launch {
+                    Log.e("test", it)
+                    speaker.say(it)
+                }
+            }
+            if (state.isLoading) {
+                Text(
+                    text = stringResource(id = R.string.loading),
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }else if (state.success != null) {
+                when (val item = state.success) {
+                    is ActivityItem.Exercise -> {
+                        ExerciseComposable(
+                            exerciseName = item.name,
                             nextExerciseName = item.nextExercise,
                             currentTime = item.currentTime,
                             totalTime = item.totalExerciseTime,
-                            trainingProgressPercent = item.trainingProgressPercent
+                            trainingProgressPercent = item.trainingProgressPercent,
+                            disableExerciseAnimation = disableExerciseAnimation
                         )
+                        disableExerciseAnimation = false
+                    }
+                    is ActivityItem.Break -> BreakComposable(
+                        nextExerciseName = item.nextExercise,
+                        currentTime = item.currentTime,
+                        totalTime = item.totalExerciseTime,
+                        trainingProgressPercent = item.trainingProgressPercent
+                    )
+                    else -> {
+
                     }
                 }
-                ExecuteTrainingUiState.Error -> Text(
+            } else if (state.error != null) {
+                Text(
                     text = stringResource(id = R.string.error),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
-                is ExecuteTrainingUiState.TrainingCompleted -> TrainingSummaryComposable(
-                    numberOfExercises = state.numberOfExercises,
-                    currentTrainingTime = state.currentTrainingTime,
+            } else if(state.trainingCompleted != null){
+                state.trainingCompletedEvent?.consume()?.let {
+                    coroutineScope.launch {
+                        speaker.say("Training Finished!")
+                    }
+                }
+                TrainingSummaryComposable(
+                    numberOfExercises = state.trainingCompleted.numberOfExercises,
+                    currentTrainingTime = state.trainingCompleted.currentTrainingTime,
                     navController = navController
                 )
             }
@@ -130,6 +149,7 @@ fun BreakComposable(
         }
         Spacer(modifier = Modifier.height(100.dp))
         TimerComposable(
+            isBreak = true,
             totalSeconds = totalTime.toFloat() * 1000,
             modifier = Modifier.size(300.dp),
             currentSeconds = currentTime
@@ -204,6 +224,7 @@ fun ExerciseComposable(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TimerComposable(
+    isBreak: Boolean = false,
     totalSeconds: Float,
     currentSeconds: Float,
     modifier: Modifier = Modifier,
@@ -231,7 +252,11 @@ fun TimerComposable(
     {
         Canvas(modifier = modifier) {
             drawArc(
-                color = Color(AzureBlue.toArgb()),
+                color = if (isBreak) {
+                    Color.White
+                } else {
+                    AzureBlue
+                },
                 startAngle = -215f,
                 sweepAngle = sweepAngle * percentageOfTimer,
                 useCenter = false,

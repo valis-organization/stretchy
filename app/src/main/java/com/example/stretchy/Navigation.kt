@@ -1,5 +1,6 @@
 package com.example.stretchy
 
+import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
@@ -54,25 +55,24 @@ fun Navigation(
             arguments = listOf(navArgument("id") { defaultValue = "-1" })
         ) {
             val trainingId = it.arguments?.getString("id")!!.toLong()
+            val component = ExecuteTrainingComponent.create(activityComponent, trainingId)
             val vm = createExecuteTrainingViewModel(
-                activityComponent,
+                component,
+                activityComponent.activity(),
                 LocalViewModelStoreOwner.current!!,
-                trainingId
             )
-            ExecuteTrainingComposable(navController = navController, viewModel = vm)
+            ExecuteTrainingComposable(vm, activityComponent.speaker(), navController)
         }
     }
 }
 
 private fun createExecuteTrainingViewModel(
-    activityComponent: ActivityComponent,
+    executeTrainingComponent: ExecuteTrainingComponent,
+    componentActivity: ComponentActivity,
     viewModelStoreOwner: ViewModelStoreOwner,
-    trainingId: Long
 ): ExecuteTrainingViewModel {
-    val component = ExecuteTrainingComponent.create(activityComponent, trainingId)
-    val provider = component.viewModelProvider()
-    val vm by activityComponent.activity()
-        .daggerViewModel(owner = viewModelStoreOwner) { provider }
+    val provider = executeTrainingComponent.viewModelProvider()
+    val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
     return vm
 }
 

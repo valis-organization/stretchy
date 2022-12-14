@@ -3,18 +3,21 @@ package com.example.stretchy.features.executetraining
 import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.util.Log
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
 
 class Speaker(
     context: Context,
     locale: Locale = Locale.ENGLISH,
     pitch: Float = 1f,
     speechSpeed: Float = 0.9f,
-    onInitialized: () -> Unit
 ) {
     lateinit var textToSpeech: TextToSpeech
-    private var initliazed: AtomicBoolean = AtomicBoolean(false)
+    private var isInitializedFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     init {
         textToSpeech = TextToSpeech(context) { status ->
@@ -23,28 +26,29 @@ class Speaker(
                 if (languageResult == TextToSpeech.LANG_MISSING_DATA || languageResult == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.e(TAG, "Language not supported")
                 } else {
-                    initliazed.set(true)
                     textToSpeech.voice
                     textToSpeech.setPitch(pitch)
-                    textToSpeech.setSpeechRate(speechSpeed);
-                    onInitialized()
+                    textToSpeech.setSpeechRate(speechSpeed)
+                    GlobalScope.launch {
+                        isInitializedFlow.emit(true)
+                    }
                 }
             }
         }
     }
 
     @Throws(SpeakerUninitializedException::class)
-    fun say(text: String) {
-        if (initliazed.get()) {
-            textToSpeech.speak(
-                text,
-                TextToSpeech.QUEUE_FLUSH,
-                null,
-                null
-            )
-        } else {
-            throw SpeakerUninitializedException()
-        }
+    suspend fun say(text: String) {
+        isInitializedFlow
+            .filter { it }
+            .first()
+
+        textToSpeech.speak(
+            text,
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            null
+        )
     }
 
     class SpeakerUninitializedException() : Exception()

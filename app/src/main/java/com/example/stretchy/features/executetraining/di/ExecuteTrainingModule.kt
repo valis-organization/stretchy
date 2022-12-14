@@ -8,6 +8,6 @@ import dagger.Provides
 @Module
 class ExecuteTrainingModule {
     @Provides
-    fun provideExecuteTrainingViewModel(repository: Repository, trainingId : Long) =
+    fun provideExecuteTrainingViewModel(repository: Repository, trainingId: Long) =
         ExecuteTrainingViewModel(repository, trainingId)
 }
