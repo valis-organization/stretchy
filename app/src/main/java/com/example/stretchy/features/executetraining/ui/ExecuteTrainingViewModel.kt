@@ -19,11 +19,11 @@ import java.util.*
 class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
     private var timer: Timer = Timer()
     private val _uiState = MutableStateFlow<ExecuteTrainingUiState>(ExecuteTrainingUiState.Loading)
-    private var startingTimeStampSaved = false
+    private var startingTimestampSaved = false
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
 
     private var isPaused = true
-    private var startingTimeStamp = 0L
+    private var startingTimestamp = 0L
 
     init {
         _uiState.value = ExecuteTrainingUiState.Loading
@@ -38,7 +38,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 exercisesWithBreaks.forEachIndexed { index, exercise ->
                     timer.setSeconds(exercise.duration)
                     timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                        if (!startingTimeStampSaved) {
+                        if (!startingTimestampSaved) {
                             saveStartingTimeStamp()
                         }
                         when (exercise.activityType) {
@@ -74,7 +74,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                     }
                     if (trainingWithActivities.activities.getOrNull(index + 1) == null) {
                         val currentTime = Calendar.getInstance()
-                        val seconds = (currentTime.timeInMillis - startingTimeStamp) / 1000
+                        val seconds = (currentTime.timeInMillis - startingTimestamp) / 1000
                         _uiState.value =
                             ExecuteTrainingUiState.TrainingCompleted(
                                 currentTrainingTime = convertSecondsToMinutes(
@@ -114,8 +114,8 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private fun saveStartingTimeStamp() {
         val startDate = Calendar.getInstance()
         Log.i("Start date", "Started on ${startDate.time}")
-        startingTimeStamp = startDate.timeInMillis
-        startingTimeStampSaved = true
+        startingTimestamp = startDate.timeInMillis
+        startingTimestampSaved = true
     }
 
     companion object {
