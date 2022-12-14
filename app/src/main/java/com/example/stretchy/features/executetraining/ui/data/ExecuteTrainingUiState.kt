@@ -1,12 +1,16 @@
 package com.example.stretchy.features.executetraining.ui.data
 
-sealed class ExecuteTrainingUiState {
-    object Loading : ExecuteTrainingUiState()
-    object Error : ExecuteTrainingUiState()
-    class TrainingCompleted(val currentTrainingTime: String, val numberOfExercises: Int) :
-        ExecuteTrainingUiState()
-    class Success(val activityItem: ActivityItem) : ExecuteTrainingUiState()
-}
+
+data class ExecuteTrainingUiState(
+    var isLoading: Boolean,
+    var error: Throwable?,
+    var success: ActivityItem?,
+    val readExerciseNameEvent: ReadExerciseNameEvent?,
+    val trainingCompleted: TrainingCompleted?,
+    val trainingCompletedEvent: TrainingCompletedEvent?
+)
+
+class TrainingCompleted(val currentTrainingTime: String, val numberOfExercises: Int)
 
 sealed class ActivityItem(
     open val nextExercise: String?,
