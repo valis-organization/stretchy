@@ -23,9 +23,7 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
     fun addActivity(activityItem: Activity) {
         trainingExercisesList.add(activityItem)
         val currentList = mutableListOf<Activity>()
-        trainingExercisesList.forEach{ activity ->
-        currentList.add(activity)
-        }
+        currentList.addAll(trainingExercisesList)
         viewModelScope.launch {
             _uiState.emit(
                 CreateTrainingUiState.Success(
@@ -60,6 +58,7 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
             }
         }
     }
+
     private fun currentActivitySizeList(): Int =
         (_uiState.value as? CreateTrainingUiState.Success)?.training?.size ?: 0
 
@@ -67,7 +66,14 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             val success = (_uiState.value as? CreateTrainingUiState.Success)
             if (success != null) {
-                repository.addTrainingWithActivities(TrainingWithActivity(name!!,TrainingType.STRETCH,true,trainingExercisesList))
+                repository.addTrainingWithActivities(
+                    TrainingWithActivity(
+                        name!!,
+                        TrainingType.STRETCH,
+                        true,
+                        trainingExercisesList
+                    )
+                )
                 trainingExercisesList.clear()
                 _uiState.emit(CreateTrainingUiState.Done)
             } else {
