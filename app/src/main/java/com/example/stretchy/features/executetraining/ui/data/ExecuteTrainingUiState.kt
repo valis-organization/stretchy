@@ -1,13 +1,21 @@
 package com.example.stretchy.features.executetraining.ui.data
 
+import com.example.stretchy.features.executetraining.ui.data.event.ActivityFinishesEvent
+import com.example.stretchy.features.executetraining.ui.data.event.BreakEndsEvent
+import com.example.stretchy.features.executetraining.ui.data.event.ReadExerciseNameEvent
+import com.example.stretchy.features.executetraining.ui.data.event.TrainingCompletedEvent
+
 
 data class ExecuteTrainingUiState(
     var isLoading: Boolean,
     var error: Throwable?,
     var success: ActivityItem?,
-    val readExerciseNameEvent: ReadExerciseNameEvent?,
     val trainingCompleted: TrainingCompleted?,
-    val trainingCompletedEvent: TrainingCompletedEvent?
+    //events
+    val readExerciseNameEvent: ReadExerciseNameEvent?,
+    val trainingCompletedEvent: TrainingCompletedEvent?,
+    val activityFinishesEvent: ActivityFinishesEvent?,
+    val breakEndsEvent: BreakEndsEvent?
 )
 
 class TrainingCompleted(val currentTrainingTime: String, val numberOfExercises: Int)

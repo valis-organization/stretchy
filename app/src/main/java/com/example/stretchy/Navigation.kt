@@ -61,7 +61,12 @@ fun Navigation(
                 activityComponent.activity(),
                 LocalViewModelStoreOwner.current!!,
             )
-            ExecuteTrainingComposable(vm, activityComponent.speaker(), navController)
+            ExecuteTrainingComposable(
+                vm,
+                activityComponent.speaker(),
+                component.player(),
+                navController
+            )
         }
     }
 }
