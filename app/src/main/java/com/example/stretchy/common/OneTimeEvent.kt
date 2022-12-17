@@ -1,4 +1,4 @@
-package com.example.stretchy.features.executetraining.ui.data
+package com.example.stretchy.common
 
 open class OneTimeEvent<T> {
     open var value: T? = null

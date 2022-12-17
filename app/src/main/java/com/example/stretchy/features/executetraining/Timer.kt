@@ -36,7 +36,7 @@ class Timer {
         paused = true
     }
 
-    fun setSeconds(seconds: Int) {
+    fun setDuration(seconds: Int) {
         flow.value = seconds.toFloat() * 1000
         currentMs = seconds * 1000
     }

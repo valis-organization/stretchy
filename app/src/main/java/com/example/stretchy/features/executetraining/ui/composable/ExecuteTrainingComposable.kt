@@ -1,6 +1,5 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
-import android.util.Log
 import androidx.compose.animation.*
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -28,21 +27,27 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
-import com.example.stretchy.features.executetraining.Speaker
+import com.example.stretchy.features.executetraining.sound.Player
+import com.example.stretchy.features.executetraining.sound.SoundTrack
+import com.example.stretchy.features.executetraining.sound.Speaker
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.data.ActivityItem
+import com.example.stretchy.features.executetraining.ui.data.event.ActivityFinishesEvent
+import com.example.stretchy.features.executetraining.ui.data.event.BreakEndsEvent
+import com.example.stretchy.features.executetraining.ui.data.event.ReadExerciseNameEvent
 import com.example.stretchy.theme.AzureBlue
 import com.example.stretchy.theme.LapisLazuli
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlin.math.ceil
-
 
 @Composable
 fun ExecuteTrainingComposable(
     viewModel: ExecuteTrainingViewModel,
     speaker: Speaker,
+    player: Player,
     navController: NavController
-    ) {
+) {
     val coroutineScope = rememberCoroutineScope()
     var disableExerciseAnimation =
         true //The first exercise cannot be animated because at the beginning of training the timer is stopped
@@ -63,19 +68,17 @@ fun ExecuteTrainingComposable(
             contentAlignment = Alignment.Center
         ) {
             val state = viewModel.uiState.collectAsState().value
-            state.readExerciseNameEvent?.consume()?.let {
-                coroutineScope.launch {
-                    Log.e("test", it)
-                    speaker.say(it)
-                }
-            }
+            consumeReadExerciseEvent(state.readExerciseNameEvent, coroutineScope, speaker)
+            consumeActivityFinishedState(state.activityFinishesEvent, coroutineScope, player)
+            consumeBreakEndsState(state.breakEndsEvent, coroutineScope, player)
+
             if (state.isLoading) {
                 Text(
                     text = stringResource(id = R.string.loading),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
-            }else if (state.success != null) {
+            } else if (state.success != null) {
                 when (val item = state.success) {
                     is ActivityItem.Exercise -> {
                         ExerciseComposable(
@@ -104,7 +107,7 @@ fun ExecuteTrainingComposable(
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold
                 )
-            } else if(state.trainingCompleted != null){
+            } else if (state.trainingCompleted != null) {
                 state.trainingCompletedEvent?.consume()?.let {
                     coroutineScope.launch {
                         speaker.say("Training Finished!")
@@ -116,6 +119,42 @@ fun ExecuteTrainingComposable(
                     navController = navController
                 )
             }
+        }
+    }
+}
+
+private fun consumeReadExerciseEvent(
+    readExerciseNameEvent: ReadExerciseNameEvent?,
+    coroutineScope: CoroutineScope,
+    speaker: Speaker
+) {
+    readExerciseNameEvent?.consume()?.let {
+        coroutineScope.launch {
+            speaker.say(it)
+        }
+    }
+}
+
+private fun consumeActivityFinishedState(
+    activityFinishesEvent: ActivityFinishesEvent?,
+    coroutineScope: CoroutineScope,
+    player: Player
+) {
+    activityFinishesEvent?.consume()?.let {
+        coroutineScope.launch {
+            player.playSound(SoundTrack.EXERCISE_ENDING)
+        }
+    }
+}
+
+private fun consumeBreakEndsState(
+    breakEndsEvent: BreakEndsEvent?,
+    coroutineScope: CoroutineScope,
+    player: Player
+) {
+    breakEndsEvent?.consume()?.let {
+        coroutineScope.launch {
+            player.playSound(SoundTrack.BREAK_ENDED)
         }
     }
 }
