@@ -1,5 +1,7 @@
 package com.example.stretchy.features.createtraining.ui.composable
 
+import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -42,6 +44,7 @@ fun CreateTrainingComposable(
     navController: NavController,
     viewModel: CreateTrainingViewModel
 ) {
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -57,6 +60,9 @@ fun CreateTrainingComposable(
                 is CreateTrainingUiState.Success -> {
                     ExerciseList(exercises = state.training)
                 }
+                is CreateTrainingUiState.Error -> {
+                    HandleError(state = state, context = context)
+                }
                 else -> {
                     ExerciseList(emptyList())
                 }
@@ -71,7 +77,9 @@ fun CreateTrainingComposable(
                     .padding(16.dp),
                 onClick = {
                     viewModel.createTraining()
-                    navController.navigate(Screen.TrainingListScreen.route)
+                    if (viewModel.uiState.value is CreateTrainingUiState.Done) {
+                        navController.navigate(Screen.TrainingListScreen.route)
+                    }
                 }
             ) {
                 Text(stringResource(id = R.string.create_training))
@@ -182,13 +190,13 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                                 ActivityType.STRETCH
                             )
                         )
-                        Toast.makeText(context, "Exercise added", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, R.string.exercise_added, Toast.LENGTH_LONG).show()
                         sliderValue = minExerciseDuration
                         exerciseDuration = minExerciseDuration
                     } else {
                         Toast.makeText(
                             context,
-                            "You need to specify exercise name!",
+                            R.string.specify_exercise_name,
                             Toast.LENGTH_LONG
                         ).show()
                     }
@@ -313,5 +321,36 @@ private fun toDisplayableLength(exerciseDuration: Int): String {
         "$mins min $rest sec"
     } else {
         "$exerciseDuration sec"
+    }
+}
+
+@Composable
+private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
+    Log.e("Error", state.reason.toString())
+    when (state.reason) {
+        CreateTrainingUiState.Error.Reason.MissingTrainingName -> {
+            Toast.makeText(
+                context,
+                R.string.specify_training_name,
+                Toast.LENGTH_LONG
+            ).show()
+            ExerciseList(exercises = state.exercises)
+        }
+        CreateTrainingUiState.Error.Reason.NotEnoughExercises -> {
+            Toast.makeText(
+                context,
+                R.string.add_min_2_exercises,
+                Toast.LENGTH_LONG
+            ).show()
+            ExerciseList(exercises = state.exercises)
+        }
+        is CreateTrainingUiState.Error.Reason.Unknown -> {
+            Toast.makeText(
+                context,
+                R.string.something_went_wrong,
+                Toast.LENGTH_LONG
+            ).show()
+            ExerciseList(exercises = state.exercises)
+        }
     }
 }

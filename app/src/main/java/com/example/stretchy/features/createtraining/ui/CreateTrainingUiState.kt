@@ -7,7 +7,7 @@ sealed class CreateTrainingUiState {
         val training: List<Activity>
     ) : CreateTrainingUiState()
 
-    data class Error(val reason: Reason) : CreateTrainingUiState() {
+    data class Error(val reason: Reason,val exercises : List<Activity>) : CreateTrainingUiState() {
         sealed class Reason {
             object MissingTrainingName : Reason()
             object NotEnoughExercises : Reason()
@@ -18,17 +18,4 @@ sealed class CreateTrainingUiState {
     object Init : CreateTrainingUiState()
 
     object Done : CreateTrainingUiState()
-}
-
-sealed class CreateTrainingActivityItem(
-    open val duration: Float,
-) {
-    data class Exercise(
-        val name: String,
-        override val duration: Float,
-    ) : CreateTrainingActivityItem(duration)
-
-    data class Break(
-        override val duration: Float,
-    ) : CreateTrainingActivityItem(duration)
 }

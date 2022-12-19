@@ -17,9 +17,7 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
     val uiState: StateFlow<CreateTrainingUiState> = _uiState
 
     private var name: String? = null
-    private var type: Training.Type = Training.Type.STRETCHING
     private val trainingExercisesList = mutableListOf<Activity>()
-
     fun addActivity(activityItem: Activity) {
         trainingExercisesList.add(activityItem)
         val currentList = mutableListOf<Activity>()
@@ -40,9 +38,9 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
     fun createTraining() {
         viewModelScope.launch {
             if (name == null) {
-                _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName))
+                _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName,trainingExercisesList))
             } else if (currentActivitySizeList() < 2) {
-                _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.NotEnoughExercises))
+                _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.NotEnoughExercises,trainingExercisesList))
             } else {
                 try {
                     saveTraining()
@@ -51,7 +49,7 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
                         CreateTrainingUiState.Error(
                             CreateTrainingUiState.Error.Reason.Unknown(
                                 ex
-                            )
+                            ),trainingExercisesList
                         )
                     )
                 }
@@ -74,10 +72,8 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
                         trainingExercisesList
                     )
                 )
-                trainingExercisesList.clear()
                 _uiState.emit(CreateTrainingUiState.Done)
-            } else {
-                //todo toast
+                trainingExercisesList.clear()
             }
         }
     }
