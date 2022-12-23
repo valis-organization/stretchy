@@ -13,9 +13,13 @@
     <string name="error">Something went wrong. Try restarting your app</string>
     <string name="exercise_break">Break</string>
     <string name="specify_exercise_name">You need to specify exercise name!</string>
+    <string name="specify_training_name">You need to specify training name!</string>
+    <string name="something_went_wrong">Something went wrong…</string>
+    <string name="add_min_2_exercises">Add at least 2 exercises!</string>
     <string name="training_name">Training name</string>
     <string name="name">Name:</string>
     <string name="create_training">Create training!</string>
     <string name="import_trainings">Import</string>
     <string name="export_trainings">Export</string>
+    <string name="exercise_added">Exercise added!</string>
 </resources>

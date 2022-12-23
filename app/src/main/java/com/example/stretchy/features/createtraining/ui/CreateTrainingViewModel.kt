@@ -17,7 +17,6 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
     val uiState: StateFlow<CreateTrainingUiState> = _uiState
 
     private var name: String? = null
-    private var type: Training.Type = Training.Type.STRETCHING
     private val trainingExercisesList = mutableListOf<Activity>()
 
     fun addActivity(activityItem: Activity) {
@@ -27,21 +26,33 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             _uiState.emit(
                 CreateTrainingUiState.Success(
-                    currentList
+                    currentList,
+                    isCreateTrainingButtonVisible()
                 )
             )
         }
     }
 
+    private fun isCreateTrainingButtonVisible() =
+        !name.isNullOrBlank() && trainingExercisesList.size >= 2
+
     fun setTrainingName(trainingName: String) {
         this.name = trainingName
+        viewModelScope.launch {
+            _uiState.emit(
+                CreateTrainingUiState.TitleChanged(
+                    trainingExercisesList,
+                    isCreateTrainingButtonVisible()
+                )
+            )
+        }
     }
 
     fun createTraining() {
         viewModelScope.launch {
             if (name == null) {
                 _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName))
-            } else if (currentActivitySizeList() < 2) {
+            } else if (trainingExercisesList.size < 2) {
                 _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.NotEnoughExercises))
             } else {
                 try {
@@ -59,9 +70,6 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
         }
     }
 
-    private fun currentActivitySizeList(): Int =
-        (_uiState.value as? CreateTrainingUiState.Success)?.training?.size ?: 0
-
     private fun saveTraining() {
         viewModelScope.launch {
             val success = (_uiState.value as? CreateTrainingUiState.Success)
@@ -74,10 +82,8 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
                         trainingExercisesList
                     )
                 )
-                trainingExercisesList.clear()
                 _uiState.emit(CreateTrainingUiState.Done)
-            } else {
-                //todo toast
+                trainingExercisesList.clear()
             }
         }
     }
