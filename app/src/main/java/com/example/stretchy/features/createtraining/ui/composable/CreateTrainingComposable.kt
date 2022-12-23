@@ -56,12 +56,16 @@ fun CreateTrainingComposable(
         ) {
             TrainingName(viewModel)
             Spacer(modifier = Modifier.height(24.dp))
+
             when (val state = viewModel.uiState.collectAsState().value) {
                 is CreateTrainingUiState.Success -> {
                     ExerciseList(exercises = state.training)
                 }
                 is CreateTrainingUiState.Error -> {
                     HandleError(state = state, context = context)
+                }
+                is CreateTrainingUiState.TitleChanged -> {
+                    ExerciseList(exercises = state.training)
                 }
                 else -> {
                     ExerciseList(emptyList())
@@ -71,18 +75,20 @@ fun CreateTrainingComposable(
         }
         Spacer(modifier = Modifier.height(200.dp))
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                onClick = {
-                    viewModel.createTraining()
-                    if (viewModel.uiState.value is CreateTrainingUiState.Done) {
-                        navController.navigate(Screen.TrainingListScreen.route)
+            if(viewModel.uiState.collectAsState().value.createTrainingButtonVisible){
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    onClick = {
+                        viewModel.createTraining()
+                        if (viewModel.uiState.value is CreateTrainingUiState.Done) {
+                            navController.navigate(Screen.TrainingListScreen.route)
+                        }
                     }
+                ) {
+                    Text(stringResource(id = R.string.create_training))
                 }
-            ) {
-                Text(stringResource(id = R.string.create_training))
             }
         }
     }
@@ -334,7 +340,6 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
                 R.string.specify_training_name,
                 Toast.LENGTH_LONG
             ).show()
-            ExerciseList(exercises = state.exercises)
         }
         CreateTrainingUiState.Error.Reason.NotEnoughExercises -> {
             Toast.makeText(
@@ -342,7 +347,6 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
                 R.string.add_min_2_exercises,
                 Toast.LENGTH_LONG
             ).show()
-            ExerciseList(exercises = state.exercises)
         }
         is CreateTrainingUiState.Error.Reason.Unknown -> {
             Toast.makeText(
@@ -350,7 +354,6 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
                 R.string.something_went_wrong,
                 Toast.LENGTH_LONG
             ).show()
-            ExerciseList(exercises = state.exercises)
         }
     }
 }

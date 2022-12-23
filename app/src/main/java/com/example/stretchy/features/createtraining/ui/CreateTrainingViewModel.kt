@@ -18,6 +18,7 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
 
     private var name: String? = null
     private val trainingExercisesList = mutableListOf<Activity>()
+
     fun addActivity(activityItem: Activity) {
         trainingExercisesList.add(activityItem)
         val currentList = mutableListOf<Activity>()
@@ -25,22 +26,34 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
         viewModelScope.launch {
             _uiState.emit(
                 CreateTrainingUiState.Success(
-                    currentList
+                    currentList,
+                    isCreateTrainingButtonVisible()
                 )
             )
         }
     }
 
+    private fun isCreateTrainingButtonVisible() =
+        !name.isNullOrBlank() && trainingExercisesList.size >= 2
+
     fun setTrainingName(trainingName: String) {
         this.name = trainingName
+        viewModelScope.launch {
+            _uiState.emit(
+                CreateTrainingUiState.TitleChanged(
+                    trainingExercisesList,
+                    isCreateTrainingButtonVisible()
+                )
+            )
+        }
     }
 
     fun createTraining() {
         viewModelScope.launch {
             if (name == null) {
-                _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName,trainingExercisesList))
-            } else if (currentActivitySizeList() < 2) {
-                _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.NotEnoughExercises,trainingExercisesList))
+                _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName))
+            } else if (trainingExercisesList.size < 2) {
+                _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.NotEnoughExercises))
             } else {
                 try {
                     saveTraining()
@@ -49,16 +62,13 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
                         CreateTrainingUiState.Error(
                             CreateTrainingUiState.Error.Reason.Unknown(
                                 ex
-                            ),trainingExercisesList
+                            )
                         )
                     )
                 }
             }
         }
     }
-
-    private fun currentActivitySizeList(): Int =
-        (_uiState.value as? CreateTrainingUiState.Success)?.training?.size ?: 0
 
     private fun saveTraining() {
         viewModelScope.launch {
