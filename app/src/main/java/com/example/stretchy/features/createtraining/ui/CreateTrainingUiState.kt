@@ -7,6 +7,12 @@ sealed class CreateTrainingUiState {
         val training: List<Activity>
     ) : CreateTrainingUiState()
 
+    data class Editing(
+        val trainingId: Long,
+        val trainingName: String,
+        val activities: List<Activity>
+    ) : CreateTrainingUiState()
+
     data class Error(val reason: Reason) : CreateTrainingUiState() {
         sealed class Reason {
             object MissingTrainingName : Reason()

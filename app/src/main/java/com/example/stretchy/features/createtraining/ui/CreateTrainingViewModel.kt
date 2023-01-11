@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
+class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
         MutableStateFlow(CreateTrainingUiState.Init)
     val uiState: StateFlow<CreateTrainingUiState> = _uiState
@@ -19,6 +19,24 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
     private var name: String? = null
     private var type: Training.Type = Training.Type.STRETCHING
     private val trainingExercisesList = mutableListOf<Activity>()
+
+    init {
+        if (trainingId != -1L) {
+            viewModelScope.launch {
+                val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+                name = trainingWithActivities.name
+                trainingExercisesList.addAll(trainingWithActivities.activities)
+                val currentName = name
+                val currentActivities = trainingWithActivities.activities
+                _uiState.emit(
+                    CreateTrainingUiState.Editing(
+                        trainingId, currentName!!,
+                        currentActivities
+                    )
+                )
+            }
+        }
+    }
 
     fun addActivity(activityItem: Activity) {
         trainingExercisesList.add(activityItem)
@@ -79,6 +97,41 @@ class CreateTrainingViewModel(val repository: Repository) : ViewModel() {
             } else {
                 //todo toast
             }
+        }
+    }
+
+    fun editTraining(trainingId: Long) {
+        val asd = mutableListOf<Activity>()
+        asd.addAll(trainingExercisesList)
+        viewModelScope.launch {
+            val success = (_uiState.value as? CreateTrainingUiState.Success)
+            if (success != null) {
+                repository.editTrainingWithActivities(
+                    trainingId,
+                    TrainingWithActivity(
+                        name!!,
+                        TrainingType.STRETCH,
+                        true,
+                        asd
+                    )
+                )
+                trainingExercisesList.clear()
+                _uiState.emit(CreateTrainingUiState.Done)
+            }
+        }
+    }
+
+    fun deleteExercise(exerciseListPosition: Int) {
+        trainingExercisesList.removeAt(exerciseListPosition)
+        val currentExercises = mutableListOf<Activity>()
+        currentExercises.addAll(trainingExercisesList)
+
+        viewModelScope.launch {
+            _uiState.emit(
+                CreateTrainingUiState.Success(
+                    currentExercises
+                )
+            )
         }
     }
 }

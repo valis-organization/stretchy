@@ -49,7 +49,7 @@ fun TrainingListComposable(
 ) {
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate(Screen.ExerciseCreatorScreen.route) }) {
+            FloatingActionButton(onClick = { navController.navigate("exerciseCreatorScreen") }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
             }
         },
@@ -170,13 +170,15 @@ fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportCl
 }
 
 @Composable
-private fun TrainingListComposable(trainingList: List<Training>,navController: NavController) {
+private fun TrainingListComposable(trainingList: List<Training>, navController: NavController) {
     LazyColumn {
-        items(trainingList) { exercise ->
-            Box(modifier = Modifier.clickable {
-                navController.navigate("executeTraining?id=${exercise.id}")
-            }) {
-                TrainingComposable(item = exercise)
+        items(trainingList) { training ->
+            Box(
+                modifier = Modifier.clickable {
+                    navController.navigate("executeTraining?id=${training.id}")
+                },
+            ) {
+                TrainingComposable(item = training,navController)
             }
             Spacer(modifier = Modifier.height(24.dp))
         }
@@ -184,7 +186,7 @@ private fun TrainingListComposable(trainingList: List<Training>,navController: N
 }
 
 @Composable
-private fun TrainingComposable(item: Training) {
+private fun TrainingComposable(item: Training,navController: NavController) {
     Column(
         modifier = Modifier
             .background(color = Color.White)
@@ -193,7 +195,22 @@ private fun TrainingComposable(item: Training) {
             .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 12.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = item.itemName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Row(modifier = Modifier.fillMaxWidth()){
+            Text(text = item.itemName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+            Row(Modifier.fillMaxWidth().clickable { navController.navigate("exerciseCreatorScreen?id=${item.id}") },Arrangement.End) {
+    /*            IconButton(
+                    onClick = {
+
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = "menu",
+                    )
+                    }*/
+               Icon(imageVector = Icons.Filled.MoreVert, contentDescription = "Add")
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
         Divider(color = Color.LightGray, thickness = 1.dp)
         Spacer(modifier = Modifier.height(16.dp))

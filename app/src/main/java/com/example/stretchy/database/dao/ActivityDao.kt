@@ -1,9 +1,6 @@
 package com.example.stretchy.database.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
 import com.example.stretchy.database.entity.ActivityEntity
 
 @Dao
@@ -19,4 +16,7 @@ interface ActivityDao {
 
     @Delete
     fun delete(activityEntity: ActivityEntity)
+
+    @Update
+    fun update(activityEntity: ActivityEntity)
 }
