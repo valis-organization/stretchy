@@ -51,6 +51,19 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
         }
     }
 
+    fun editActivity(activityItem: Activity,listId : Int) {
+        trainingExercisesList[listId] = activityItem
+        val currentList = mutableListOf<Activity>()
+        currentList.addAll(trainingExercisesList)
+        viewModelScope.launch {
+            _uiState.emit(
+                CreateTrainingUiState.Success(
+                    currentList
+                )
+            )
+        }
+    }
+
     fun setTrainingName(trainingName: String) {
         this.name = trainingName
     }

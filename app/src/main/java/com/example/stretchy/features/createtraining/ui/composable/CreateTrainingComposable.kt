@@ -1,10 +1,8 @@
 package com.example.stretchy.features.createtraining.ui.composable
 
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
@@ -24,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -101,6 +100,8 @@ fun CreateTrainingComposable(
 
 @Composable
 private fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) {
+    var editedExercise by remember { mutableStateOf(Exercise()) }
+    var widgetVisible by remember { mutableStateOf(false) }
     LazyColumn(
         modifier = Modifier.heightIn(0.dp, 240.dp),
         verticalArrangement = Arrangement.Top
@@ -108,24 +109,42 @@ private fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingVie
         itemsIndexed(exercises) { listPosition, exercise ->
             SwipeableExerciseItem(
                 vm = viewModel,
-                item = Exercise(exercise.name, exercise.duration),
-                listId = listPosition
+                item = Exercise(exercise.name, exercise.duration, listPosition),
+                listId = listPosition,
+                onEditClick = {
+                    editedExercise = it
+                    if (widgetVisible) {
+                        widgetVisible = false
+                    }
+                    widgetVisible = true
+                }
             )
         }
     }
-    CreateExerciseWidget(viewModel = viewModel)
+    CreateExerciseWidget(
+        viewModel = viewModel,
+        editedExercise = editedExercise,
+        widgetVisible = widgetVisible,
+        onAddClick = { widgetVisible = !widgetVisible })
 }
 
 @Composable
-fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
-    val minExerciseDuration = 10
-    var visible by remember { mutableStateOf(false) }
+fun CreateExerciseWidget(
+    viewModel: CreateTrainingViewModel,
+    editedExercise: Exercise,
+    widgetVisible: Boolean,
+    onAddClick: () -> Unit
+) {
+    val sliderMinValue = 10
     val sliderMaxValue = 300
-    var sliderValue: Int by remember { mutableStateOf(minExerciseDuration) }
-    var exerciseDuration: Int by remember { mutableStateOf(minExerciseDuration) }
-    var exerciseName = ""
+    var exerciseDuration: Int by remember { mutableStateOf(sliderMinValue) }
     val context = LocalContext.current
-    AnimatedVisibility(visible = !visible) {
+    val exerciseIsBeingEdited: Boolean = editedExercise.name != ""
+
+    var exerciseName = editedExercise.name
+    exerciseDuration = editedExercise.duration
+
+    AnimatedVisibility(visible = !widgetVisible) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -135,14 +154,14 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                 .clip(RoundedCornerShape(10.dp))
                 .background(color = Color(BananaMania.toArgb()))
                 .clickable {
-                    visible = !visible
+                    onAddClick()
                 }
         ) {
             Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
         }
     }
     AnimatedVisibility(
-        visible = visible,
+        visible = widgetVisible,
         enter = fadeIn(animationSpec = tween(500)),
         exit = fadeOut(animationSpec = tween(500))
     ) {
@@ -150,10 +169,10 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
             Modifier
                 .padding(start = 12.dp, end = 12.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(color = Color.LightGray)
+                .background(color = Color(BananaMania.toArgb()))
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            ExerciseNameControls(onNameEntered = { exerciseName = it })
+            ExerciseNameControls(asd = exerciseName, onNameEntered = { exerciseName = it })
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -163,17 +182,15 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                 fontWeight = FontWeight.Bold
             )
             Slider(
-                value = sliderValue.toFloat(),
+                value = exerciseDuration.toFloat(),
                 onValueChange = {
-                    sliderValue = it.toInt()
-                    exerciseDuration = sliderValue
+                    exerciseDuration = it.toInt()
                 },
                 valueRange = 10f..sliderMaxValue.toFloat(),
             )
             AddOrSubtractButtons { changeValue ->
-                if (sliderValue + changeValue in 10..300) {
-                    sliderValue += changeValue
-                    exerciseDuration = sliderValue
+                if (exerciseDuration + changeValue in 10..300) {
+                    exerciseDuration += changeValue
                 }
             }
             Button(
@@ -182,18 +199,27 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                     .fillMaxWidth()
                     .padding(bottom = 16.dp, top = 16.dp),
                 onClick = {
-                    if (exerciseName.isNotEmpty() && sliderValue != 0) {
-                        visible = !visible
-                        viewModel.addActivity(
-                            Activity(
-                                exerciseName,
-                                exerciseDuration,
-                                ActivityType.STRETCH
+                    if (exerciseName.isNotEmpty() && exerciseDuration != 0) {
+                        onAddClick()
+                        if (exerciseIsBeingEdited) {
+                            viewModel.editActivity(
+                                Activity(
+                                    exerciseName,
+                                    exerciseDuration,
+                                    ActivityType.STRETCH
+                                ), editedExercise.listId!!
                             )
-                        )
-                        Toast.makeText(context, "Exercise added", Toast.LENGTH_LONG).show()
-                        sliderValue = minExerciseDuration
-                        exerciseDuration = minExerciseDuration
+                            Toast.makeText(context, "Exercise edited", Toast.LENGTH_LONG).show()
+                        } else {
+                            viewModel.addActivity(
+                                Activity(
+                                    exerciseName,
+                                    exerciseDuration,
+                                    ActivityType.STRETCH
+                                )
+                            )
+                            Toast.makeText(context, "Exercise added", Toast.LENGTH_LONG).show()
+                        }
                     } else {
                         Toast.makeText(
                             context,
@@ -202,7 +228,13 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                         ).show()
                     }
                 }
-            ) { Text(text = "Add Exercise") }
+            ) {
+                if (exerciseIsBeingEdited) {
+                    Text(text = "Edit Exercise")
+                } else {
+                    Text(text = "Add Exercise")
+                }
+            }
         }
     }
 }
@@ -280,9 +312,10 @@ fun TrainingName(viewModel: CreateTrainingViewModel) {
 
 @Composable
 fun ExerciseNameControls(
+    asd: String,
     onNameEntered: (value: String) -> Unit
 ) {
-    var exerciseName by remember { mutableStateOf("") }
+    var exerciseName by remember { mutableStateOf(asd) }
     Text(
         modifier = Modifier
             .fillMaxWidth()
@@ -317,11 +350,18 @@ fun ExerciseNameControls(
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun SwipeableExerciseItem(vm: CreateTrainingViewModel, item: Exercise, listId: Int) {
+fun SwipeableExerciseItem(
+    vm: CreateTrainingViewModel,
+    item: Exercise,
+    listId: Int,
+    onEditClick: (exercise: Exercise) -> Unit
+) {
     val swipeableState = rememberSwipeableState(0)
-    val sizePx = with(LocalDensity.current) { 100.dp.toPx() }
+    val sizePx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
     val anchors = mapOf(0f to 0, sizePx to 1) // Maps anchor points (in px) to states
-
+    fun isItemSwiped(): Boolean {
+        return swipeableState.currentValue == 1
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -336,7 +376,9 @@ fun SwipeableExerciseItem(vm: CreateTrainingViewModel, item: Exercise, listId: I
             .clip(RoundedCornerShape(12.dp))
             .background(Color(WhiteSmoke.toArgb()))
     ) {
-        SwipeActions(vm, listId)
+        if (isItemSwiped()) {
+            SwipeActions(vm, item, listId, onEditClick)
+        }
         Box(modifier = Modifier
             .fillMaxSize()
             .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
@@ -350,14 +392,19 @@ fun SwipeableExerciseItem(vm: CreateTrainingViewModel, item: Exercise, listId: I
 }
 
 @Composable
-fun SwipeActions(viewModel: CreateTrainingViewModel, exerciseId: Int) {
-    Row() {
+fun SwipeActions(
+    viewModel: CreateTrainingViewModel,
+    exercise: Exercise,
+    exerciseId: Int,
+    onEditClick: (exercise: Exercise) -> Unit
+) {
+    Row {
         IconButton(
             modifier = Modifier.padding(top = 2.dp),
             onClick = { viewModel.deleteExercise(exerciseId) }) {
             Icon(Icons.Filled.Delete, "Delete exercise")
         }
-        IconButton(modifier = Modifier.padding(top = 2.dp), onClick = { /*TODO*/ }) {
+        IconButton(modifier = Modifier.padding(top = 2.dp), onClick = { onEditClick(exercise) }) {
             Icon(Icons.Filled.Edit, "asd")
         }
     }
