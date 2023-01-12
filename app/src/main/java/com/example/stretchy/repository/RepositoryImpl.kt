@@ -22,6 +22,28 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
         }
     }
 
+    override suspend fun editTrainingWithActivities(
+        trainingId: Long,
+        training: TrainingWithActivity
+    ) {
+        val currentTraining = getTrainingWithActivitiesById(trainingId)
+        currentTraining.activities.forEach{activity ->
+            with(activity){
+                db.activityDao().delete(ActivityEntity(activityId,name,duration, activityType))
+            }
+        }
+        training.activities.forEach{activity ->
+                with(activity){
+                    val aId = generateActivityId()
+                    db.activityDao().add(ActivityEntity(aId, name, duration, activityType))
+                    db.trainingWithActivitiesDao().insert(TrainingActivityEntity(trainingId, aId))
+                }
+        }
+        with(training) {
+            db.trainingDao().update(TrainingEntity(trainingId, name, trainingType, finished))
+        }
+    }
+
     override suspend fun getTrainingsWithActivities(): List<TrainingWithActivity> =
         db.trainingWithActivitiesDao().getTrainings().map { activity ->
             map(activity)

@@ -19,4 +19,7 @@ interface TrainingWithActivitiesDao {
 
     @Delete
     fun delete(trainingActivity: TrainingActivityEntity)
+
+    @Update
+    fun update(trainingActivityEntity: TrainingActivityEntity)
 }
