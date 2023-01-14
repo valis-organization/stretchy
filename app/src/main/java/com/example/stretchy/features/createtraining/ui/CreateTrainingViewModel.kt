@@ -18,8 +18,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
 
     private var name: String? = null
     private var type: Training.Type = Training.Type.STRETCHING
-    private val trainingExercisesList = mutableListOf<Activity>()
-
+    private var trainingExercisesList = mutableListOf<Activity>()
     init {
         if (trainingId != -1L) {
             viewModelScope.launch {
@@ -27,11 +26,10 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
                 name = trainingWithActivities.name
                 trainingExercisesList.addAll(trainingWithActivities.activities)
                 val currentName = name
-                val currentActivities = trainingWithActivities.activities
                 _uiState.emit(
                     CreateTrainingUiState.Editing(
                         trainingId, currentName!!,
-                        currentActivities
+                    trainingExercisesList
                     )
                 )
             }
@@ -51,7 +49,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
         }
     }
 
-    fun editActivity(activityItem: Activity,listId : Int) {
+    fun editActivity(activityItem: Activity, listId: Int) {
         trainingExercisesList[listId] = activityItem
         val currentList = mutableListOf<Activity>()
         currentList.addAll(trainingExercisesList)
@@ -114,8 +112,8 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
     }
 
     fun editTraining(trainingId: Long) {
-        val asd = mutableListOf<Activity>()
-        asd.addAll(trainingExercisesList)
+        val currentExercises = mutableListOf<Activity>()
+        currentExercises.addAll(trainingExercisesList)
         viewModelScope.launch {
             val success = (_uiState.value as? CreateTrainingUiState.Success)
             if (success != null) {
@@ -125,7 +123,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
                         name!!,
                         TrainingType.STRETCH,
                         true,
-                        asd
+                       trainingExercisesList
                     )
                 )
                 trainingExercisesList.clear()
@@ -143,6 +141,23 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
             _uiState.emit(
                 CreateTrainingUiState.Success(
                     currentExercises
+                )
+            )
+        }
+    }
+
+    fun swapExercises(from: Int, to: Int) {
+        val fromItem = trainingExercisesList[from]
+        val toItem = trainingExercisesList[to]
+        val newList = trainingExercisesList.toMutableList()
+        newList[from] = toItem
+        newList[to] = fromItem
+        trainingExercisesList = newList
+
+        viewModelScope.launch {
+            _uiState.emit(
+                CreateTrainingUiState.Success(
+                    trainingExercisesList
                 )
             )
         }

@@ -1,28 +1,29 @@
 package com.example.stretchy.features.createtraining.ui.composable
 
+import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColor
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -35,9 +36,9 @@ import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
-import com.example.stretchy.features.createtraining.ui.CreateTrainingViewModel
+import com.example.stretchy.features.createtraining.ui.*
 import com.example.stretchy.features.createtraining.ui.data.Exercise
+import com.example.stretchy.features.createtraining.ui.list.DragDropLazyList
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.theme.BananaMania
 import com.example.stretchy.theme.WhiteSmoke
@@ -99,26 +100,28 @@ fun CreateTrainingComposable(
 }
 
 @Composable
-private fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) {
+fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) {
     var editedExercise by remember { mutableStateOf(Exercise()) }
     var widgetVisible by remember { mutableStateOf(false) }
-    LazyColumn(
+    DragDropLazyList(
         modifier = Modifier.heightIn(0.dp, 240.dp),
-        verticalArrangement = Arrangement.Top
-    ) {
-        itemsIndexed(exercises) { listPosition, exercise ->
-            SwipeableExerciseItem(
-                vm = viewModel,
-                item = Exercise(exercise.name, exercise.duration, listPosition),
-                listId = listPosition,
-                onEditClick = {
-                    editedExercise = it
-                    if (widgetVisible) {
-                        widgetVisible = false
-                    }
+        items = exercises,
+        onSwap = viewModel::swapExercises
+    ) { index, item ->
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable(
+                    interactionSource = MutableInteractionSource(),
+                    indication = null
+                ) {
+                    editedExercise = Exercise(item.name, item.duration, index)
                     widgetVisible = true
-                }
-            )
+                }) {
+            SwipeableExerciseItem(vm = viewModel, item = Exercise(item.name, item.duration, index))
         }
     }
     CreateExerciseWidget(
@@ -138,10 +141,11 @@ fun CreateExerciseWidget(
     val sliderMinValue = 10
     val sliderMaxValue = 300
     var exerciseDuration: Int by remember { mutableStateOf(sliderMinValue) }
+    var exerciseName: String by remember { mutableStateOf("") }
     val context = LocalContext.current
     val exerciseIsBeingEdited: Boolean = editedExercise.name != ""
 
-    var exerciseName = editedExercise.name
+    exerciseName = editedExercise.name
     exerciseDuration = editedExercise.duration
 
     AnimatedVisibility(visible = !widgetVisible) {
@@ -172,7 +176,7 @@ fun CreateExerciseWidget(
                 .background(color = Color(BananaMania.toArgb()))
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            ExerciseNameControls(asd = exerciseName, onNameEntered = { exerciseName = it })
+            ExerciseNameControls(currentName = exerciseName, onNameEntered = { exerciseName = it })
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -312,10 +316,10 @@ fun TrainingName(viewModel: CreateTrainingViewModel) {
 
 @Composable
 fun ExerciseNameControls(
-    asd: String,
+    currentName: String,
     onNameEntered: (value: String) -> Unit
 ) {
-    var exerciseName by remember { mutableStateOf(asd) }
+    var exerciseName = currentName
     Text(
         modifier = Modifier
             .fillMaxWidth()
@@ -352,32 +356,54 @@ fun ExerciseNameControls(
 @Composable
 fun SwipeableExerciseItem(
     vm: CreateTrainingViewModel,
-    item: Exercise,
-    listId: Int,
-    onEditClick: (exercise: Exercise) -> Unit
+    item: Exercise
 ) {
     val swipeableState = rememberSwipeableState(0)
-    val sizePx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    //  val sizePx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
+    val sizePx = with(LocalDensity.current) { 64.dp.toPx() }
     val anchors = mapOf(0f to 0, sizePx to 1) // Maps anchor points (in px) to states
     fun isItemSwiped(): Boolean {
         return swipeableState.currentValue == 1
     }
+    // val transition = updateTransition(swipeableState.offset.value)
+    val transition = rememberInfiniteTransition()
+    val color by transition.animateColor(
+        initialValue = Color.White,
+        targetValue = Color.Red,
+        animationSpec = infiniteRepeatable(animation = tween(2000), repeatMode = RepeatMode.Reverse)
+    )
+    /*   var color by remember{ mutableStateOf(Color(WhiteSmoke.toArgb()))}
+       Crossfade(targetState = swipeableState.currentValue) { value ->
+           when(value){
+               1 -> color = Color.Red
+           }
+       }*/
+
+
+    Log.e("state", swipeableState.currentValue.toString() + isItemSwiped().toString())
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
+            .fillMaxSize()
             .swipeable(
                 state = swipeableState,
                 anchors = anchors,
                 thresholds = { _, _ -> FractionalThreshold(0.3f) },
                 orientation = Orientation.Horizontal
             )
-            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Color(WhiteSmoke.toArgb()))
+            .background(color)
     ) {
+/*        Row() {
+            IconButton(
+                modifier = Modifier.padding(top = 2.dp),
+                onClick = { }) {
+                Icon(Icons.Filled.Delete, "Delete exercise")
+            }
+        }
         if (isItemSwiped()) {
-            SwipeActions(vm, item, listId, onEditClick)
+            vm.deleteExercise(listId)
+        }*/
+        if (isItemSwiped()) {
+            SwipeActions(vm, item)
         }
         Box(modifier = Modifier
             .fillMaxSize()
@@ -395,17 +421,12 @@ fun SwipeableExerciseItem(
 fun SwipeActions(
     viewModel: CreateTrainingViewModel,
     exercise: Exercise,
-    exerciseId: Int,
-    onEditClick: (exercise: Exercise) -> Unit
 ) {
     Row {
         IconButton(
             modifier = Modifier.padding(top = 2.dp),
-            onClick = { viewModel.deleteExercise(exerciseId) }) {
+            onClick = { viewModel.deleteExercise(exercise.listId!!) }) {
             Icon(Icons.Filled.Delete, "Delete exercise")
-        }
-        IconButton(modifier = Modifier.padding(top = 2.dp), onClick = { onEditClick(exercise) }) {
-            Icon(Icons.Filled.Edit, "asd")
         }
     }
 }
