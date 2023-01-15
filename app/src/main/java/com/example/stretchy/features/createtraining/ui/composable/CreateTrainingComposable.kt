@@ -1,15 +1,10 @@
 package com.example.stretchy.features.createtraining.ui.composable
 
-import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.animateColor
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,11 +20,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -42,7 +35,6 @@ import com.example.stretchy.features.createtraining.ui.list.DragDropLazyList
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.theme.BananaMania
 import com.example.stretchy.theme.WhiteSmoke
-import kotlin.math.roundToInt
 
 @Composable
 fun CreateTrainingComposable(
@@ -121,7 +113,10 @@ fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) 
                     editedExercise = Exercise(item.name, item.duration, index)
                     widgetVisible = true
                 }) {
-            SwipeableExerciseItem(vm = viewModel, item = Exercise(item.name, item.duration, index))
+            SwipeableExerciseItem(
+                vm = viewModel,
+                exercise = Exercise(item.name, item.duration, index)
+            )
         }
     }
     CreateExerciseWidget(
@@ -356,79 +351,48 @@ fun ExerciseNameControls(
 @Composable
 fun SwipeableExerciseItem(
     vm: CreateTrainingViewModel,
-    item: Exercise
+    exercise: Exercise
 ) {
-    val swipeableState = rememberSwipeableState(0)
-    //  val sizePx = with(LocalDensity.current) { LocalConfiguration.current.screenWidthDp.dp.toPx() }
-    val sizePx = with(LocalDensity.current) { 64.dp.toPx() }
-    val anchors = mapOf(0f to 0, sizePx to 1) // Maps anchor points (in px) to states
-    fun isItemSwiped(): Boolean {
-        return swipeableState.currentValue == 1
-    }
-    // val transition = updateTransition(swipeableState.offset.value)
-    val transition = rememberInfiniteTransition()
-    val color by transition.animateColor(
-        initialValue = Color.White,
-        targetValue = Color.Red,
-        animationSpec = infiniteRepeatable(animation = tween(2000), repeatMode = RepeatMode.Reverse)
-    )
-    /*   var color by remember{ mutableStateOf(Color(WhiteSmoke.toArgb()))}
-       Crossfade(targetState = swipeableState.currentValue) { value ->
-           when(value){
-               1 -> color = Color.Red
-           }
-       }*/
+    val dismissState = DismissState(initialValue = DismissValue.Default,confirmStateChange = {
+        if (it == DismissValue.DismissedToEnd) {
+            vm.deleteExercise(exercise.listId!!)
+        }
+        true
+    })
 
-
-    Log.e("state", swipeableState.currentValue.toString() + isItemSwiped().toString())
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .swipeable(
-                state = swipeableState,
-                anchors = anchors,
-                thresholds = { _, _ -> FractionalThreshold(0.3f) },
-                orientation = Orientation.Horizontal
+    SwipeToDismiss(
+        state = dismissState,
+        directions = setOf(DismissDirection.StartToEnd),
+        background = {
+            val color by animateColorAsState(
+                targetValue = when (dismissState.targetValue) {
+                    DismissValue.Default -> Color(WhiteSmoke.toArgb())
+                    DismissValue.DismissedToEnd -> Color.Red
+                    else -> {Color(WhiteSmoke.toArgb())}
+                }
             )
-            .background(color)
-    ) {
-/*        Row() {
-            IconButton(
-                modifier = Modifier.padding(top = 2.dp),
-                onClick = { }) {
-                Icon(Icons.Filled.Delete, "Delete exercise")
+            val icon = Icons.Default.Delete
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(12.dp),
+                Alignment.BottomStart
+            ) {
+                Icon(icon, contentDescription = "asd")
             }
-        }
-        if (isItemSwiped()) {
-            vm.deleteExercise(listId)
-        }*/
-        if (isItemSwiped()) {
-            SwipeActions(vm, item)
-        }
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .offset { IntOffset(swipeableState.offset.value.roundToInt(), 0) }
-            .background(Color(BananaMania.toArgb()))
-            .clip(RoundedCornerShape(12.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(item.name)
-        }
-    }
-}
+        },
+        dismissContent = {
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .background(Color(BananaMania.toArgb()))
+                .clip(RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center){
+                Text(exercise.name)
+            }
 
-@Composable
-fun SwipeActions(
-    viewModel: CreateTrainingViewModel,
-    exercise: Exercise,
-) {
-    Row {
-        IconButton(
-            modifier = Modifier.padding(top = 2.dp),
-            onClick = { viewModel.deleteExercise(exercise.listId!!) }) {
-            Icon(Icons.Filled.Delete, "Delete exercise")
         }
-    }
+    )
 }
 
 private fun toDisplayableLength(exerciseDuration: Int): String {

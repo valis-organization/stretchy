@@ -19,6 +19,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
     private var name: String? = null
     private var type: Training.Type = Training.Type.STRETCHING
     private var trainingExercisesList = mutableListOf<Activity>()
+
     init {
         if (trainingId != -1L) {
             viewModelScope.launch {
@@ -29,7 +30,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
                 _uiState.emit(
                     CreateTrainingUiState.Editing(
                         trainingId, currentName!!,
-                    trainingExercisesList
+                        trainingExercisesList
                     )
                 )
             }
@@ -123,7 +124,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
                         name!!,
                         TrainingType.STRETCH,
                         true,
-                       trainingExercisesList
+                        trainingExercisesList
                     )
                 )
                 trainingExercisesList.clear()
