@@ -42,7 +42,7 @@ fun CreateTrainingComposable(
     navController: NavController,
     viewModel: CreateTrainingViewModel
 ) {
-    var trainingName = ""
+    var trainingName: String by remember { mutableStateOf("") }
     var trainingId: Long by remember { mutableStateOf(-1) }
 
     Box(
@@ -110,10 +110,9 @@ fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) 
     ) { index, item ->
         Box(
             Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .height(64.dp)
-                .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .clip(RoundedCornerShape(10.dp))
                 .clickable(
                     interactionSource = MutableInteractionSource(),
                     indication = null
@@ -375,7 +374,7 @@ fun SwipeableExerciseItem(
     SwipeToDismiss(
         state = dismissState,
         directions = setOf(DismissDirection.StartToEnd),
-        dismissThresholds = {FractionalThreshold(0.2f)},
+        dismissThresholds = { FractionalThreshold(0.2f) },
         background = {
             val color by animateColorAsState(
                 targetValue = when (dismissState.targetValue) {
@@ -386,7 +385,6 @@ fun SwipeableExerciseItem(
                     }
                 }
             )
-            val icon = Icons.Default.Delete
             Box(
                 Modifier
                     .fillMaxSize()
@@ -394,7 +392,7 @@ fun SwipeableExerciseItem(
                     .padding(12.dp),
                 Alignment.BottomStart
             ) {
-                Icon(icon, contentDescription = "asd")
+                Icon(Icons.Default.Delete, contentDescription = "Delete")
             }
         },
         dismissContent = {
@@ -402,7 +400,7 @@ fun SwipeableExerciseItem(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(BananaMania.toArgb()))
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(exercise.name)

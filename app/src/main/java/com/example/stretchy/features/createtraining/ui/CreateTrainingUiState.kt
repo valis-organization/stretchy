@@ -4,6 +4,7 @@ import com.example.stretchy.repository.Activity
 
 sealed class CreateTrainingUiState {
     data class Success(
+        val currentName: String,
         val activities: List<Activity>
     ) : CreateTrainingUiState()
 
@@ -21,7 +22,7 @@ sealed class CreateTrainingUiState {
         }
     }
 
-    data class Init(val string:String) : CreateTrainingUiState()
+    object Init : CreateTrainingUiState()
 
     object Done : CreateTrainingUiState()
 }

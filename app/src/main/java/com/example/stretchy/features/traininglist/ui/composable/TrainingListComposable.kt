@@ -17,7 +17,6 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -238,28 +238,29 @@ private fun TrainingComposable(
                     .background(color = Color.White)
                     .fillMaxWidth()
                     .defaultMinSize(minHeight = 152.dp)
-                    .padding(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 12.dp),
+                    .padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 12.dp),
                 verticalArrangement = Arrangement.Center
             ) {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     Text(text = training.itemName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     Row(
                         Modifier
-                            .fillMaxWidth()
-                            .clickable { navController.navigate("exerciseCreatorScreen?id=${training.id}") },
+                            .fillMaxWidth(),
                         Arrangement.End
                     ) {
-                        /*            IconButton(
-                                        onClick = {
-
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Filled.MoreVert,
-                                            contentDescription = "menu",
-                                        )
-                                        }*/
-                        Icon(imageVector = Icons.Filled.Edit, contentDescription = "Add")
+                        IconButton(
+                            onClick = {
+                                navController.navigate("exerciseCreatorScreen?id=${training.id}")
+                            },
+                            Modifier
+                                .size(24.dp)
+                                .padding(0.dp)
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_edit),
+                                contentDescription = "Edit icon",
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))

@@ -12,12 +12,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
-    private var name: String? = null
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
-        MutableStateFlow(CreateTrainingUiState.Init(name.toString()))
+        MutableStateFlow(CreateTrainingUiState.Init)
     val uiState: StateFlow<CreateTrainingUiState> = _uiState
 
-
+    private var name: String? = null
     private var type: Training.Type = Training.Type.STRETCHING
     private var trainingExercisesList = mutableListOf<Activity>()
 
@@ -27,10 +26,10 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
                 val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
                 name = trainingWithActivities.name
                 trainingExercisesList.addAll(trainingWithActivities.activities)
-                val currentName = name
                 _uiState.emit(
                     CreateTrainingUiState.Editing(
-                        trainingId, currentName!!,
+                        trainingId,
+                        name ?: "",
                         trainingExercisesList
                     )
                 )
@@ -45,6 +44,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
         viewModelScope.launch {
             _uiState.emit(
                 CreateTrainingUiState.Success(
+                    name ?: "",
                     currentList
                 )
             )
@@ -58,6 +58,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
         viewModelScope.launch {
             _uiState.emit(
                 CreateTrainingUiState.Success(
+                    name ?: "",
                     currentList
                 )
             )
@@ -66,6 +67,15 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
 
     fun setTrainingName(trainingName: String) {
         this.name = trainingName
+        val currentName = name
+        viewModelScope.launch {
+            _uiState.emit(
+                CreateTrainingUiState.Success(
+                    currentName ?: "",
+                    trainingExercisesList
+                )
+            )
+        }
     }
 
     fun createTraining() {
@@ -136,12 +146,11 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
 
     fun deleteExercise(exerciseListPosition: Int) {
         trainingExercisesList.removeAt(exerciseListPosition)
-        val currentExercises = mutableListOf<Activity>()
-        currentExercises.addAll(trainingExercisesList)
-
+        val currentExercises = trainingExercisesList.toMutableList()
         viewModelScope.launch {
             _uiState.emit(
                 CreateTrainingUiState.Success(
+                    name ?: "",
                     currentExercises
                 )
             )
@@ -149,11 +158,13 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
     }
 
     fun swapExercises(from: Int, to: Int) {
-        trainingExercisesList = trainingExercisesList.toMutableList().apply { add(to,removeAt(from)) }
+        trainingExercisesList =
+            trainingExercisesList.toMutableList().apply { add(to, removeAt(from)) }
 
         viewModelScope.launch {
             _uiState.emit(
                 CreateTrainingUiState.Success(
+                    name ?: "",
                     trainingExercisesList
                 )
             )
