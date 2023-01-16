@@ -35,13 +35,16 @@ import com.example.stretchy.features.createtraining.ui.list.DragDropLazyList
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.theme.BananaMania
 import com.example.stretchy.theme.WhiteSmoke
+import java.util.*
 
 @Composable
 fun CreateTrainingComposable(
     navController: NavController,
     viewModel: CreateTrainingViewModel
 ) {
+    var trainingName : String by remember { mutableStateOf("")}
     var trainingId: Long by remember { mutableStateOf(-1) }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -51,14 +54,15 @@ fun CreateTrainingComposable(
             Modifier
                 .padding(top = 16.dp)
         ) {
-            TrainingName(viewModel)
+            TrainingName(viewModel,trainingName)
             Spacer(modifier = Modifier.height(24.dp))
             when (val state = viewModel.uiState.collectAsState().value) {
                 is CreateTrainingUiState.Success -> {
-                    ExerciseList(exercises = state.training, viewModel = viewModel)
+                    ExerciseList(exercises = state.activities, viewModel = viewModel)
                 }
                 is CreateTrainingUiState.Editing -> {
                     trainingId = state.trainingId
+                    trainingName = state.trainingName
                     ExerciseList(exercises = state.activities, viewModel = viewModel)
                 }
                 else -> {
@@ -123,7 +127,10 @@ fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) 
         viewModel = viewModel,
         editedExercise = editedExercise,
         widgetVisible = widgetVisible,
-        onAddClick = { widgetVisible = !widgetVisible })
+        onAddClick = {
+            widgetVisible = !widgetVisible
+            editedExercise = Exercise()
+        })
 }
 
 @Composable
@@ -287,8 +294,8 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
 }
 
 @Composable
-fun TrainingName(viewModel: CreateTrainingViewModel) {
-    var trainingName by remember { mutableStateOf("") }
+fun TrainingName(viewModel: CreateTrainingViewModel, initName: String) {
+    var trainingName = initName
 
     TextField(
         modifier = Modifier
@@ -353,7 +360,7 @@ fun SwipeableExerciseItem(
     vm: CreateTrainingViewModel,
     exercise: Exercise
 ) {
-    val dismissState = DismissState(initialValue = DismissValue.Default,confirmStateChange = {
+    val dismissState = DismissState(initialValue = DismissValue.Default, confirmStateChange = {
         if (it == DismissValue.DismissedToEnd) {
             vm.deleteExercise(exercise.listId!!)
         }
@@ -368,7 +375,9 @@ fun SwipeableExerciseItem(
                 targetValue = when (dismissState.targetValue) {
                     DismissValue.Default -> Color(WhiteSmoke.toArgb())
                     DismissValue.DismissedToEnd -> Color.Red
-                    else -> {Color(WhiteSmoke.toArgb())}
+                    else -> {
+                        Color(WhiteSmoke.toArgb())
+                    }
                 }
             )
             val icon = Icons.Default.Delete
@@ -383,11 +392,13 @@ fun SwipeableExerciseItem(
             }
         },
         dismissContent = {
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .background(Color(BananaMania.toArgb()))
-                .clip(RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center){
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(BananaMania.toArgb()))
+                    .clip(RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center
+            ) {
                 Text(exercise.name)
             }
 

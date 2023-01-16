@@ -90,7 +90,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
     }
 
     private fun currentActivitySizeList(): Int =
-        (_uiState.value as? CreateTrainingUiState.Success)?.training?.size ?: 0
+        (_uiState.value as? CreateTrainingUiState.Success)?.activities?.size ?: 0
 
     private fun saveTraining() {
         viewModelScope.launch {
