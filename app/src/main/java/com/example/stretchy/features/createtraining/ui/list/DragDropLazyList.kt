@@ -19,10 +19,10 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun <T : Any> DragDropLazyList(
-    modifier : Modifier = Modifier,
+    modifier: Modifier = Modifier,
     items: List<T>,
     onSwap: (Int, Int) -> Unit,
-    itemContent: @Composable LazyItemScope.(index: Int,item: T) -> Unit,
+    itemContent: @Composable LazyItemScope.(index: Int, item: T) -> Unit,
 ) {
     var overscrollJob by remember { mutableStateOf<Job?>(null) }
     val listState = rememberLazyListState()

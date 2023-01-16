@@ -42,7 +42,7 @@ fun CreateTrainingComposable(
     navController: NavController,
     viewModel: CreateTrainingViewModel
 ) {
-    var trainingName : String by remember { mutableStateOf("")}
+    var trainingName = ""
     var trainingId: Long by remember { mutableStateOf(-1) }
 
     Box(
@@ -54,18 +54,22 @@ fun CreateTrainingComposable(
             Modifier
                 .padding(top = 16.dp)
         ) {
-            TrainingName(viewModel,trainingName)
-            Spacer(modifier = Modifier.height(24.dp))
             when (val state = viewModel.uiState.collectAsState().value) {
                 is CreateTrainingUiState.Success -> {
+                    TrainingName(viewModel, trainingName)
+                    Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(exercises = state.activities, viewModel = viewModel)
                 }
                 is CreateTrainingUiState.Editing -> {
                     trainingId = state.trainingId
                     trainingName = state.trainingName
+                    TrainingName(viewModel, trainingName)
+                    Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(exercises = state.activities, viewModel = viewModel)
                 }
                 else -> {
+                    TrainingName(viewModel, trainingName)
+                    Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(emptyList(), viewModel = viewModel)
                 }
             }
@@ -294,8 +298,8 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
 }
 
 @Composable
-fun TrainingName(viewModel: CreateTrainingViewModel, initName: String) {
-    var trainingName = initName
+fun TrainingName(viewModel: CreateTrainingViewModel, initialTrainingName: String) {
+    var trainingName by remember { mutableStateOf(initialTrainingName) }
 
     TextField(
         modifier = Modifier
@@ -346,6 +350,7 @@ fun ExerciseNameControls(
                 .align(Alignment.Center),
             value = exerciseName,
             textStyle = TextStyle(fontSize = 16.sp),
+            singleLine = true,
             onValueChange = {
                 exerciseName = it
                 onNameEntered(it)
@@ -370,6 +375,7 @@ fun SwipeableExerciseItem(
     SwipeToDismiss(
         state = dismissState,
         directions = setOf(DismissDirection.StartToEnd),
+        dismissThresholds = {FractionalThreshold(0.2f)},
         background = {
             val color by animateColorAsState(
                 targetValue = when (dismissState.targetValue) {

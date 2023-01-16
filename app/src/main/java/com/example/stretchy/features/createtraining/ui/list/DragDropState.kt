@@ -12,7 +12,7 @@ import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-class DragDropState internal constructor(
+class DragDropState(
     val state: LazyListState,
     private val scope: CoroutineScope,
     private val onSwap: (Int, Int) -> Unit

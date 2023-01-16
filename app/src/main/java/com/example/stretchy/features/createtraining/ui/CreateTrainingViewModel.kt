@@ -12,11 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
+    private var name: String? = null
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
-        MutableStateFlow(CreateTrainingUiState.Init)
+        MutableStateFlow(CreateTrainingUiState.Init(name.toString()))
     val uiState: StateFlow<CreateTrainingUiState> = _uiState
 
-    private var name: String? = null
+
     private var type: Training.Type = Training.Type.STRETCHING
     private var trainingExercisesList = mutableListOf<Activity>()
 
@@ -148,12 +149,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
     }
 
     fun swapExercises(from: Int, to: Int) {
-        val fromItem = trainingExercisesList[from]
-        val toItem = trainingExercisesList[to]
-        val newList = trainingExercisesList.toMutableList()
-        newList[from] = toItem
-        newList[to] = fromItem
-        trainingExercisesList = newList
+        trainingExercisesList = trainingExercisesList.toMutableList().apply { add(to,removeAt(from)) }
 
         viewModelScope.launch {
             _uiState.emit(

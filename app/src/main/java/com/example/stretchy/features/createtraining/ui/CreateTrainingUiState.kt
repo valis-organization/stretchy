@@ -21,7 +21,7 @@ sealed class CreateTrainingUiState {
         }
     }
 
-    object Init : CreateTrainingUiState()
+    data class Init(val string:String) : CreateTrainingUiState()
 
     object Done : CreateTrainingUiState()
 }
