@@ -40,10 +40,11 @@ import java.util.*
 @Composable
 fun CreateTrainingComposable(
     navController: NavController,
-    viewModel: CreateTrainingViewModel
+    viewModel: CreateOrEditTrainingViewModel
 ) {
     var trainingName: String by remember { mutableStateOf("") }
-    var trainingId: Long by remember { mutableStateOf(-1) }
+    var trainingId: Long? by remember { mutableStateOf(null) }
+    var isTrainingBeingEdited = false
 
     Box(
         modifier = Modifier
@@ -57,12 +58,14 @@ fun CreateTrainingComposable(
             when (val state = viewModel.uiState.collectAsState().value) {
                 is CreateTrainingUiState.Success -> {
                     TrainingName(viewModel, trainingName)
+                    isTrainingBeingEdited = state.editingTraining
                     Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(exercises = state.activities, viewModel = viewModel)
                 }
                 is CreateTrainingUiState.Editing -> {
                     trainingId = state.trainingId
                     trainingName = state.trainingName
+                    isTrainingBeingEdited = state.editingTraining
                     TrainingName(viewModel, trainingName)
                     Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(exercises = state.activities, viewModel = viewModel)
@@ -81,15 +84,15 @@ fun CreateTrainingComposable(
                     .fillMaxWidth()
                     .padding(16.dp),
                 onClick = {
-                    if (isTrainingBeingEdited(trainingId)) {
-                        viewModel.editTraining(trainingId = trainingId)
+                    if (isTrainingBeingEdited) {
+                        viewModel.editTraining(trainingId = trainingId!!)
                     } else {
                         viewModel.createTraining()
                     }
                     navController.navigate(Screen.TrainingListScreen.route)
                 }
             ) {
-                if (isTrainingBeingEdited(trainingId)) {
+                if (isTrainingBeingEdited) {
                     Text(stringResource(id = R.string.save_changes))
                 } else {
                     Text(stringResource(id = R.string.create_training))
@@ -100,7 +103,7 @@ fun CreateTrainingComposable(
 }
 
 @Composable
-fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) {
+fun ExerciseList(exercises: List<Activity>, viewModel: CreateOrEditTrainingViewModel) {
     var editedExercise by remember { mutableStateOf(Exercise()) }
     var widgetVisible by remember { mutableStateOf(false) }
     DragDropLazyList(
@@ -138,7 +141,7 @@ fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) 
 
 @Composable
 fun CreateExerciseWidget(
-    viewModel: CreateTrainingViewModel,
+    viewModel: CreateOrEditTrainingViewModel,
     editedExercise: Exercise,
     widgetVisible: Boolean,
     onAddButtonClick: () -> Unit
@@ -302,7 +305,7 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
 }
 
 @Composable
-fun TrainingName(viewModel: CreateTrainingViewModel, initialTrainingName: String) {
+fun TrainingName(viewModel: CreateOrEditTrainingViewModel, initialTrainingName: String) {
     var trainingName by remember { mutableStateOf(initialTrainingName) }
 
     TextField(
@@ -366,7 +369,7 @@ fun ExerciseNameControls(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun SwipeableExerciseItem(
-    vm: CreateTrainingViewModel,
+    vm: CreateOrEditTrainingViewModel,
     exercise: Exercise
 ) {
     val dismissState = DismissState(initialValue = DismissValue.Default, confirmStateChange = {
@@ -425,8 +428,4 @@ private fun toDisplayableLength(exerciseDuration: Int): String {
     } else {
         "$exerciseDuration sec"
     }
-}
-
-private fun isTrainingBeingEdited(trainingId: Long): Boolean {
-    return trainingId >= 0
 }

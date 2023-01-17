@@ -4,12 +4,14 @@ import com.example.stretchy.repository.Activity
 
 sealed class CreateTrainingUiState {
     data class Success(
+        val editingTraining: Boolean,
         val currentName: String,
         val activities: List<Activity>
     ) : CreateTrainingUiState()
 
     data class Editing(
-        val trainingId: Long,
+        val trainingId: Long?,
+        val editingTraining: Boolean,
         val trainingName: String,
         val activities: List<Activity>
     ) : CreateTrainingUiState()

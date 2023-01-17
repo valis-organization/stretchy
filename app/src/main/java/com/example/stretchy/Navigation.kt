@@ -10,7 +10,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.stretchy.activity.di.ActivityComponent
 import com.example.stretchy.extensions.daggerViewModel
-import com.example.stretchy.features.createtraining.ui.CreateTrainingViewModel
+import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.composable.CreateTrainingComposable
 import com.example.stretchy.features.createtraining.ui.di.CreateTrainingComponent
 import com.example.stretchy.features.executetraining.di.ExecuteTrainingComponent
@@ -91,7 +91,7 @@ private fun createCreateTrainingViewModel(
     createTrainingComponent: CreateTrainingComponent,
     componentActivity: ComponentActivity,
     viewModelStoreOwner: ViewModelStoreOwner,
-): CreateTrainingViewModel {
+): CreateOrEditTrainingViewModel {
     val provider = createTrainingComponent.viewModelProvider()
     val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
     return vm
