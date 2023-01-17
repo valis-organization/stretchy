@@ -130,7 +130,7 @@ fun ExerciseList(exercises: List<Activity>, viewModel: CreateTrainingViewModel) 
         viewModel = viewModel,
         editedExercise = editedExercise,
         widgetVisible = widgetVisible,
-        onAddClick = {
+        onAddButtonClick = {
             widgetVisible = !widgetVisible
             editedExercise = Exercise()
         })
@@ -141,7 +141,7 @@ fun CreateExerciseWidget(
     viewModel: CreateTrainingViewModel,
     editedExercise: Exercise,
     widgetVisible: Boolean,
-    onAddClick: () -> Unit
+    onAddButtonClick: () -> Unit
 ) {
     val sliderMinValue = 10
     val sliderMaxValue = 300
@@ -163,7 +163,7 @@ fun CreateExerciseWidget(
                 .clip(RoundedCornerShape(10.dp))
                 .background(color = Color(BananaMania.toArgb()))
                 .clickable {
-                    onAddClick()
+                    onAddButtonClick()
                 }
         ) {
             Icon(
@@ -212,7 +212,7 @@ fun CreateExerciseWidget(
                     .padding(bottom = 16.dp, top = 16.dp),
                 onClick = {
                     if (exerciseName.isNotEmpty() && exerciseDuration != 0) {
-                        onAddClick()
+                        onAddButtonClick()
                         if (exerciseIsBeingEdited) {
                             viewModel.editActivity(
                                 Activity(
@@ -371,7 +371,7 @@ fun SwipeableExerciseItem(
 ) {
     val dismissState = DismissState(initialValue = DismissValue.Default, confirmStateChange = {
         if (it == DismissValue.DismissedToEnd) {
-            vm.deleteExercise(exercise.listId!!)
+            vm.removeLocalExercise(exercise.listId!!)
         }
         true
     })
@@ -413,7 +413,6 @@ fun SwipeableExerciseItem(
             ) {
                 Text(exercise.name)
             }
-
         }
     )
 }

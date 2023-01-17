@@ -144,7 +144,7 @@ class CreateTrainingViewModel(val repository: Repository, val trainingId: Long) 
         }
     }
 
-    fun deleteExercise(exerciseListPosition: Int) {
+    fun removeLocalExercise(exerciseListPosition: Int) {
         trainingExercisesList.removeAt(exerciseListPosition)
         val currentExercises = trainingExercisesList.toMutableList()
         viewModelScope.launch {
