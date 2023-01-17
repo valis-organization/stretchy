@@ -51,10 +51,11 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
                 db.activityDao().delete(ActivityEntity(activityId, name, duration, activityType))
             }
         }
-        currentTraining.activities.forEach{ activity ->
+        currentTraining.activities.forEach { activity ->
             with(activity) {
                 db.activityDao().delete(ActivityEntity(activityId, name, duration, activityType))
-                db.trainingWithActivitiesDao().delete(TrainingActivityEntity(trainingId, activityId))
+                db.trainingWithActivitiesDao()
+                    .delete(TrainingActivityEntity(trainingId, activityId))
             }
         }
         db.trainingDao().deleteById(trainingId = trainingId)

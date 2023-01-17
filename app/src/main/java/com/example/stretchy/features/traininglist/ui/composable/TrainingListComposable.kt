@@ -52,7 +52,10 @@ fun TrainingListComposable(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate("exerciseCreatorScreen") }) {
-                Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = stringResource(id = R.string.desc_plus_icon)
+                )
             }
         },
         topBar = {
@@ -74,13 +77,6 @@ fun TrainingListComposable(
                 .fillMaxSize()
         ) {
             Column(modifier = Modifier.padding(top = 24.dp)) {
-                Row(modifier = Modifier.padding(start = 24.dp)) {
-                    Text(
-                        text = stringResource(R.string.stretches),
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
                 when (val state = viewModel.uiState.collectAsState().value) {
                     is TrainingListUiState.Empty ->
                         Column(
@@ -133,7 +129,7 @@ fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportCl
     ) {
         Icon(
             imageVector = Icons.Filled.MoreVert,
-            contentDescription = "menu",
+            contentDescription = stringResource(id = R.string.desc_menu_icon),
             tint = Color.White
         )
         DropdownMenu(
@@ -229,7 +225,11 @@ private fun TrainingComposable(
                     .padding(12.dp),
                 Alignment.CenterStart
             ) {
-                Icon(icon, contentDescription = "Delete", Modifier.size(44.dp))
+                Icon(
+                    icon,
+                    contentDescription = stringResource(id = R.string.desc_delete_icon),
+                    Modifier.size(44.dp)
+                )
             }
         },
         dismissContent = {
@@ -258,7 +258,7 @@ private fun TrainingComposable(
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_edit),
-                                contentDescription = "Edit icon",
+                                contentDescription = stringResource(id = R.string.desc_edit_icon),
                             )
                         }
                     }

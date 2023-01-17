@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun <T : Any> DragDropLazyList(
+fun <T> DragDropLazyList(
     modifier: Modifier = Modifier,
     items: List<T>,
     onSwap: (Int, Int) -> Unit,

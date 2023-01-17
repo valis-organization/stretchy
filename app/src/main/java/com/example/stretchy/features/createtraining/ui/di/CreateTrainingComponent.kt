@@ -27,7 +27,7 @@ interface CreateTrainingComponent {
             activityComponent: ActivityComponent,
             trainingId: Long
         ): CreateTrainingComponent {
-            return DaggerCreateTrainingComponent.factory().create(activityComponent,trainingId)
+            return DaggerCreateTrainingComponent.factory().create(activityComponent, trainingId)
         }
     }
 }

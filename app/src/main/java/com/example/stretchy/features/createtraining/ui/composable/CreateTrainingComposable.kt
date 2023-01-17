@@ -90,7 +90,7 @@ fun CreateTrainingComposable(
                 }
             ) {
                 if (isTrainingBeingEdited(trainingId)) {
-                    Text("Edit")
+                    Text(stringResource(id = R.string.save_changes))
                 } else {
                     Text(stringResource(id = R.string.create_training))
                 }
@@ -166,7 +166,10 @@ fun CreateExerciseWidget(
                     onAddClick()
                 }
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = stringResource(id = R.string.desc_plus_icon)
+            )
         }
     }
     AnimatedVisibility(
@@ -186,7 +189,7 @@ fun CreateExerciseWidget(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                text = "Duration: ${toDisplayableLength(exerciseDuration)}",
+                text = stringResource(R.string.duration) + " ${toDisplayableLength(exerciseDuration)}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -218,7 +221,8 @@ fun CreateExerciseWidget(
                                     ActivityType.STRETCH
                                 ), editedExercise.listId!!
                             )
-                            Toast.makeText(context, "Exercise edited", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, R.string.exercise_edited, Toast.LENGTH_LONG)
+                                .show()
                         } else {
                             viewModel.addActivity(
                                 Activity(
@@ -227,21 +231,22 @@ fun CreateExerciseWidget(
                                     ActivityType.STRETCH
                                 )
                             )
-                            Toast.makeText(context, "Exercise added", Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, R.string.exercise_added, Toast.LENGTH_LONG)
+                                .show()
                         }
                     } else {
                         Toast.makeText(
                             context,
-                            "You need to specify exercise name!",
+                            R.string.specify_exercise_name,
                             Toast.LENGTH_LONG
                         ).show()
                     }
                 }
             ) {
                 if (exerciseIsBeingEdited) {
-                    Text(text = "Edit Exercise")
+                    Text(text = stringResource(id = R.string.save_changes))
                 } else {
-                    Text(text = "Add Exercise")
+                    Text(text = stringResource(id = R.string.add_exercise))
                 }
             }
         }
@@ -392,7 +397,10 @@ fun SwipeableExerciseItem(
                     .padding(12.dp),
                 Alignment.BottomStart
             ) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(id = R.string.desc_delete_icon)
+                )
             }
         },
         dismissContent = {

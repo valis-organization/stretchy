@@ -40,11 +40,12 @@ fun Navigation(
                 onImportClick = onImportClick
             )
         }
-        composable(route = Screen.ExerciseCreatorScreen.route,
+        composable(
+            route = Screen.ExerciseCreatorScreen.route,
             arguments = listOf(navArgument("id") { defaultValue = "-1" })
         ) {
             val trainingId = it.arguments?.getString("id")!!.toLong()
-            val component = CreateTrainingComponent.create(activityComponent,trainingId)
+            val component = CreateTrainingComponent.create(activityComponent, trainingId)
             val vm = createCreateTrainingViewModel(
                 component,
                 activityComponent.activity(),
@@ -91,7 +92,6 @@ private fun createCreateTrainingViewModel(
     componentActivity: ComponentActivity,
     viewModelStoreOwner: ViewModelStoreOwner,
 ): CreateTrainingViewModel {
-
     val provider = createTrainingComponent.viewModelProvider()
     val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
     return vm
