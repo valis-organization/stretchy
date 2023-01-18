@@ -20,14 +20,17 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         if (trainingId != -1L) {
             viewModelScope.launch {
                 val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
-                _uiState.emit(
-                    CreateTrainingUiState.Success(
-                        trainingId,
-                        true,
-                        trainingWithActivities.name,
-                        trainingWithActivities.activities
+                with(trainingWithActivities) {
+                    _uiState.emit(
+                        CreateTrainingUiState.Success(
+                            trainingId,
+                            true,
+                            name,
+                            activities,
+                            isCreateTrainingButtonVisible(name, activities)
+                        )
                     )
-                )
+                }
             }
         } else {
             viewModelScope.launch {
@@ -36,12 +39,14 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
                         trainingId,
                         false,
                         "",
-                        emptyList()
+                        emptyList(),
+                        false
                     )
                 )
             }
         }
     }
+
     fun editTraining(trainingId: Long) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         viewModelScope.launch {
@@ -65,26 +70,26 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.removeAt(exerciseListPosition)
-        _uiState.value = stateSuccess.copy(activities = currentList)
+        _uiState.value = stateSuccess.copy(activities = currentList, createTrainingButtonVisible = isCreateTrainingButtonVisible(stateSuccess.currentName,currentList))
     }
 
     fun addActivity(activityItem: Activity) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.add(activityItem)
-        _uiState.value = stateSuccess.copy(activities = currentList)
+        _uiState.value = stateSuccess.copy(activities = currentList, createTrainingButtonVisible = isCreateTrainingButtonVisible(stateSuccess.currentName,currentList))
     }
 
     fun editActivity(activityItem: Activity, listId: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList[listId] = activityItem
-        _uiState.value = stateSuccess.copy(activities = currentList)
+        _uiState.value = stateSuccess.copy(activities = currentList, createTrainingButtonVisible = isCreateTrainingButtonVisible(stateSuccess.currentName,currentList))
     }
 
     fun setTrainingName(trainingName: String) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        _uiState.value = stateSuccess.copy(currentName = trainingName)
+        _uiState.value = stateSuccess.copy(currentName = trainingName, createTrainingButtonVisible = isCreateTrainingButtonVisible(trainingName,stateSuccess.activities))
     }
 
     fun createTraining() {
@@ -113,7 +118,7 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
     fun swapExercises(from: Int, to: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val activities = getCurrentActivities(stateSuccess)
-        activities.apply { add(to,removeAt(from)) }
+        activities.apply { add(to, removeAt(from)) }
         _uiState.value = stateSuccess.copy(activities = activities)
     }
 
@@ -144,4 +149,10 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         currentList.addAll(state.activities)
         return currentList
     }
+
+    private fun isCreateTrainingButtonVisible(
+        currentName: String,
+        currentExercises: List<Activity>
+    ) =
+        currentName.isNotBlank() && currentExercises.size >= 2
 }

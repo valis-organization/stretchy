@@ -82,7 +82,6 @@ fun CreateTrainingComposable(
                     ExerciseList(emptyList(), viewModel = viewModel)
                 }
             }
-            CreateExerciseWidget(viewModel)
         }
         Spacer(modifier = Modifier.height(200.dp))
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
