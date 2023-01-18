@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -51,6 +52,7 @@ fun ExecuteTrainingComposable(
     val coroutineScope = rememberCoroutineScope()
     var disableExerciseAnimation =
         true //The first exercise cannot be animated because at the beginning of training the timer is stopped
+    val context = LocalContext.current
     Column(
         Modifier
             .fillMaxSize()
@@ -110,7 +112,7 @@ fun ExecuteTrainingComposable(
             } else if (state.trainingCompleted != null) {
                 state.trainingCompletedEvent?.consume()?.let {
                     coroutineScope.launch {
-                        speaker.say("Training Finished!")
+                        speaker.say(context.resources.getString(R.string.training_finished))
                     }
                 }
                 TrainingSummaryComposable(
@@ -172,7 +174,7 @@ fun BreakComposable(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Prepare to next Exercise:",
+            text = stringResource(id = R.string.prepare_next_exercise) + " ",
             fontSize = 16.sp,
             color = Color.LightGray,
             fontWeight = FontWeight.Bold
@@ -184,7 +186,12 @@ fun BreakComposable(
             visible = showAnimation,
             enter = textFadeInProperties()
         ) {
-            Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            Box(
+                Modifier
+                    .padding(start = 24.dp,end = 24.dp)
+                    .weight(1f, fill = false)) {
+                Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            }
         }
         Spacer(modifier = Modifier.height(100.dp))
         TimerComposable(
@@ -224,7 +231,12 @@ fun ExerciseComposable(
             visible = showAnimation,
             enter = textFadeInProperties()
         ) {
-            Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            Box(
+                Modifier
+                    .padding(start = 24.dp,end = 24.dp)
+                    .weight(1f, fill = false)){
+                Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            }
         }
         Spacer(modifier = Modifier.height(100.dp))
         TimerComposable(
@@ -251,7 +263,12 @@ fun ExerciseComposable(
             visible = showAnimation,
             enter = textFadeInProperties()
         ) {
-            Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Box(
+                Modifier
+                    .padding(start = 24.dp,end = 24.dp)
+                    .weight(1f, fill = false)) {
+                Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -263,10 +280,10 @@ fun ExerciseComposable(
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TimerComposable(
+    modifier: Modifier = Modifier,
     isBreak: Boolean = false,
     totalSeconds: Float,
     currentSeconds: Float,
-    modifier: Modifier = Modifier,
     strokeWidth: Dp = 10.dp
 ) {
     fun toCounterText(seconds: Int): String {

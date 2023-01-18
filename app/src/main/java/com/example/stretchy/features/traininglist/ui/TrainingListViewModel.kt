@@ -53,8 +53,11 @@ class TrainingListViewModel(
 
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        this.activities.forEach {
-            duration += it.duration
+        this.activities.forEachIndexed{index,activity ->
+            duration+= activity.duration
+            if(activities.lastIndex != index){
+                duration += 5
+            }
         }
         return Training(
             this.id.toString(),
@@ -64,7 +67,6 @@ class TrainingListViewModel(
             this.trainingType.toTrainingType()
         )
     }
-
     private fun TrainingType.toTrainingType(): Training.Type {
         return when (this) {
             TrainingType.STRETCH -> Training.Type.STRETCHING
