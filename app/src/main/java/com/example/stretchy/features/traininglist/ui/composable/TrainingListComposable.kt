@@ -233,28 +233,30 @@ private fun TrainingComposable(
             }
         },
         dismissContent = {
-            Column(
-                modifier = Modifier
+            Box(
+                Modifier
                     .background(color = Color.White)
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 152.dp)
-                    .padding(start = 24.dp, end = 24.dp, top = 4.dp, bottom = 12.dp),
-                verticalArrangement = Arrangement.Center
+                    .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 20.dp),
+                Alignment.Center
             ) {
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    Text(text = training.itemName, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                Column {
                     Row(
-                        Modifier
-                            .fillMaxWidth(),
-                        Arrangement.End
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Text(
+                            text = training.itemName,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f, fill = false)
+                        )
                         IconButton(
                             onClick = {
                                 navController.navigate("exerciseCreatorScreen?id=${training.id}")
                             },
                             Modifier
-                                .size(24.dp)
-                                .padding(0.dp)
+                                .size(20.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_edit),
@@ -262,40 +264,40 @@ private fun TrainingComposable(
                             )
                         }
                     }
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                Divider(color = Color.LightGray, thickness = 1.dp)
-                Spacer(modifier = Modifier.height(16.dp))
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    Column {
-                        Text(
-                            text = stringResource(R.string.exercises),
-                            fontSize = 12.sp,
-                            color = Color.LightGray
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "${training.numberOfExercises}",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(100.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.total_time),
-                            fontSize = 12.sp,
-                            color = Color.LightGray
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = convertSecondsToMinutes(training.timeInSeconds.toLong()),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Divider(color = Color.LightGray, thickness = 1.dp)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Column {
+                            Text(
+                                text = stringResource(R.string.exercises),
+                                fontSize = 12.sp,
+                                color = Color.LightGray
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = "${training.numberOfExercises}",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(100.dp))
+                        Column {
+                            Text(
+                                text = stringResource(R.string.total_time),
+                                fontSize = 12.sp,
+                                color = Color.LightGray
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = convertSecondsToMinutes(training.timeInSeconds.toLong()),
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
             }
