@@ -70,26 +70,50 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.removeAt(exerciseListPosition)
-        _uiState.value = stateSuccess.copy(activities = currentList, createTrainingButtonVisible = isCreateTrainingButtonVisible(stateSuccess.currentName,currentList))
+        _uiState.value = stateSuccess.copy(
+            activities = currentList,
+            createTrainingButtonVisible = isCreateTrainingButtonVisible(
+                stateSuccess.currentName,
+                currentList
+            )
+        )
     }
 
     fun addActivity(activityItem: Activity) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.add(activityItem)
-        _uiState.value = stateSuccess.copy(activities = currentList, createTrainingButtonVisible = isCreateTrainingButtonVisible(stateSuccess.currentName,currentList))
+        _uiState.value = stateSuccess.copy(
+            activities = currentList,
+            createTrainingButtonVisible = isCreateTrainingButtonVisible(
+                stateSuccess.currentName,
+                currentList
+            )
+        )
     }
 
     fun editActivity(activityItem: Activity, listId: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList[listId] = activityItem
-        _uiState.value = stateSuccess.copy(activities = currentList, createTrainingButtonVisible = isCreateTrainingButtonVisible(stateSuccess.currentName,currentList))
+        _uiState.value = stateSuccess.copy(
+            activities = currentList,
+            createTrainingButtonVisible = isCreateTrainingButtonVisible(
+                stateSuccess.currentName,
+                currentList
+            )
+        )
     }
 
     fun setTrainingName(trainingName: String) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        _uiState.value = stateSuccess.copy(currentName = trainingName, createTrainingButtonVisible = isCreateTrainingButtonVisible(trainingName,stateSuccess.activities))
+        _uiState.value = stateSuccess.copy(
+            currentName = trainingName,
+            createTrainingButtonVisible = isCreateTrainingButtonVisible(
+                trainingName,
+                stateSuccess.activities
+            )
+        )
     }
 
     fun createTraining() {
