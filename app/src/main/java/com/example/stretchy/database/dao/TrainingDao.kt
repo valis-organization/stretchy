@@ -1,9 +1,6 @@
 package com.example.stretchy.database.dao
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.Query
+import androidx.room.*
 import com.example.stretchy.database.entity.TrainingEntity
 
 @Dao
@@ -16,4 +13,10 @@ interface TrainingDao {
 
     @Delete
     fun delete(trainingEntity: TrainingEntity)
+
+    @Query("DELETE FROM training WHERE trainingId = :trainingId")
+    fun deleteById(trainingId: Long)
+
+    @Update
+    fun update(trainingEntity: TrainingEntity)
 }

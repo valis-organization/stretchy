@@ -71,4 +71,9 @@ class TrainingListViewModel(
             TrainingType.BODYWEIGHT -> Training.Type.BODY_WEIGHT
         }
     }
+
+    fun deleteTraining(training: Training) {
+        viewModelScope.launch { repository.deleteTrainingById(training.id.toLong()) }
+        fetchTrainingList()
+    }
 }

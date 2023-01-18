@@ -7,6 +7,6 @@ class TrainingWithActivity(
     val trainingType: TrainingType,
     val finished: Boolean,
     val activities: List<Activity>
-){
+) {
     var id: Long = 0
 }

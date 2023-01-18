@@ -1,7 +1,8 @@
 package com.example.stretchy.features.createtraining.ui.di
 
 import com.example.stretchy.activity.di.ActivityComponent
-import com.example.stretchy.features.createtraining.ui.CreateTrainingViewModel
+import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
+import dagger.BindsInstance
 import dagger.Component
 import javax.inject.Provider
 
@@ -15,16 +16,18 @@ interface CreateTrainingComponent {
     interface Factory {
         fun create(
             activityComponent: ActivityComponent,
+            @BindsInstance trainingId: Long
         ): CreateTrainingComponent
     }
 
-    fun viewModelProvider(): Provider<CreateTrainingViewModel>
+    fun viewModelProvider(): Provider<CreateOrEditTrainingViewModel>
 
     companion object {
         fun create(
             activityComponent: ActivityComponent,
+            trainingId: Long
         ): CreateTrainingComponent {
-            return DaggerCreateTrainingComponent.factory().create(activityComponent)
+            return DaggerCreateTrainingComponent.factory().create(activityComponent, trainingId)
         }
     }
 }

@@ -4,19 +4,22 @@ import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,17 +36,24 @@ import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.database.data.ActivityType
+import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
-import com.example.stretchy.features.createtraining.ui.CreateTrainingViewModel
+import com.example.stretchy.features.createtraining.ui.*
 import com.example.stretchy.features.createtraining.ui.data.Exercise
+import com.example.stretchy.features.createtraining.ui.list.DragDropLazyList
 import com.example.stretchy.repository.Activity
-import com.example.stretchy.theme.DarkGray
+import com.example.stretchy.theme.BananaMania
+import com.example.stretchy.theme.WhiteSmoke
+import java.util.*
 
 @Composable
 fun CreateTrainingComposable(
     navController: NavController,
-    viewModel: CreateTrainingViewModel
+    viewModel: CreateOrEditTrainingViewModel
 ) {
+    var trainingName: String by remember { mutableStateOf("") }
+    var trainingId: Long? by remember { mutableStateOf(null) }
+    var isTrainingBeingEdited = false
     val context = LocalContext.current
     Box(
         modifier = Modifier
@@ -54,40 +64,49 @@ fun CreateTrainingComposable(
             Modifier
                 .padding(top = 16.dp)
         ) {
-            TrainingName(viewModel)
-            Spacer(modifier = Modifier.height(24.dp))
-
             when (val state = viewModel.uiState.collectAsState().value) {
                 is CreateTrainingUiState.Success -> {
-                    ExerciseList(exercises = state.training)
+                    trainingId = state.trainingId
+                    trainingName = state.currentName
+                    TrainingName(viewModel, trainingName)
+                    isTrainingBeingEdited = state.editingTraining
+                    Spacer(modifier = Modifier.height(24.dp))
+                    ExerciseList(exercises = state.activities, viewModel = viewModel)
                 }
                 is CreateTrainingUiState.Error -> {
                     HandleError(state = state, context = context)
                 }
-                is CreateTrainingUiState.TitleChanged -> {
-                    ExerciseList(exercises = state.training)
-                }
                 else -> {
-                    ExerciseList(emptyList())
+                    TrainingName(viewModel, trainingName)
+                    Spacer(modifier = Modifier.height(24.dp))
+                    ExerciseList(emptyList(), viewModel = viewModel)
                 }
             }
             CreateExerciseWidget(viewModel)
         }
         Spacer(modifier = Modifier.height(200.dp))
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            if(viewModel.uiState.collectAsState().value.createTrainingButtonVisible){
+            if (viewModel.uiState.collectAsState().value.createTrainingButtonVisible) {
                 Button(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
                     onClick = {
-                        viewModel.createTraining()
+                        if (isTrainingBeingEdited) {
+                            viewModel.editTraining(trainingId = trainingId!!)
+                        } else {
+                            viewModel.createTraining()
+                        }
                         if (viewModel.uiState.value is CreateTrainingUiState.Done) {
                             navController.navigate(Screen.TrainingListScreen.route)
                         }
                     }
                 ) {
-                    Text(stringResource(id = R.string.create_training))
+                    if (isTrainingBeingEdited) {
+                        Text(stringResource(id = R.string.save_changes))
+                    } else {
+                        Text(stringResource(id = R.string.create_training))
+                    }
                 }
             }
         }
@@ -95,42 +114,60 @@ fun CreateTrainingComposable(
 }
 
 @Composable
-private fun ExerciseList(exercises: List<Activity>) {
-    LazyColumn(
+fun ExerciseList(exercises: List<Activity>, viewModel: CreateOrEditTrainingViewModel) {
+    var editedExercise by remember { mutableStateOf(Exercise()) }
+    var widgetVisible by remember { mutableStateOf(false) }
+    DragDropLazyList(
         modifier = Modifier.heightIn(0.dp, 240.dp),
-        verticalArrangement = Arrangement.Top
-    ) {
-        items(exercises) { exercise ->
-            ExerciseItem(item = Exercise(exercise.name))
+        items = exercises,
+        onSwap = viewModel::swapExercises
+    ) { index, item ->
+        Box(
+            Modifier
+                .fillMaxSize()
+                .height(64.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(
+                    interactionSource = MutableInteractionSource(),
+                    indication = null
+                ) {
+                    editedExercise = Exercise(item.name, item.duration, index)
+                    widgetVisible = true
+                }) {
+            SwipeableExerciseItem(
+                vm = viewModel,
+                exercise = Exercise(item.name, item.duration, index)
+            )
         }
     }
+    CreateExerciseWidget(
+        viewModel = viewModel,
+        editedExercise = editedExercise,
+        widgetVisible = widgetVisible,
+        onAddButtonClick = {
+            widgetVisible = !widgetVisible
+            editedExercise = Exercise()
+        })
 }
 
 @Composable
-private fun ExerciseItem(item: Exercise) {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(color = Color.LightGray)
-    ) {
-        Text(text = item.exerciseName, color = Color.Black, fontWeight = FontWeight.Bold)
-    }
-}
-
-@Composable
-fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
-    val minExerciseDuration = 10
-    var visible by remember { mutableStateOf(false) }
+fun CreateExerciseWidget(
+    viewModel: CreateOrEditTrainingViewModel,
+    editedExercise: Exercise,
+    widgetVisible: Boolean,
+    onAddButtonClick: () -> Unit
+) {
+    val sliderMinValue = 10
     val sliderMaxValue = 300
-    var sliderValue: Int by remember { mutableStateOf(minExerciseDuration) }
-    var exerciseDuration: Int by remember { mutableStateOf(minExerciseDuration) }
-    var exerciseName = ""
+    var exerciseDuration: Int by remember { mutableStateOf(sliderMinValue) }
+    var exerciseName: String by remember { mutableStateOf("") }
     val context = LocalContext.current
-    AnimatedVisibility(visible = !visible) {
+    val exerciseIsBeingEdited: Boolean = editedExercise.name != ""
+
+    exerciseName = editedExercise.name
+    exerciseDuration = editedExercise.duration
+
+    AnimatedVisibility(visible = !widgetVisible) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
@@ -138,16 +175,19 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                 .height(64.dp)
                 .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(color = Color.LightGray)
+                .background(color = Color(BananaMania.toArgb()))
                 .clickable {
-                    visible = !visible
+                    onAddButtonClick()
                 }
         ) {
-            Icon(imageVector = Icons.Filled.Add, contentDescription = "Add")
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = stringResource(id = R.string.desc_plus_icon)
+            )
         }
     }
     AnimatedVisibility(
-        visible = visible,
+        visible = widgetVisible,
         enter = fadeIn(animationSpec = tween(500)),
         exit = fadeOut(animationSpec = tween(500))
     ) {
@@ -155,30 +195,28 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
             Modifier
                 .padding(start = 12.dp, end = 12.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(color = Color.LightGray)
+                .background(color = Color(BananaMania.toArgb()))
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            ExerciseNameControls(onNameEntered = { exerciseName = it })
+            ExerciseNameControls(currentName = exerciseName, onNameEntered = { exerciseName = it })
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                text = "Duration: ${toDisplayableLength(exerciseDuration)}",
+                text = stringResource(R.string.duration) + " ${toDisplayableLength(exerciseDuration)}",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
             Slider(
-                value = sliderValue.toFloat(),
+                value = exerciseDuration.toFloat(),
                 onValueChange = {
-                    sliderValue = it.toInt()
-                    exerciseDuration = sliderValue
+                    exerciseDuration = it.toInt()
                 },
                 valueRange = 10f..sliderMaxValue.toFloat(),
             )
             AddOrSubtractButtons { changeValue ->
-                if (sliderValue + changeValue in 10..300) {
-                    sliderValue += changeValue
-                    exerciseDuration = sliderValue
+                if (exerciseDuration + changeValue in 10..300) {
+                    exerciseDuration += changeValue
                 }
             }
             Button(
@@ -187,18 +225,29 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                     .fillMaxWidth()
                     .padding(bottom = 16.dp, top = 16.dp),
                 onClick = {
-                    if (exerciseName.isNotEmpty() && sliderValue != 0) {
-                        visible = !visible
-                        viewModel.addActivity(
-                            Activity(
-                                exerciseName,
-                                exerciseDuration,
-                                ActivityType.STRETCH
+                    if (exerciseName.isNotEmpty() && exerciseDuration != 0) {
+                        onAddButtonClick()
+                        if (exerciseIsBeingEdited) {
+                            viewModel.editActivity(
+                                Activity(
+                                    exerciseName,
+                                    exerciseDuration,
+                                    ActivityType.STRETCH
+                                ), editedExercise.listId!!
                             )
-                        )
-                        Toast.makeText(context, R.string.exercise_added, Toast.LENGTH_LONG).show()
-                        sliderValue = minExerciseDuration
-                        exerciseDuration = minExerciseDuration
+                            Toast.makeText(context, R.string.exercise_edited, Toast.LENGTH_LONG)
+                                .show()
+                        } else {
+                            viewModel.addActivity(
+                                Activity(
+                                    exerciseName,
+                                    exerciseDuration,
+                                    ActivityType.STRETCH
+                                )
+                            )
+                            Toast.makeText(context, R.string.exercise_added, Toast.LENGTH_LONG)
+                                .show()
+                        }
                     } else {
                         Toast.makeText(
                             context,
@@ -207,7 +256,13 @@ fun CreateExerciseWidget(viewModel: CreateTrainingViewModel) {
                         ).show()
                     }
                 }
-            ) { Text(text = "Add Exercise") }
+            ) {
+                if (exerciseIsBeingEdited) {
+                    Text(text = stringResource(id = R.string.save_changes))
+                } else {
+                    Text(text = stringResource(id = R.string.add_exercise))
+                }
+            }
         }
     }
 }
@@ -261,8 +316,8 @@ fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
 }
 
 @Composable
-fun TrainingName(viewModel: CreateTrainingViewModel) {
-    var trainingName by remember { mutableStateOf("") }
+fun TrainingName(viewModel: CreateOrEditTrainingViewModel, initialTrainingName: String) {
+    var trainingName by remember { mutableStateOf(initialTrainingName) }
 
     TextField(
         modifier = Modifier
@@ -285,9 +340,10 @@ fun TrainingName(viewModel: CreateTrainingViewModel) {
 
 @Composable
 fun ExerciseNameControls(
+    currentName: String,
     onNameEntered: (value: String) -> Unit
 ) {
-    var exerciseName by remember { mutableStateOf("") }
+    var exerciseName = currentName
     Text(
         modifier = Modifier
             .fillMaxWidth()
@@ -300,7 +356,7 @@ fun ExerciseNameControls(
         modifier = Modifier
             .background(
                 shape = RoundedCornerShape(percent = 10),
-                color = Color(DarkGray.toArgb()),
+                color = Color(WhiteSmoke.toArgb()),
             )
             .height(36.dp)
             .padding(start = 12.dp, end = 12.dp),
@@ -312,12 +368,67 @@ fun ExerciseNameControls(
                 .align(Alignment.Center),
             value = exerciseName,
             textStyle = TextStyle(fontSize = 16.sp),
+            singleLine = true,
             onValueChange = {
                 exerciseName = it
                 onNameEntered(it)
             },
         )
     }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun SwipeableExerciseItem(
+    vm: CreateOrEditTrainingViewModel,
+    exercise: Exercise
+) {
+    val dismissState = DismissState(initialValue = DismissValue.Default, confirmStateChange = {
+        if (it == DismissValue.DismissedToEnd) {
+            vm.removeLocalActivity(exercise.listId!!)
+        }
+        true
+    })
+
+    SwipeToDismiss(
+        state = dismissState,
+        directions = setOf(DismissDirection.StartToEnd),
+        dismissThresholds = { FractionalThreshold(0.2f) },
+        background = {
+            val color by animateColorAsState(
+                targetValue = when (dismissState.targetValue) {
+                    DismissValue.Default -> Color(WhiteSmoke.toArgb())
+                    DismissValue.DismissedToEnd -> Color.Red
+                    else -> {
+                        Color(WhiteSmoke.toArgb())
+                    }
+                }
+            )
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(12.dp),
+                Alignment.BottomStart
+            ) {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = stringResource(id = R.string.desc_delete_icon)
+                )
+            }
+        },
+        dismissContent = {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(BananaMania.toArgb()))
+                    .clip(RoundedCornerShape(10.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(exercise.name)
+            }
+        }
+    )
 }
 
 private fun toDisplayableLength(exerciseDuration: Int): String {
