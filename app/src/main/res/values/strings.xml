@@ -1,7 +1,5 @@
 <resources>
     <string name="app_name">Stretchy</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="total_time">Total time</string>
     <string name="exercises">Exercises</string>
@@ -18,4 +16,15 @@
     <string name="create_training">Create training!</string>
     <string name="import_trainings">Import</string>
     <string name="export_trainings">Export</string>
+    <string name="save_changes">Save changes!</string>
+    <string name="duration">Duration: </string>
+    <string name="exercise_edited">Exercise edited</string>
+    <string name="exercise_added">Exercise added</string>
+    <string name="add_exercise">Add exercise</string>
+
+    //content description
+    <string name="desc_delete_icon">Delete icon</string>
+    <string name="desc_plus_icon">Plus icon</string>
+    <string name="desc_menu_icon">Menu icon</string>
+    <string name="desc_edit_icon">Edit icon</string>
 </resources>
