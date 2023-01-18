@@ -1,6 +1,13 @@
 package com.example.stretchy.features.createtraining.ui.composable
 
+import android.content.Context
+import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -29,6 +36,8 @@ import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.database.data.ActivityType
+import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
+import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
 import com.example.stretchy.features.createtraining.ui.*
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.features.createtraining.ui.list.DragDropLazyList
@@ -45,7 +54,7 @@ fun CreateTrainingComposable(
     var trainingName: String by remember { mutableStateOf("") }
     var trainingId: Long? by remember { mutableStateOf(null) }
     var isTrainingBeingEdited = false
-
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -64,6 +73,9 @@ fun CreateTrainingComposable(
                     Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(exercises = state.activities, viewModel = viewModel)
                 }
+                is CreateTrainingUiState.Error -> {
+                    HandleError(state = state, context = context)
+                }
                 else -> {
                     TrainingName(viewModel, trainingName)
                     Spacer(modifier = Modifier.height(24.dp))
@@ -73,23 +85,27 @@ fun CreateTrainingComposable(
         }
         Spacer(modifier = Modifier.height(200.dp))
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            Button(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                onClick = {
-                    if (isTrainingBeingEdited) {
-                        viewModel.editTraining(trainingId = trainingId!!)
-                    } else {
-                        viewModel.createTraining()
+            if (viewModel.uiState.collectAsState().value.createTrainingButtonVisible) {
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    onClick = {
+                        if (isTrainingBeingEdited) {
+                            viewModel.editTraining(trainingId = trainingId!!)
+                        } else {
+                            viewModel.createTraining()
+                        }
+                        if (viewModel.uiState.value is CreateTrainingUiState.Done) {
+                            navController.navigate(Screen.TrainingListScreen.route)
+                        }
                     }
-                    navController.navigate(Screen.TrainingListScreen.route)
-                }
-            ) {
-                if (isTrainingBeingEdited) {
-                    Text(stringResource(id = R.string.save_changes))
-                } else {
-                    Text(stringResource(id = R.string.create_training))
+                ) {
+                    if (isTrainingBeingEdited) {
+                        Text(stringResource(id = R.string.save_changes))
+                    } else {
+                        Text(stringResource(id = R.string.create_training))
+                    }
                 }
             }
         }
@@ -421,5 +437,33 @@ private fun toDisplayableLength(exerciseDuration: Int): String {
         "$mins min $rest sec"
     } else {
         "$exerciseDuration sec"
+    }
+}
+
+@Composable
+private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
+    Log.e("Error", state.reason.toString())
+    when (state.reason) {
+        CreateTrainingUiState.Error.Reason.MissingTrainingName -> {
+            Toast.makeText(
+                context,
+                R.string.specify_training_name,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        CreateTrainingUiState.Error.Reason.NotEnoughExercises -> {
+            Toast.makeText(
+                context,
+                R.string.add_min_2_exercises,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+        is CreateTrainingUiState.Error.Reason.Unknown -> {
+            Toast.makeText(
+                context,
+                R.string.something_went_wrong,
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 }
