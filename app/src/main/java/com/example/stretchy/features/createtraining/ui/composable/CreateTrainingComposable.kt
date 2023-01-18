@@ -57,16 +57,10 @@ fun CreateTrainingComposable(
         ) {
             when (val state = viewModel.uiState.collectAsState().value) {
                 is CreateTrainingUiState.Success -> {
-                    TrainingName(viewModel, trainingName)
-                    isTrainingBeingEdited = state.editingTraining
-                    Spacer(modifier = Modifier.height(24.dp))
-                    ExerciseList(exercises = state.activities, viewModel = viewModel)
-                }
-                is CreateTrainingUiState.Editing -> {
                     trainingId = state.trainingId
-                    trainingName = state.trainingName
-                    isTrainingBeingEdited = state.editingTraining
+                    trainingName = state.currentName
                     TrainingName(viewModel, trainingName)
+                    isTrainingBeingEdited = state.editingTraining
                     Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(exercises = state.activities, viewModel = viewModel)
                 }
@@ -374,7 +368,7 @@ fun SwipeableExerciseItem(
 ) {
     val dismissState = DismissState(initialValue = DismissValue.Default, confirmStateChange = {
         if (it == DismissValue.DismissedToEnd) {
-            vm.removeLocalExercise(exercise.listId!!)
+            vm.removeLocalActivity(exercise.listId!!)
         }
         true
     })

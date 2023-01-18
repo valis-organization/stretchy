@@ -4,18 +4,11 @@ import com.example.stretchy.repository.Activity
 
 sealed class CreateTrainingUiState {
     data class Success(
+        val trainingId: Long?,
         val editingTraining: Boolean,
         val currentName: String,
         val activities: List<Activity>
     ) : CreateTrainingUiState()
-
-    data class Editing(
-        val trainingId: Long?,
-        val editingTraining: Boolean,
-        val trainingName: String,
-        val activities: List<Activity>
-    ) : CreateTrainingUiState()
-
     data class Error(val reason: Reason) : CreateTrainingUiState() {
         sealed class Reason {
             object MissingTrainingName : Reason()
