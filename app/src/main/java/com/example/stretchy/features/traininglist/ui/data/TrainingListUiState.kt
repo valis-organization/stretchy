@@ -8,7 +8,7 @@ sealed class TrainingListUiState {
 
 data class Training(
     val id: String,
-    val itemName: String,
+    val name: String,
     val numberOfExercises: Int,
     val timeInSeconds: Int,
     val type: Type
