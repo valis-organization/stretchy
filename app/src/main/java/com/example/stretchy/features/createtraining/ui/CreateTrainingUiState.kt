@@ -2,15 +2,15 @@ package com.example.stretchy.features.createtraining.ui
 
 import com.example.stretchy.repository.Activity
 
-sealed class CreateTrainingUiState(open val createTrainingButtonVisible: Boolean,open val isTrainingChanged : Boolean) {
+sealed class CreateTrainingUiState(open val saveButtonCanBeClicked: Boolean, open val isTrainingChanged : Boolean) {
     data class Success(
         val trainingId: Long?,
         val editingTraining: Boolean,
         val currentName: String,
         val activities: List<Activity>,
         override val isTrainingChanged : Boolean = false,
-        override val createTrainingButtonVisible: Boolean = false
-    ) : CreateTrainingUiState(createTrainingButtonVisible,isTrainingChanged)
+        override val saveButtonCanBeClicked: Boolean = false
+    ) : CreateTrainingUiState(saveButtonCanBeClicked,isTrainingChanged)
 
     data class Error(val reason: Reason) : CreateTrainingUiState(false,false) {
         sealed class Reason {

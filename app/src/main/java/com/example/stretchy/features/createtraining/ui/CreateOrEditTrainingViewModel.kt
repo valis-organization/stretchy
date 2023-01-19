@@ -42,7 +42,7 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
                         "",
                         emptyList(),
                         false,
-                        createTrainingButtonVisible = false
+                        saveButtonCanBeClicked = false
                     )
                 )
             }
@@ -72,20 +72,7 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.removeAt(exerciseListPosition)
-        with(stateSuccess){
-            _uiState.value = stateSuccess.copy(
-                activities = currentList,
-                createTrainingButtonVisible = isCreateTrainingButtonVisible(
-                    stateSuccess.currentName,
-                    currentList
-                ),
-                isTrainingChanged = isTrainingChanged(
-                    stateSuccess.trainingId,
-                    stateSuccess.currentName,
-                    currentList
-                )
-            )
-        }
+        emitActivitiesList(stateSuccess,currentList)
     }
 
     fun addActivity(activityItem: Activity) {
@@ -107,7 +94,7 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         with(stateSuccess) {
             _uiState.value = copy(
                 currentName = trainingName,
-                createTrainingButtonVisible = isCreateTrainingButtonVisible(
+                saveButtonCanBeClicked = isCreateTrainingButtonVisible(
                     trainingName,
                     activities
                 ),
@@ -212,7 +199,7 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         with(stateSuccess){
             _uiState.value = copy(
                 activities = currentList,
-                createTrainingButtonVisible = isCreateTrainingButtonVisible(
+                saveButtonCanBeClicked = isCreateTrainingButtonVisible(
                     currentName,
                     currentList
                 ),
