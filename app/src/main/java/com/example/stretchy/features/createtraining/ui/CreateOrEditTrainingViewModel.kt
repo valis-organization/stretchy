@@ -72,21 +72,21 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.removeAt(exerciseListPosition)
-        emitActivitiesList(stateSuccess,currentList)
+        emitActivitiesList(stateSuccess, currentList)
     }
 
     fun addActivity(activityItem: Activity) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.add(activityItem)
-        emitActivitiesList(stateSuccess,currentList)
+        emitActivitiesList(stateSuccess, currentList)
     }
 
     fun editActivity(activityItem: Activity, listId: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList[listId] = activityItem
-        emitActivitiesList(stateSuccess,currentList)
+        emitActivitiesList(stateSuccess, currentList)
     }
 
     fun setTrainingName(trainingName: String) {
@@ -195,8 +195,11 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         return true
     }
 
-    private fun emitActivitiesList(stateSuccess : CreateTrainingUiState.Success,currentList: List<Activity>){
-        with(stateSuccess){
+    private fun emitActivitiesList(
+        stateSuccess: CreateTrainingUiState.Success,
+        currentList: List<Activity>
+    ) {
+        with(stateSuccess) {
             _uiState.value = copy(
                 activities = currentList,
                 saveButtonCanBeClicked = isCreateTrainingButtonVisible(

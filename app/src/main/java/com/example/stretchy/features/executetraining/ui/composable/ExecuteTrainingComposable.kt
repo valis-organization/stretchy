@@ -174,7 +174,7 @@ fun BreakComposable(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = stringResource(id = R.string.prepare_next_exercise) + " ",
+            text = "${stringResource(id = R.string.prepare_next_exercise)} ",
             fontSize = 16.sp,
             color = Color.LightGray,
             fontWeight = FontWeight.Bold
@@ -188,8 +188,9 @@ fun BreakComposable(
         ) {
             Box(
                 Modifier
-                    .padding(start = 24.dp,end = 24.dp)
-                    .weight(1f, fill = false)) {
+                    .padding(start = 24.dp, end = 24.dp)
+                    .weight(1f, fill = false)
+            ) {
                 Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
             }
         }
@@ -233,8 +234,9 @@ fun ExerciseComposable(
         ) {
             Box(
                 Modifier
-                    .padding(start = 24.dp,end = 24.dp)
-                    .weight(1f, fill = false)){
+                    .padding(start = 24.dp, end = 24.dp)
+                    .weight(1f, fill = false)
+            ) {
                 Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
             }
         }
@@ -265,8 +267,9 @@ fun ExerciseComposable(
         ) {
             Box(
                 Modifier
-                    .padding(start = 24.dp,end = 24.dp)
-                    .weight(1f, fill = false)) {
+                    .padding(start = 24.dp, end = 24.dp)
+                    .weight(1f, fill = false)
+            ) {
                 Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             }
         }

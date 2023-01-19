@@ -83,16 +83,16 @@ class TrainingListViewModel(
     fun copyTraining(training: Training) {
         viewModelScope.launch {
             with(training) {
-              repository.getTrainingWithActivitiesById(id.toLong()).activities.let{
-                  repository.addTrainingWithActivities(
-                      TrainingWithActivity(
-                          name + COPY,
-                          TrainingType.STRETCH,
-                          true,
-                          it
-                      )
-                  )
-              }
+                repository.getTrainingWithActivitiesById(id.toLong()).activities.let {
+                    repository.addTrainingWithActivities(
+                        TrainingWithActivity(
+                            name + COPY,
+                            TrainingType.STRETCH,
+                            true,
+                            it
+                        )
+                    )
+                }
             }
         }
         fetchTrainingList()

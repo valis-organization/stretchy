@@ -102,7 +102,7 @@ fun CreateOrEditTrainingButton(
         if (buttonCanBeClicked) ButtonDefaults.buttonColors(backgroundColor = Color(BananaMania.toArgb())) else ButtonDefaults.buttonColors(
             backgroundColor = Color.Gray
         )
-    val textColors = if(buttonCanBeClicked) Color.Black else Color.DarkGray
+    val textColors = if (buttonCanBeClicked) Color.Black else Color.DarkGray
     Button(
         modifier = Modifier
             .fillMaxWidth()
@@ -123,13 +123,25 @@ fun CreateOrEditTrainingButton(
     ) {
         if (isTrainingBeingEdited) {
             if (viewModel.uiState.collectAsState().value.isTrainingChanged) {
-                Text(stringResource(id = R.string.save_changes),fontWeight = FontWeight.Bold, color = textColors)
+                Text(
+                    stringResource(id = R.string.save_changes),
+                    fontWeight = FontWeight.Bold,
+                    color = textColors
+                )
             } else {
-                Text(stringResource(id = R.string.back),fontWeight = FontWeight.Bold, color = textColors)
+                Text(
+                    stringResource(id = R.string.back),
+                    fontWeight = FontWeight.Bold,
+                    color = textColors
+                )
             }
 
         } else {
-            Text(stringResource(id = R.string.create_training),fontWeight = FontWeight.Bold, color = textColors)
+            Text(
+                stringResource(id = R.string.create_training),
+                fontWeight = FontWeight.Bold,
+                color = textColors
+            )
         }
     }
 }
