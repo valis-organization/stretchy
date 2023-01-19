@@ -185,10 +185,11 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
             if (trainingFromDb!!.name == trainingName) {
                 if (trainingFromDb!!.activities.size == activities.size) {
                     trainingFromDb!!.activities.forEachIndexed { index, activity ->
-                        if (activity == activities[index]) {
-                            return false
+                        if (activity != activities[index]) {
+                            return true
                         }
                     }
+                    return false
                 }
             }
         }

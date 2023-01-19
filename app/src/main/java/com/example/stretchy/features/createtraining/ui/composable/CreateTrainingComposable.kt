@@ -53,7 +53,7 @@ fun CreateTrainingComposable(
 ) {
     var trainingName: String by remember { mutableStateOf("") }
     var trainingId: Long? by remember { mutableStateOf(null) }
-    var isTrainingBeingEdited by remember { mutableStateOf(false)}
+    var isTrainingBeingEdited by remember { mutableStateOf(false) }
     val context = LocalContext.current
     Box(
         modifier = Modifier
@@ -76,7 +76,7 @@ fun CreateTrainingComposable(
                 is CreateTrainingUiState.Error -> {
                     HandleError(state = state, context = context)
                 }
-                is CreateTrainingUiState.Done->{
+                is CreateTrainingUiState.Done -> {
 
                 }
                 else -> {
@@ -133,7 +133,7 @@ fun CreateOrEditTrainingButton(
                 )
             } else {
                 Text(
-                    stringResource(id = R.string.back),
+                    stringResource(id = R.string.close_editing),
                     fontWeight = FontWeight.Bold,
                     color = textColors
                 )
@@ -288,15 +288,17 @@ fun AddOrEditExerciseButton(
             if (exerciseName.isNotEmpty() && exerciseDuration != 0) {
                 onAddOrEditButtonClick()
                 if (exerciseIsBeingEdited) {
-                    viewModel.editActivity(
-                        Activity(
-                            exerciseName,
-                            exerciseDuration,
-                            ActivityType.STRETCH
-                        ), editedExercise.listId!!
-                    )
-                    Toast.makeText(context, R.string.exercise_edited, Toast.LENGTH_LONG)
-                        .show()
+                    if (exerciseName != editedExercise.name || exerciseDuration != editedExercise.duration) {
+                        viewModel.editActivity(
+                            Activity(
+                                exerciseName,
+                                exerciseDuration,
+                                ActivityType.STRETCH
+                            ), editedExercise.listId!!
+                        )
+                        Toast.makeText(context, R.string.exercise_edited, Toast.LENGTH_LONG)
+                            .show()
+                    }
                 } else {
                     viewModel.addActivity(
                         Activity(
@@ -319,7 +321,7 @@ fun AddOrEditExerciseButton(
     ) {
         if (exerciseIsBeingEdited) {
             if (exerciseName == editedExercise.name && exerciseDuration == editedExercise.duration) {
-                Text(text = stringResource(id = R.string.back))
+                Text(text = stringResource(id = R.string.close_item))
             } else {
                 Text(text = stringResource(id = R.string.save_changes))
             }
