@@ -76,4 +76,26 @@ class TrainingListViewModel(
         viewModelScope.launch { repository.deleteTrainingById(training.id.toLong()) }
         fetchTrainingList()
     }
+
+    fun copyTraining(training: Training) {
+        viewModelScope.launch {
+            with(training) {
+              repository.getTrainingWithActivitiesById(id.toLong()).activities.let{
+                  repository.addTrainingWithActivities(
+                      TrainingWithActivity(
+                          name + COPY,
+                          TrainingType.STRETCH,
+                          true,
+                          it
+                      )
+                  )
+              }
+            }
+        }
+        fetchTrainingList()
+    }
+
+    companion object{
+        const val COPY = " copy"
+    }
 }

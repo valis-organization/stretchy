@@ -69,7 +69,6 @@ fun TrainingListComposable(
             )
         }
     ) { contentPadding ->
-
         Box(
             modifier = Modifier
                 .padding(contentPadding)
@@ -246,22 +245,37 @@ private fun TrainingComposable(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = training.itemName,
+                            text = training.name,
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.weight(1f, fill = false)
                         )
-                        IconButton(
-                            onClick = {
-                                navController.navigate("exerciseCreatorScreen?id=${training.id}")
-                            },
-                            Modifier
-                                .size(20.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_edit),
-                                contentDescription = stringResource(id = R.string.desc_edit_icon),
-                            )
+                        Row {
+                            IconButton(
+                                onClick = {
+                                    navController.navigate("exerciseCreatorScreen?id=${training.id}")
+                                },
+                                Modifier
+                                    .size(20.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_edit),
+                                    contentDescription = stringResource(id = R.string.desc_edit_icon),
+                                )
+                            }
+                            Spacer(Modifier.width(16.dp))
+                            IconButton(
+                                onClick = {
+                                    vm.copyTraining(training)
+                                },
+                                Modifier
+                                    .size(20.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_copy),
+                                    contentDescription = stringResource(id = R.string.desc_copy_icon),
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
