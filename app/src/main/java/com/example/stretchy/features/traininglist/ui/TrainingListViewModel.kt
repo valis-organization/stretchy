@@ -53,9 +53,9 @@ class TrainingListViewModel(
 
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        this.activities.forEachIndexed{index,activity ->
-            duration+= activity.duration
-            if(activities.lastIndex != index){
+        this.activities.forEachIndexed { index, activity ->
+            duration += activity.duration
+            if (activities.lastIndex != index) {
                 duration += 5
             }
         }
@@ -67,6 +67,7 @@ class TrainingListViewModel(
             this.trainingType.toTrainingType()
         )
     }
+
     private fun TrainingType.toTrainingType(): Training.Type {
         return when (this) {
             TrainingType.STRETCH -> Training.Type.STRETCHING
@@ -97,7 +98,7 @@ class TrainingListViewModel(
         fetchTrainingList()
     }
 
-    companion object{
+    companion object {
         const val COPY = " copy"
     }
 }

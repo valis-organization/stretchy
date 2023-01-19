@@ -102,7 +102,12 @@ fun CreateTrainingComposable(
                     }
                 ) {
                     if (isTrainingBeingEdited) {
-                        Text(stringResource(id = R.string.save_changes))
+                        if(viewModel.uiState.collectAsState().value.isTrainingChanged){
+                            Text(stringResource(id = R.string.save_changes))
+                        }else{
+                            Text(stringResource(id = R.string.back))
+                        }
+
                     } else {
                         Text(stringResource(id = R.string.create_training))
                     }
@@ -257,7 +262,11 @@ fun CreateExerciseWidget(
                 }
             ) {
                 if (exerciseIsBeingEdited) {
-                    Text(text = stringResource(id = R.string.save_changes))
+                    if(exerciseName == editedExercise.name && exerciseDuration == editedExercise.duration){
+                        Text(text = stringResource(id = R.string.back))
+                    }else{
+                        Text(text = stringResource(id = R.string.save_changes))
+                    }
                 } else {
                     Text(text = stringResource(id = R.string.add_exercise))
                 }
