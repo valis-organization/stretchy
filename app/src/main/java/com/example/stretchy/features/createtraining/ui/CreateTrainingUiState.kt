@@ -25,7 +25,7 @@ sealed class CreateTrainingUiState(
 
     object Init : CreateTrainingUiState(false, false)
 
-    object Done : CreateTrainingUiState(false, false)
+    object Done : CreateTrainingUiState(true, true)
 }
 
 sealed class CreateTrainingActivityItem(

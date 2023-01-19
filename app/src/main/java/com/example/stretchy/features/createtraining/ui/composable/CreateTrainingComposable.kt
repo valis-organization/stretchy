@@ -53,7 +53,7 @@ fun CreateTrainingComposable(
 ) {
     var trainingName: String by remember { mutableStateOf("") }
     var trainingId: Long? by remember { mutableStateOf(null) }
-    var isTrainingBeingEdited = false
+    var isTrainingBeingEdited by remember { mutableStateOf(false)}
     val context = LocalContext.current
     Box(
         modifier = Modifier
@@ -75,6 +75,9 @@ fun CreateTrainingComposable(
                 }
                 is CreateTrainingUiState.Error -> {
                     HandleError(state = state, context = context)
+                }
+                is CreateTrainingUiState.Done->{
+
                 }
                 else -> {
                     TrainingName(viewModel, trainingName)
