@@ -7,6 +7,7 @@ import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
+import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,11 +54,8 @@ class TrainingListViewModel(
 
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        this.activities.forEachIndexed { index, activity ->
+        getExercisesWithBreak(activities).forEach {activity ->
             duration += activity.duration
-            if (activities.lastIndex != index) {
-                duration += 5
-            }
         }
         return Training(
             this.id.toString(),
@@ -97,7 +95,6 @@ class TrainingListViewModel(
         }
         fetchTrainingList()
     }
-
     companion object {
         const val COPY = " copy"
     }
