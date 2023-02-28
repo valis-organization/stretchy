@@ -1,5 +1,6 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
@@ -49,77 +50,101 @@ fun ExecuteTrainingComposable(
     player: Player,
     navController: NavController
 ) {
-    val coroutineScope = rememberCoroutineScope()
+
+    var showSnackbar by remember { mutableStateOf(false) }
+    var numberOfBackButtonClick = 0
+    BackHandler {
+        numberOfBackButtonClick++
+        showSnackbar = true
+        if (numberOfBackButtonClick == 2) {
+            navController.popBackStack()
+        }
+    }
     var disableExerciseAnimation =
         true //The first exercise cannot be animated because at the beginning of training the timer is stopped
     val context = LocalContext.current
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(Color.White),
-        verticalArrangement = Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Box(
-            modifier = Modifier.clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                viewModel.toggleStartStopTimer()
-            },
-            contentAlignment = Alignment.Center
-        ) {
-            val state = viewModel.uiState.collectAsState().value
-            consumeReadExerciseEvent(state.readExerciseNameEvent, coroutineScope, speaker)
-            consumeActivityFinishedState(state.activityFinishesEvent, coroutineScope, player)
-            consumeBreakEndsState(state.breakEndsEvent, coroutineScope, player)
+    val coroutineScope = rememberCoroutineScope()
+    val scaffoldState: ScaffoldState = rememberScaffoldState()
 
-            if (state.isLoading) {
-                Text(
-                    text = stringResource(id = R.string.loading),
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            } else if (state.success != null) {
-                when (val item = state.success) {
-                    is ActivityItem.Exercise -> {
-                        ExerciseComposable(
-                            exerciseName = item.name,
+    Scaffold(scaffoldState = scaffoldState) { padding ->
+        if (showSnackbar) {
+            QuittingSnackbar(
+                scaffoldState = scaffoldState,
+                navController = navController,
+                onDismiss = {
+                    showSnackbar = false
+                    numberOfBackButtonClick = 0
+                })
+        }
+        Column(
+            Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(padding),
+            verticalArrangement = Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier.clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {
+                    viewModel.toggleStartStopTimer()
+                },
+                contentAlignment = Alignment.Center
+            ) {
+                val state = viewModel.uiState.collectAsState().value
+                consumeReadExerciseEvent(state.readExerciseNameEvent, coroutineScope, speaker)
+                consumeActivityFinishedState(state.activityFinishesEvent, coroutineScope, player)
+                consumeBreakEndsState(state.breakEndsEvent, coroutineScope, player)
+
+                if (state.isLoading) {
+                    Text(
+                        text = stringResource(id = R.string.loading),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                } else if (state.success != null) {
+                    when (val item = state.success) {
+                        is ActivityItem.Exercise -> {
+                            ExerciseComposable(
+                                exerciseName = item.name,
+                                nextExerciseName = item.nextExercise,
+                                currentTime = item.currentTime,
+                                totalTime = item.totalExerciseTime,
+                                trainingProgressPercent = item.trainingProgressPercent,
+                                disableExerciseAnimation = disableExerciseAnimation
+                            )
+                            disableExerciseAnimation = false
+                        }
+                        is ActivityItem.Break -> BreakComposable(
                             nextExerciseName = item.nextExercise,
                             currentTime = item.currentTime,
                             totalTime = item.totalExerciseTime,
-                            trainingProgressPercent = item.trainingProgressPercent,
-                            disableExerciseAnimation = disableExerciseAnimation
+                            trainingProgressPercent = item.trainingProgressPercent
                         )
-                        disableExerciseAnimation = false
-                    }
-                    is ActivityItem.Break -> BreakComposable(
-                        nextExerciseName = item.nextExercise,
-                        currentTime = item.currentTime,
-                        totalTime = item.totalExerciseTime,
-                        trainingProgressPercent = item.trainingProgressPercent
-                    )
-                    else -> {
+                        else -> {
 
+                        }
                     }
-                }
-            } else if (state.error != null) {
-                Text(
-                    text = stringResource(id = R.string.error),
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            } else if (state.trainingCompleted != null) {
-                state.trainingCompletedEvent?.consume()?.let {
-                    coroutineScope.launch {
-                        speaker.say(context.resources.getString(R.string.training_finished))
+                } else if (state.error != null) {
+                    Text(
+                        text = stringResource(id = R.string.error),
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                } else if (state.trainingCompleted != null) {
+                    state.trainingCompletedEvent?.consume()?.let {
+                        coroutineScope.launch {
+                            speaker.say(context.resources.getString(R.string.training_finished))
+                        }
                     }
+                    TrainingSummaryComposable(
+                        numberOfExercises = state.trainingCompleted.numberOfExercises,
+                        currentTrainingTime = state.trainingCompleted.currentTrainingTime,
+                        navController = navController
+                    )
                 }
-                TrainingSummaryComposable(
-                    numberOfExercises = state.trainingCompleted.numberOfExercises,
-                    currentTrainingTime = state.trainingCompleted.currentTrainingTime,
-                    navController = navController
-                )
             }
         }
     }
@@ -385,4 +410,28 @@ fun TextSpacer(fontSize: TextUnit) {
 
 private fun textFadeInProperties(): EnterTransition {
     return fadeIn(initialAlpha = 0f, animationSpec = tween(500))
+}
+
+@Composable
+fun QuittingSnackbar(
+    scaffoldState: ScaffoldState,
+    navController: NavController,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    LaunchedEffect(scaffoldState.snackbarHostState) {
+        val snackbarResult =
+            scaffoldState.snackbarHostState.showSnackbar(
+                message = context.resources.getString(R.string.do_you_want_to_quit),
+                actionLabel = context.resources.getString(R.string.quit),
+                duration = SnackbarDuration.Short
+            )
+        when (snackbarResult) {
+            SnackbarResult.Dismissed -> {
+                onDismiss()
+            }
+            SnackbarResult.ActionPerformed -> navController.popBackStack()
+        }
+    }
+
 }
