@@ -53,7 +53,7 @@ fun CreateTrainingComposable(
 ) {
     var trainingName: String by remember { mutableStateOf("") }
     var trainingId: Long? by remember { mutableStateOf(null) }
-    var isTrainingBeingEdited = false
+    var isTrainingBeingEdited by remember { mutableStateOf(false) }
     val context = LocalContext.current
     Box(
         modifier = Modifier
@@ -76,6 +76,9 @@ fun CreateTrainingComposable(
                 is CreateTrainingUiState.Error -> {
                     HandleError(state = state, context = context)
                 }
+                is CreateTrainingUiState.Done -> {
+
+                }
                 else -> {
                     TrainingName(viewModel, trainingName)
                     Spacer(modifier = Modifier.height(24.dp))
@@ -85,29 +88,63 @@ fun CreateTrainingComposable(
         }
         Spacer(modifier = Modifier.height(200.dp))
         Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            if (viewModel.uiState.collectAsState().value.createTrainingButtonVisible) {
-                Button(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    onClick = {
-                        if (isTrainingBeingEdited) {
-                            viewModel.editTraining(trainingId = trainingId!!)
-                        } else {
-                            viewModel.createTraining()
-                        }
-                        if (viewModel.uiState.value is CreateTrainingUiState.Done) {
-                            navController.navigate(Screen.TrainingListScreen.route)
-                        }
-                    }
-                ) {
-                    if (isTrainingBeingEdited) {
-                        Text(stringResource(id = R.string.save_changes))
-                    } else {
-                        Text(stringResource(id = R.string.create_training))
-                    }
+            CreateOrEditTrainingButton(viewModel, isTrainingBeingEdited, navController, trainingId)
+        }
+    }
+}
+
+@Composable
+fun CreateOrEditTrainingButton(
+    viewModel: CreateOrEditTrainingViewModel,
+    isTrainingBeingEdited: Boolean,
+    navController: NavController,
+    trainingId: Long?
+) {
+    val buttonCanBeClicked = viewModel.uiState.collectAsState().value.saveButtonCanBeClicked
+    val buttonColor =
+        if (buttonCanBeClicked) ButtonDefaults.buttonColors(backgroundColor = Color(BananaMania.toArgb())) else ButtonDefaults.buttonColors(
+            backgroundColor = Color.Gray
+        )
+    val textColors = if (buttonCanBeClicked) Color.Black else Color.DarkGray
+    Button(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        onClick = {
+            if (buttonCanBeClicked) {
+                if (isTrainingBeingEdited) {
+                    viewModel.editTraining(trainingId = trainingId!!)
+                } else {
+                    viewModel.createTraining()
+                }
+                if (viewModel.uiState.value is CreateTrainingUiState.Done) {
+                    navController.navigate(Screen.TrainingListScreen.route)
                 }
             }
+        },
+        colors = buttonColor
+    ) {
+        if (isTrainingBeingEdited) {
+            if (viewModel.uiState.collectAsState().value.isTrainingChanged) {
+                Text(
+                    stringResource(id = R.string.save_changes),
+                    fontWeight = FontWeight.Bold,
+                    color = textColors
+                )
+            } else {
+                Text(
+                    stringResource(id = R.string.close_editing),
+                    fontWeight = FontWeight.Bold,
+                    color = textColors
+                )
+            }
+
+        } else {
+            Text(
+                stringResource(id = R.string.create_training),
+                fontWeight = FontWeight.Bold,
+                color = textColors
+            )
         }
     }
 }
@@ -143,7 +180,7 @@ fun ExerciseList(exercises: List<Activity>, viewModel: CreateOrEditTrainingViewM
         viewModel = viewModel,
         editedExercise = editedExercise,
         widgetVisible = widgetVisible,
-        onAddButtonClick = {
+        onAddOrEditButtonClick = {
             widgetVisible = !widgetVisible
             editedExercise = Exercise()
         })
@@ -154,14 +191,12 @@ fun CreateExerciseWidget(
     viewModel: CreateOrEditTrainingViewModel,
     editedExercise: Exercise,
     widgetVisible: Boolean,
-    onAddButtonClick: () -> Unit
+    onAddOrEditButtonClick: () -> Unit
 ) {
     val sliderMinValue = 10
     val sliderMaxValue = 300
     var exerciseDuration: Int by remember { mutableStateOf(sliderMinValue) }
     var exerciseName: String by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    val exerciseIsBeingEdited: Boolean = editedExercise.name != ""
 
     exerciseName = editedExercise.name
     exerciseDuration = editedExercise.duration
@@ -176,7 +211,7 @@ fun CreateExerciseWidget(
                 .clip(RoundedCornerShape(10.dp))
                 .background(color = Color(BananaMania.toArgb()))
                 .clickable {
-                    onAddButtonClick()
+                    onAddOrEditButtonClick()
                 }
         ) {
             Icon(
@@ -197,12 +232,18 @@ fun CreateExerciseWidget(
                 .background(color = Color(BananaMania.toArgb()))
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            ExerciseNameControls(currentName = exerciseName, onNameEntered = { exerciseName = it })
+            ExerciseNameControls(
+                currentName = exerciseName,
+                onNameEntered = { exerciseName = it })
             Text(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
-                text = stringResource(R.string.duration) + " ${toDisplayableLength(exerciseDuration)}",
+                text = stringResource(R.string.duration) + " ${
+                    toDisplayableLength(
+                        exerciseDuration
+                    )
+                }",
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -218,50 +259,74 @@ fun CreateExerciseWidget(
                     exerciseDuration += changeValue
                 }
             }
-            Button(
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp, top = 16.dp),
-                onClick = {
-                    if (exerciseName.isNotEmpty() && exerciseDuration != 0) {
-                        onAddButtonClick()
-                        if (exerciseIsBeingEdited) {
-                            viewModel.editActivity(
-                                Activity(
-                                    exerciseName,
-                                    exerciseDuration,
-                                    ActivityType.STRETCH
-                                ), editedExercise.listId!!
-                            )
-                            Toast.makeText(context, R.string.exercise_edited, Toast.LENGTH_LONG)
-                                .show()
-                        } else {
-                            viewModel.addActivity(
-                                Activity(
-                                    exerciseName,
-                                    exerciseDuration,
-                                    ActivityType.STRETCH
-                                )
-                            )
-                            Toast.makeText(context, R.string.exercise_added, Toast.LENGTH_LONG)
-                                .show()
-                        }
-                    } else {
-                        Toast.makeText(
-                            context,
-                            R.string.specify_exercise_name,
-                            Toast.LENGTH_LONG
-                        ).show()
-                    }
-                }
-            ) {
+            AddOrEditExerciseButton(
+                exerciseName,
+                exerciseDuration,
+                viewModel,
+                editedExercise,
+                onAddOrEditButtonClick
+            )
+        }
+    }
+}
+
+@Composable
+fun AddOrEditExerciseButton(
+    exerciseName: String,
+    exerciseDuration: Int,
+    viewModel: CreateOrEditTrainingViewModel,
+    editedExercise: Exercise,
+    onAddOrEditButtonClick: () -> Unit
+) {
+    val context = LocalContext.current
+    val exerciseIsBeingEdited: Boolean = editedExercise.name != ""
+    Button(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 16.dp, top = 16.dp),
+        onClick = {
+            if (exerciseName.isNotEmpty() && exerciseDuration != 0) {
+                onAddOrEditButtonClick()
                 if (exerciseIsBeingEdited) {
-                    Text(text = stringResource(id = R.string.save_changes))
+                    if (exerciseName != editedExercise.name || exerciseDuration != editedExercise.duration) {
+                        viewModel.editActivity(
+                            Activity(
+                                exerciseName,
+                                exerciseDuration,
+                                ActivityType.STRETCH
+                            ), editedExercise.listId!!
+                        )
+                        Toast.makeText(context, R.string.exercise_edited, Toast.LENGTH_LONG)
+                            .show()
+                    }
                 } else {
-                    Text(text = stringResource(id = R.string.add_exercise))
+                    viewModel.addActivity(
+                        Activity(
+                            exerciseName,
+                            exerciseDuration,
+                            ActivityType.STRETCH
+                        )
+                    )
+                    Toast.makeText(context, R.string.exercise_added, Toast.LENGTH_LONG)
+                        .show()
                 }
+            } else {
+                Toast.makeText(
+                    context,
+                    R.string.specify_exercise_name,
+                    Toast.LENGTH_LONG
+                ).show()
             }
+        }
+    ) {
+        if (exerciseIsBeingEdited) {
+            if (exerciseName == editedExercise.name && exerciseDuration == editedExercise.duration) {
+                Text(text = stringResource(id = R.string.close_item))
+            } else {
+                Text(text = stringResource(id = R.string.save_changes))
+            }
+        } else {
+            Text(text = stringResource(id = R.string.add_exercise))
         }
     }
 }

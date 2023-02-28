@@ -26,6 +26,10 @@
     <string name="exercise_edited">Exercise edited</string>
     <string name="exercise_added">Exercise added</string>
     <string name="add_exercise">Add exercise</string>
+    <string name="training_finished">Training finished!</string>
+    <string name="prepare_next_exercise">Prepare for the next exercise:</string>
+    <string name="close_item">Close Item</string>
+    <string name="close_editing">Close Editing</string>
 
     //content description
     <string name="desc_delete_icon">Delete icon</string>

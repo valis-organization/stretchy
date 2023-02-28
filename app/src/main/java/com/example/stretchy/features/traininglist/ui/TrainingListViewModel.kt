@@ -7,6 +7,7 @@ import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
+import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -53,8 +54,8 @@ class TrainingListViewModel(
 
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        this.activities.forEach {
-            duration += it.duration
+        getExercisesWithBreak(activities).forEach {activity ->
+            duration += activity.duration
         }
         return Training(
             this.id.toString(),
@@ -80,22 +81,21 @@ class TrainingListViewModel(
     fun copyTraining(training: Training) {
         viewModelScope.launch {
             with(training) {
-              repository.getTrainingWithActivitiesById(id.toLong()).activities.let{
-                  repository.addTrainingWithActivities(
-                      TrainingWithActivity(
-                          name + COPY,
-                          TrainingType.STRETCH,
-                          true,
-                          it
-                      )
-                  )
-              }
+                repository.getTrainingWithActivitiesById(id.toLong()).activities.let {
+                    repository.addTrainingWithActivities(
+                        TrainingWithActivity(
+                            name + COPY,
+                            TrainingType.STRETCH,
+                            true,
+                            it
+                        )
+                    )
+                }
             }
         }
         fetchTrainingList()
     }
-
-    companion object{
+    companion object {
         const val COPY = " copy"
     }
 }

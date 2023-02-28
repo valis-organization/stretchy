@@ -27,7 +27,8 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
                             true,
                             name,
                             activities,
-                            isCreateTrainingButtonVisible(name, activities)
+                            false,
+                            isCreateTrainingButtonVisible(name, activities),
                         )
                     )
                 }
@@ -40,7 +41,8 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
                         false,
                         "",
                         emptyList(),
-                        false
+                        false,
+                        saveButtonCanBeClicked = false
                     )
                 )
             }
@@ -70,50 +72,40 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.removeAt(exerciseListPosition)
-        _uiState.value = stateSuccess.copy(
-            activities = currentList,
-            createTrainingButtonVisible = isCreateTrainingButtonVisible(
-                stateSuccess.currentName,
-                currentList
-            )
-        )
+        emitActivitiesList(stateSuccess, currentList)
     }
 
     fun addActivity(activityItem: Activity) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList.add(activityItem)
-        _uiState.value = stateSuccess.copy(
-            activities = currentList,
-            createTrainingButtonVisible = isCreateTrainingButtonVisible(
-                stateSuccess.currentName,
-                currentList
-            )
-        )
+        emitActivitiesList(stateSuccess, currentList)
     }
 
     fun editActivity(activityItem: Activity, listId: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
         currentList[listId] = activityItem
-        _uiState.value = stateSuccess.copy(
-            activities = currentList,
-            createTrainingButtonVisible = isCreateTrainingButtonVisible(
-                stateSuccess.currentName,
-                currentList
-            )
-        )
+        emitActivitiesList(stateSuccess, currentList)
     }
 
     fun setTrainingName(trainingName: String) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        _uiState.value = stateSuccess.copy(
-            currentName = trainingName,
-            createTrainingButtonVisible = isCreateTrainingButtonVisible(
-                trainingName,
-                stateSuccess.activities
+        with(stateSuccess) {
+            _uiState.value = copy(
+                currentName = trainingName,
+                saveButtonCanBeClicked = isCreateTrainingButtonVisible(
+                    trainingName,
+                    activities
+                ),
+                isTrainingChanged = isTrainingChanged(
+                    trainingId,
+                    trainingName,
+                    activities
+                )
             )
-        )
+        }
+
     }
 
     fun createTraining() {
@@ -179,4 +171,48 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         currentExercises: List<Activity>
     ) =
         currentName.isNotBlank() && currentExercises.size >= 2
+
+    private fun isTrainingChanged(
+        trainingId: Long?,
+        trainingName: String,
+        activities: List<Activity>
+    ): Boolean {
+        var trainingFromDb: TrainingWithActivity? = null
+        if (trainingId != null && trainingId >= 0) {
+            viewModelScope.launch {
+                trainingFromDb = repository.getTrainingWithActivitiesById(trainingId)
+            }
+            if (trainingFromDb!!.name == trainingName) {
+                if (trainingFromDb!!.activities.size == activities.size) {
+                    trainingFromDb!!.activities.forEachIndexed { index, activity ->
+                        if (activity != activities[index]) {
+                            return true
+                        }
+                    }
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    private fun emitActivitiesList(
+        stateSuccess: CreateTrainingUiState.Success,
+        currentList: List<Activity>
+    ) {
+        with(stateSuccess) {
+            _uiState.value = copy(
+                activities = currentList,
+                saveButtonCanBeClicked = isCreateTrainingButtonVisible(
+                    currentName,
+                    currentList
+                ),
+                isTrainingChanged = isTrainingChanged(
+                    trainingId,
+                    currentName,
+                    currentList
+                )
+            )
+        }
+    }
 }

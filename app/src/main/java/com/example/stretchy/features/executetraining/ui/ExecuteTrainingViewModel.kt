@@ -11,6 +11,7 @@ import com.example.stretchy.features.executetraining.ui.data.event.ActivityFinis
 import com.example.stretchy.features.executetraining.ui.data.event.BreakEndsEvent
 import com.example.stretchy.features.executetraining.ui.data.event.ReadExerciseNameEvent
 import com.example.stretchy.features.executetraining.ui.data.event.TrainingCompletedEvent
+import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -214,20 +215,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             Log.i(TIMER_LOG_TAG, "Timer is resumed.")
             timer.start()
         }
-    }
-
-    private fun getExercisesWithBreak(training: List<Activity>): List<Activity> {
-        val exercisesWithBreaks: MutableList<Activity> = mutableListOf()
-        training.forEachIndexed { i, exercise ->
-            exercisesWithBreaks.add(exercise)
-            if (i != training.lastIndex) {
-                val nextExercise = training[i + 1]
-                exercisesWithBreaks.add(Activity(nextExercise.name, 5, ActivityType.BREAK).apply {
-                    activityId = nextExercise.activityId
-                })
-            }
-        }
-        return exercisesWithBreaks
     }
 
     private fun saveStartingTimeStamp() {
