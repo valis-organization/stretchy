@@ -30,6 +30,8 @@
     <string name="prepare_next_exercise">Prepare for the next exercise:</string>
     <string name="close_item">Close Item</string>
     <string name="close_editing">Close Editing</string>
+    <string name="do_you_want_to_quit">Do you really want to give up training? Press the back button again to quit.</string>
+    <string name="quit">QUIT</string>
 
     //content description
     <string name="desc_delete_icon">Delete icon</string>
