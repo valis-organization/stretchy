@@ -486,10 +486,22 @@ fun SwipeableExerciseItem(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(BananaMania.toArgb()))
-                    .clip(RoundedCornerShape(10.dp)),
+                    .clip(RoundedCornerShape(10.dp))
+                    .weight(1f, fill = false),
                 contentAlignment = Alignment.Center
             ) {
-                Text(exercise.name)
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("${exercise.listId!!.plus(1)}")
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(text = exercise.name, Modifier.padding(start = 16.dp))
+                    }
+                }
             }
         }
     )
