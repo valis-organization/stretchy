@@ -64,7 +64,7 @@ fun TrainingListComposable(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = stringResource(id = R.string.app_name))
+                    Text(text = stringResource(id = R.string.toolbar_title))
                 },
                 actions = {
                     Menu(

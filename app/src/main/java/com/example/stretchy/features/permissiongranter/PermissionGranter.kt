@@ -68,19 +68,22 @@ private fun CustomDialogUI(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "text",
+                    text = "Permissions are needed",
                     textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier
                         .padding(top = 5.dp)
                         .fillMaxWidth(),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
+                Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "Allow Permission TODO.",
+                    text = "Importing and exporting data requires storage permissions." +
+                            "\n\n Press accept to enable that feature.",
                     textAlign = TextAlign.Center,
                     modifier = Modifier
-                        .padding(top = 10.dp, start = 25.dp, end = 25.dp)
+                        .padding(top = 10.dp, start = 15.dp, end = 15.dp)
                         .fillMaxWidth(),
                 )
             }
@@ -88,7 +91,7 @@ private fun CustomDialogUI(
                 Modifier
                     .fillMaxWidth()
                     .padding(top = 10.dp)
-                    .background(Color.Cyan),
+                    .background(Color.White),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 TextButton(onClick = {
@@ -109,7 +112,7 @@ private fun CustomDialogUI(
                     onPermissionRequest(intent)
                 }) {
                     Text(
-                        "Allow",
+                        "Accept",
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.Black,
                         modifier = Modifier.padding(top = 5.dp, bottom = 5.dp)
