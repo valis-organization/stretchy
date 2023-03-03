@@ -2,19 +2,14 @@ package com.example.stretchy.activity
 
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.app.ActivityCompat
 import com.example.stretchy.Navigation
 import com.example.stretchy.activity.di.ActivityComponent
+import com.example.stretchy.features.permissiongranter.GrantPermissions
 
 
 class MainActivity : ComponentActivity() {
@@ -24,47 +19,54 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         activityComponent = ActivityComponent.create(this)
         setContent {
+            var showExportPermissionDialog by remember { mutableStateOf(false) }
+            var showImportPermissionDialog by remember { mutableStateOf(false) }
             Navigation(
                 activityComponent,
-                {
-                    grantPermissions(WRITE_EXTERNAL_STORAGE)
-                },
-                {
-                    grantPermissions(READ_EXTERNAL_STORAGE)
-                }
+                onExportClick = { showExportPermissionDialog = true },
+                onImportClick = { showImportPermissionDialog = true }
             )
+
+            if (showExportPermissionDialog) {
+                ShowPermissionDialogue(
+                    permission = WRITE_EXTERNAL_STORAGE,
+                    onDismissListener = { showExportPermissionDialog = false })
+            } else if (showImportPermissionDialog) {
+                ShowPermissionDialogue(
+                    permission = READ_EXTERNAL_STORAGE,
+                    onDismissListener = { showImportPermissionDialog = false })
+            }
         }
+
     }
 
     @Preview(showBackground = true)
     @Composable
     fun DefaultPreview() {
+        var showExportPermissionDialog by remember { mutableStateOf(false) }
+        var showImportPermissionDialog by remember { mutableStateOf(false) }
         Navigation(
             activityComponent,
-            {
-                grantPermissions(WRITE_EXTERNAL_STORAGE)
+            onExportClick = { showExportPermissionDialog = true },
+            onImportClick = { showImportPermissionDialog = true }
+        )
+    }
+
+    @Composable
+    private fun ShowPermissionDialogue(permission: String, onDismissListener: () -> Unit) {
+        GrantPermissions(
+            permission,
+            this,
+            this,
+            onPermissionRequest = {
+                startActivity(it)
             },
-            {
-                grantPermissions(READ_EXTERNAL_STORAGE)
+            onDismissClick = {
+                onDismissListener()
             }
         )
     }
 
-    private fun grantPermissions(permission: String) {
-        if (SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-            intent.data = Uri.parse("package:" + applicationContext.packageName)
-            startActivity(intent)
-        } else {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(
-                    permission
-                ),
-                100
-            )
-        }
-    }
 }
 
 

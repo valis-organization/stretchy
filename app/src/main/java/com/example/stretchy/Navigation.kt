@@ -23,8 +23,8 @@ import com.example.stretchy.features.traininglist.ui.composable.TrainingListComp
 @Composable
 fun Navigation(
     activityComponent: ActivityComponent,
-    onExportClick: () -> Unit,
-    onImportClick: () -> Unit
+    onExportClick: @Composable () -> Unit,
+    onImportClick: @Composable () -> Unit
 ) {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = Screen.TrainingListScreen.route) {

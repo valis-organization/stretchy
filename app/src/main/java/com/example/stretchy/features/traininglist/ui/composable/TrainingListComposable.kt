@@ -46,9 +46,12 @@ import kotlinx.coroutines.launch
 fun TrainingListComposable(
     viewModel: TrainingListViewModel,
     navController: NavController,
-    onExportClick: () -> Unit,
-    onImportClick: () -> Unit,
+    onExportClick: @Composable () -> Unit,
+    onImportClick: @Composable () -> Unit,
 ) {
+    var showImportDialog by remember { mutableStateOf(false) }
+    var showExportDialog by remember { mutableStateOf(false) }
+
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate("exerciseCreatorScreen") }) {
@@ -64,7 +67,10 @@ fun TrainingListComposable(
                     Text(text = stringResource(id = R.string.app_name))
                 },
                 actions = {
-                    Menu(viewModel, onExportClick, onImportClick)
+                    Menu(
+                        viewModel,
+                        onShowExportDialog = { showExportDialog = true },
+                        onShowImportDialog = { showImportDialog = true })
                 }
             )
         }
@@ -75,6 +81,15 @@ fun TrainingListComposable(
                 .background(White80)
                 .fillMaxSize()
         ) {
+            if (showImportDialog) {
+                onImportClick()
+                showImportDialog = false
+            }
+            if (showExportDialog) {
+                onExportClick()
+                showExportDialog = false
+            }
+
             Column(modifier = Modifier.padding(top = 24.dp)) {
                 when (val state = viewModel.uiState.collectAsState().value) {
                     is TrainingListUiState.Empty ->
@@ -116,7 +131,11 @@ fun TrainingListComposable(
 }
 
 @Composable
-fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportClick: () -> Unit) {
+fun Menu(
+    viewModel: TrainingListViewModel,
+    onShowExportDialog: () -> Unit,
+    onShowImportDialog: () -> Unit
+) {
     val context = LocalContext.current
     var expanded by remember {
         mutableStateOf(false)
@@ -143,7 +162,7 @@ fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportCl
                             viewModel.import()
                         }
                     } else {
-                        onImportClick()
+                        onShowImportDialog()
                     }
                     Toast.makeText(context, R.string.import_trainings, Toast.LENGTH_LONG).show()
                 }
@@ -156,7 +175,8 @@ fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportCl
                     if (isPermissionsGranted(context, WRITE_EXTERNAL_STORAGE)) {
                         viewModel.export()
                     } else {
-                        onExportClick()
+                        onShowExportDialog()
+                        // onExportClick()
                     }
                     Toast.makeText(context, R.string.export_trainings, Toast.LENGTH_LONG).show()
                 }
