@@ -20,7 +20,9 @@
     <string name="name">Name:</string>
     <string name="create_training">Create training!</string>
     <string name="import_trainings">Import</string>
+    <string name="trainings_imported">Trainings has been imported.</string>
     <string name="export_trainings">Export</string>
+    <string name="trainings_exported">Trainings has been exported.</string>
     <string name="save_changes">Save changes!</string>
     <string name="duration">Duration: </string>
     <string name="exercise_edited">Exercise edited</string>

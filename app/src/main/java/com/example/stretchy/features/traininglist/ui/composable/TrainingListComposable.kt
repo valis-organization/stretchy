@@ -69,8 +69,8 @@ fun TrainingListComposable(
                 actions = {
                     Menu(
                         viewModel,
-                        onShowExportDialog = { showExportDialog = true },
-                        onShowImportDialog = { showImportDialog = true })
+                        onExportPermissionsNeeded = { showExportDialog = true },
+                        onImportPermissionsNeeded = { showImportDialog = true })
                 }
             )
         }
@@ -133,8 +133,8 @@ fun TrainingListComposable(
 @Composable
 fun Menu(
     viewModel: TrainingListViewModel,
-    onShowExportDialog: () -> Unit,
-    onShowImportDialog: () -> Unit
+    onExportPermissionsNeeded: () -> Unit,
+    onImportPermissionsNeeded: () -> Unit
 ) {
     val context = LocalContext.current
     var expanded by remember {
@@ -161,10 +161,11 @@ fun Menu(
                         CoroutineScope(Dispatchers.Default).launch {
                             viewModel.import()
                         }
+                        Toast.makeText(context, R.string.trainings_imported, Toast.LENGTH_LONG).show()
                     } else {
-                        onShowImportDialog()
+                        onImportPermissionsNeeded()
                     }
-                    Toast.makeText(context, R.string.import_trainings, Toast.LENGTH_LONG).show()
+
                 }
             ) {
                 Text(text = stringResource(id = R.string.import_trainings))
@@ -174,11 +175,11 @@ fun Menu(
                     expanded = false
                     if (isPermissionsGranted(context, WRITE_EXTERNAL_STORAGE)) {
                         viewModel.export()
+                        Toast.makeText(context, R.string.trainings_exported, Toast.LENGTH_LONG).show()
                     } else {
-                        onShowExportDialog()
-                        // onExportClick()
+                        onExportPermissionsNeeded()
                     }
-                    Toast.makeText(context, R.string.export_trainings, Toast.LENGTH_LONG).show()
+
                 }
             ) {
                 Text(text = stringResource(id = R.string.export_trainings))
