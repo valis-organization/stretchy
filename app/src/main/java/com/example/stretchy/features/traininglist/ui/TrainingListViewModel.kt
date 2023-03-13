@@ -1,5 +1,7 @@
 package com.example.stretchy.features.traininglist.ui
 
+import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.TrainingType
@@ -39,9 +41,11 @@ class TrainingListViewModel(
         }
     }
 
-    suspend fun import() {
+    suspend fun importByAppending(importedUri: Uri?) {
         viewModelScope.launch {
-            dataImporterImpl.importData()
+            val documentId = DocumentsContract.getDocumentId(importedUri)
+            val fileUri = documentId.replaceFirst("raw:/", "")
+            dataImporterImpl.importDataByAppending(fileUri)
         }
         fetchTrainingList()
     }
@@ -54,7 +58,7 @@ class TrainingListViewModel(
 
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        getExercisesWithBreak(activities).forEach {activity ->
+        getExercisesWithBreak(activities).forEach { activity ->
             duration += activity.duration
         }
         return Training(
@@ -95,6 +99,7 @@ class TrainingListViewModel(
         }
         fetchTrainingList()
     }
+
     companion object {
         const val COPY = " copy"
     }

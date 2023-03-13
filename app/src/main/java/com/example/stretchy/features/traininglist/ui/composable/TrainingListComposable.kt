@@ -3,10 +3,14 @@ package com.example.stretchy.features.traininglist.ui.composable
 import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Environment
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -137,12 +141,24 @@ fun Menu(
     onImportPermissionsNeeded: () -> Unit
 ) {
     val context = LocalContext.current
-    var expanded by remember {
+    val filePickerIntent = Intent()
+        .setType("*/*")
+        .setAction(Intent.ACTION_GET_CONTENT)
+    val filePicker =
+        rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            val data: Uri? = result.data!!.data
+            CoroutineScope(Dispatchers.Default).launch {
+                viewModel.importByAppending(data)
+            }
+            Toast.makeText(context, R.string.trainings_imported, Toast.LENGTH_LONG)
+                .show()
+        }
+    var menuExpanded by remember {
         mutableStateOf(false)
     }
     IconButton(
         onClick = {
-            expanded = true
+            menuExpanded = true
         }
     ) {
         Icon(
@@ -151,31 +167,28 @@ fun Menu(
             tint = Color.White
         )
         DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
+            expanded = menuExpanded,
+            onDismissRequest = { menuExpanded = false }
         ) {
             DropdownMenuItem(
                 onClick = {
-                    expanded = false
+                    menuExpanded = false
                     if (isPermissionsGranted(context, READ_EXTERNAL_STORAGE)) {
-                        CoroutineScope(Dispatchers.Default).launch {
-                            viewModel.import()
-                        }
-                        Toast.makeText(context, R.string.trainings_imported, Toast.LENGTH_LONG).show()
+                        filePicker.launch(filePickerIntent)
                     } else {
                         onImportPermissionsNeeded()
                     }
-
                 }
             ) {
                 Text(text = stringResource(id = R.string.import_trainings))
             }
             DropdownMenuItem(
                 onClick = {
-                    expanded = false
+                    menuExpanded = false
                     if (isPermissionsGranted(context, WRITE_EXTERNAL_STORAGE)) {
                         viewModel.export()
-                        Toast.makeText(context, R.string.trainings_exported, Toast.LENGTH_LONG).show()
+                        Toast.makeText(context, R.string.trainings_exported, Toast.LENGTH_LONG)
+                            .show()
                     } else {
                         onExportPermissionsNeeded()
                     }
@@ -339,7 +352,6 @@ private fun TrainingComposable(
         }
     )
 }
-
 
 private fun isPermissionsGranted(context: Context, permission: String): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {

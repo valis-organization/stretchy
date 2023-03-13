@@ -9,12 +9,13 @@ import java.io.File
 
 class DataImporterImpl(val repository: Repository) : DataImporter {
     private val gson = Gson()
-    private val dataFile = File(dataTransportFilePath, dataTransportFileName)
 
-    override suspend fun importData() {
+    override suspend fun importDataByAppending(path: String) {
+        val file = File(path)
         val trainingsWithActivity = object : TypeToken<List<TrainingWithActivity>>() {}.type
-        val data: String = dataFile.inputStream().bufferedReader().use { it.readText() }
-        val trainingsList = gson.fromJson<List<TrainingWithActivity>>(data, trainingsWithActivity)
+        val data: String = file.inputStream().bufferedReader().use { it.readText() }
+        val trainingsList =
+            gson.fromJson<List<TrainingWithActivity>>(data, trainingsWithActivity)
         trainingsList.forEach { training ->
             repository.addTrainingWithActivities(training)
         }
