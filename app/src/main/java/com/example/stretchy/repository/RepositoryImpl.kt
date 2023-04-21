@@ -35,6 +35,16 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
         db.trainingDao().deleteById(trainingId = trainingId)
     }
 
+    override suspend fun deleteAllTrainings() {
+        getTrainingsWithActivities().forEach { training ->
+            with(training){
+                deleteActivitiesFromTraining(activities,id)
+                db.trainingDao().delete(trainingEntity = TrainingEntity(id,name,trainingType,finished))
+            }
+
+        }
+    }
+
     override suspend fun getTrainingsWithActivities(): List<TrainingWithActivity> =
         db.trainingWithActivitiesDao().getTrainings().map { activity ->
             map(activity)

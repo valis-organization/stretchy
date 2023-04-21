@@ -20,7 +20,8 @@
     <string name="training_name">Training name</string>
     <string name="name">Name:</string>
     <string name="create_training">Create training!</string>
-    <string name="import_trainings">Import</string>
+    <string name="import_and_override">Import and override</string>
+    <string name="import_and_append">Import and append</string>
     <string name="trainings_imported">Trainings has been imported.</string>
     <string name="export_trainings">Export</string>
     <string name="trainings_exported">Trainings has been exported.</string>

@@ -1,5 +1,7 @@
 package com.example.stretchy.features.datatransport
 
 interface DataImporter {
-    suspend fun importDataByAppending(path: String)
+    suspend fun importDataByAppending(data: String)
+
+    suspend fun importDataByOverriding(data:String)
 }
