@@ -390,7 +390,11 @@ private fun getDataFromResult(
     context: Context,
 ): String? {
     val data: Uri? = result.data?.data
-    if (data != null && getFileName(data, context).contains(DataExporterImpl.dataTransportFileExt)) {
+    if (data != null && getFileName(
+            data,
+            context
+        ).contains(DataExporterImpl.dataTransportFileExt)
+    ) {
         val inputStream = context.contentResolver.openInputStream(data)
         val bufferedReader = BufferedReader(InputStreamReader(inputStream))
         val stringBuilder = StringBuilder()

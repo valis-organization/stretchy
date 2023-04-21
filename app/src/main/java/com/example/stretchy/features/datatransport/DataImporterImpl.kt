@@ -15,7 +15,7 @@ class DataImporterImpl(val repository: Repository) : DataImporter {
 
     override suspend fun importDataByOverriding(data: String) {
         repository.deleteAllTrainings()
-        getData(data).forEach { training->
+        getData(data).forEach { training ->
             repository.addTrainingWithActivities(training)
         }
     }

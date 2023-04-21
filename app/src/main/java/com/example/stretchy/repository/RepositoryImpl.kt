@@ -37,9 +37,10 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
 
     override suspend fun deleteAllTrainings() {
         getTrainingsWithActivities().forEach { training ->
-            with(training){
-                deleteActivitiesFromTraining(activities,id)
-                db.trainingDao().delete(trainingEntity = TrainingEntity(id,name,trainingType,finished))
+            with(training) {
+                deleteActivitiesFromTraining(activities, id)
+                db.trainingDao()
+                    .delete(trainingEntity = TrainingEntity(id, name, trainingType, finished))
             }
 
         }

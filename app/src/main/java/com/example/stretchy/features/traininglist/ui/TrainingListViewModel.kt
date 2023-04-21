@@ -39,12 +39,12 @@ class TrainingListViewModel(
         }
     }
 
-    suspend fun importByAppending(fileData : String) {
+    suspend fun importByAppending(fileData: String) {
         dataImporterImpl.importDataByAppending(fileData)
         fetchTrainingList()
     }
 
-    suspend fun importByOverriding(fileData :String) {
+    suspend fun importByOverriding(fileData: String) {
         dataImporterImpl.importDataByOverriding(fileData)
         fetchTrainingList()
     }
