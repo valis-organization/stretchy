@@ -16,11 +16,13 @@ import androidx.compose.foundation.background
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import com.example.stretchy.R
 
 @Composable
 fun GrantPermissions(
@@ -68,7 +70,7 @@ private fun CustomDialogUI(
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
-                    text = "Permissions are needed",
+                    text = stringResource(id = R.string.permissions_needed),
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.ExtraBold,
                     modifier = Modifier
@@ -79,8 +81,7 @@ private fun CustomDialogUI(
                 )
                 Spacer(Modifier.height(12.dp))
                 Text(
-                    text = "Importing and exporting data requires storage permissions." +
-                            "\n\n Press accept to enable that feature.",
+                    text = stringResource(id = R.string.permissions_needed_desc),
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .padding(top = 10.dp, start = 15.dp, end = 15.dp)
@@ -99,7 +100,7 @@ private fun CustomDialogUI(
                 }) {
 
                     Text(
-                        "Decline",
+                        stringResource(id = R.string.decline),
                         fontWeight = FontWeight.Bold,
                         color = Color.Gray,
                         modifier = Modifier.padding(top = 5.dp, bottom = 5.dp)
@@ -110,9 +111,10 @@ private fun CustomDialogUI(
                         Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                     intent.data = Uri.parse("package:" + applicationContext.packageName)
                     onPermissionRequest(intent)
+                    onDismissClick()
                 }) {
                     Text(
-                        "Accept",
+                        stringResource(id = R.string.accept),
                         fontWeight = FontWeight.ExtraBold,
                         color = Color.Black,
                         modifier = Modifier.padding(top = 5.dp, bottom = 5.dp)

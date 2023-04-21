@@ -26,7 +26,6 @@ class MainActivity : ComponentActivity() {
                 onExportClick = { showExportPermissionDialog = true },
                 onImportClick = { showImportPermissionDialog = true }
             )
-
             if (showExportPermissionDialog) {
                 ShowPermissionDialogue(
                     permission = WRITE_EXTERNAL_STORAGE,

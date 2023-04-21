@@ -20,6 +20,10 @@
     <string name="training_name">Training name</string>
     <string name="name">Name:</string>
     <string name="create_training">Create training!</string>
+    <string name="permissions_needed_desc">Importing and exporting data requires storage permissions.\n\n Press accept to enable that feature.</string>
+    <string name="decline">Decline</string>
+    <string name="accept">Accept</string>
+    <string name="permissions_needed">Permissions are needed</string>
     <string name="import_and_override">Import and override</string>
     <string name="import_and_append">Import and append</string>
     <string name="trainings_imported">Trainings has been imported.</string>
@@ -36,6 +40,7 @@
     <string name="close_editing">Close Editing</string>
     <string name="do_you_want_to_quit">Do you really want to give up training? Press the back button again to quit.</string>
     <string name="quit">QUIT</string>
+    <string name="wrong_format">Wrong file format.</string>
 
     //content description
     <string name="desc_delete_icon">Delete icon</string>

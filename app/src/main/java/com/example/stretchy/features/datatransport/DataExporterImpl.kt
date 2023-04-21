@@ -18,9 +18,10 @@ class DataExporterImpl(val repository: Repository) : DataExporter {
         return gson.toJson(repository.getTrainingsWithActivities())
     }
 
-    companion object{
-        val dataTransportFilePath: String =
+    companion object {
+        private val dataTransportFilePath: String =
             Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
-        const val dataTransportFileName: String = "StretchyTrainings.rafalczamp"
+        const val dataTransportFileExt: String = ".rafalczamp"
+        private const val dataTransportFileName: String = "StretchyTrainings$dataTransportFileExt"
     }
 }

@@ -5,9 +5,11 @@ import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.provider.OpenableColumns
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +39,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.common.convertSecondsToMinutes
+import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
@@ -131,15 +134,6 @@ fun TrainingListComposable(
                         navController,
                         viewModel
                     )
-                    //TODO handle wrong file format
-        /*            is TrainingListUiState.ImportError -> {
-                        TrainingListComposable(
-                            state.trainings,
-                            navController,
-                            viewModel
-                        )
-                        Toast.makeText(context, "Wrong file format", Toast.LENGTH_LONG).show()
-                    }*/
                 }
             }
         }
@@ -156,20 +150,13 @@ fun Menu(
     val filePickerIntent = Intent()
         .setType("*/*")
         .setAction(Intent.ACTION_GET_CONTENT)
-    var append = true
+    var isImportAppend = true
     val filePicker =
         rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            val data: Uri? = result.data?.data
-            if(data != null){
-                val inputStream = context.contentResolver.openInputStream(data)
-                val bufferedReader = BufferedReader(InputStreamReader(inputStream))
-                val stringBuilder = StringBuilder()
-                bufferedReader.forEachLine { line ->
-                    stringBuilder.append(line)
-                }
-                val fileData = stringBuilder.toString()
+            val fileData = getDataFromResult(result, context)
+            if (!fileData.isNullOrBlank()) {
                 CoroutineScope(Dispatchers.Default).launch {
-                    if (append) {
+                    if (isImportAppend) {
                         viewModel.importByAppending(fileData)
                     } else {
                         viewModel.importByOverriding(fileData)
@@ -179,6 +166,9 @@ fun Menu(
                             .show()
                     }
                 }
+            } else {
+                Toast.makeText(context, R.string.wrong_format, Toast.LENGTH_LONG)
+                    .show()
             }
         }
     var menuExpanded by remember {
@@ -201,7 +191,7 @@ fun Menu(
             DropdownMenuItem(
                 onClick = {
                     menuExpanded = false
-                    append = true
+                    isImportAppend = true
                     if (isPermissionsGranted(context, READ_EXTERNAL_STORAGE)) {
                         filePicker.launch(filePickerIntent)
                     } else {
@@ -209,12 +199,12 @@ fun Menu(
                     }
                 }
             ) {
-                Text(text = "Import and append")
+                Text(text = stringResource(id = R.string.import_and_append))
             }
             DropdownMenuItem(
                 onClick = {
                     menuExpanded = false
-                    append = false
+                    isImportAppend = false
                     if (isPermissionsGranted(context, READ_EXTERNAL_STORAGE)) {
                         filePicker.launch(filePickerIntent)
                     } else {
@@ -393,6 +383,36 @@ private fun TrainingComposable(
             }
         }
     )
+}
+
+private fun getDataFromResult(
+    result: androidx.activity.result.ActivityResult,
+    context: Context,
+): String? {
+    val data: Uri? = result.data?.data
+    if (data != null && getFileName(data, context).contains(DataExporterImpl.dataTransportFileExt)) {
+        val inputStream = context.contentResolver.openInputStream(data)
+        val bufferedReader = BufferedReader(InputStreamReader(inputStream))
+        val stringBuilder = StringBuilder()
+        bufferedReader.forEachLine { line ->
+            stringBuilder.append(line)
+        }
+        val fileData = stringBuilder.toString()
+        return (fileData)
+    }
+    return null
+}
+
+private fun getFileName(uri: Uri, context: Context): String {
+    val cursor: Cursor? = context.contentResolver.query(uri, null, null, null, null)
+    val nameIndex = cursor?.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+    val fileName = if (nameIndex != null && cursor.moveToFirst()) {
+        cursor.getString(nameIndex)
+    } else {
+        uri.lastPathSegment ?: ""
+    }
+    cursor?.close()
+    return fileName
 }
 
 private fun isPermissionsGranted(context: Context, permission: String): Boolean {
