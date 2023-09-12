@@ -32,6 +32,9 @@
     <string name="close_editing">Close Editing</string>
     <string name="do_you_want_to_quit">Do you really want to give up training? Press the back button again to quit.</string>
     <string name="quit">QUIT</string>
+    <string name="stretching">Stretching</string>
+    <string name="meta_training">Meta training</string>
+    <string name="training">Training</string>
 
     //content description
     <string name="desc_delete_icon">Delete icon</string>

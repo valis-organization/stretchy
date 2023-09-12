@@ -12,21 +12,20 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.stretchy.BottomNavScreen
 import com.example.stretchy.Navigation
+import com.example.stretchy.R
 import com.example.stretchy.activity.di.ActivityComponent
 
 
@@ -38,15 +37,6 @@ class MainActivity : ComponentActivity() {
         activityComponent = ActivityComponent.create(this)
         setContent {
             BottomNavigationBar()
-      /*      Navigation(
-                activityComponent,
-                {
-                    grantPermissions(WRITE_EXTERNAL_STORAGE)
-                },
-                {
-                    grantPermissions(READ_EXTERNAL_STORAGE)
-                }
-            )*/
         }
     }
 
@@ -79,14 +69,27 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
+
     @Composable
     fun BottomNavigationBar() {
         val navController = rememberNavController()
 
         val screens = listOf(
-            BottomNavScreen("Screen 1", Icons.Default.Home, "screen1"),
-            BottomNavScreen("Screen 2", Icons.Default.Search, "screen2"),
-            BottomNavScreen("Screen 3", Icons.Default.Person, "screen3"),
+            BottomNavScreen(
+                stringResource(id = R.string.stretching),
+                painterResource(id = R.drawable.ic_stretching),
+                stringResource(id = R.string.stretching)
+            ),
+            BottomNavScreen(
+                stringResource(id = R.string.meta_training),
+                painterResource(id = R.drawable.ic_meta_training),
+                stringResource(id = R.string.meta_training)
+            ),
+            BottomNavScreen(
+                stringResource(id = R.string.training),
+                painterResource(id = R.drawable.ic_training),
+                stringResource(id = R.string.training)
+            ),
         )
 
         Scaffold(
@@ -97,7 +100,7 @@ class MainActivity : ComponentActivity() {
 
                     screens.forEach { screen ->
                         BottomNavigationItem(
-                            icon = { Icon(imageVector = screen.icon, contentDescription = null) },
+                            icon = { Icon(screen.icon, contentDescription = "") },
                             label = { Text(text = screen.label) },
                             selected = currentRoute == screen.route,
                             onClick = {
@@ -110,10 +113,10 @@ class MainActivity : ComponentActivity() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = "screen1",
+                startDestination = stringResource(id = R.string.stretching),
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable("screen1") {
+                composable(getString(R.string.stretching)) {
                     Navigation(
                         activityComponent,
                         {
@@ -124,10 +127,10 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-                composable("screen2") {
+                composable(getString(R.string.meta_training)) {
 
                 }
-                composable("screen3") {
+                composable(getString(R.string.training)) {
 
                 }
             }
@@ -135,5 +138,5 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-data class BottomNavScreen(val label: String, val icon: ImageVector, val route: String)
+
 
