@@ -261,6 +261,7 @@ fun CreateExerciseWidget(
             }
             AddOrEditExerciseButton(
                 exerciseName,
+                editedExercise.listId!!,
                 exerciseDuration,
                 viewModel,
                 editedExercise,
@@ -273,6 +274,7 @@ fun CreateExerciseWidget(
 @Composable
 fun AddOrEditExerciseButton(
     exerciseName: String,
+    exerciseOrder: Int,
     exerciseDuration: Int,
     viewModel: CreateOrEditTrainingViewModel,
     editedExercise: Exercise,
@@ -292,6 +294,7 @@ fun AddOrEditExerciseButton(
                         viewModel.editActivity(
                             Activity(
                                 exerciseName,
+                                exerciseOrder,
                                 exerciseDuration,
                                 ActivityType.STRETCH
                             ), editedExercise.listId!!
@@ -303,6 +306,7 @@ fun AddOrEditExerciseButton(
                     viewModel.addActivity(
                         Activity(
                             exerciseName,
+                            exerciseOrder,
                             exerciseDuration,
                             ActivityType.STRETCH
                         )

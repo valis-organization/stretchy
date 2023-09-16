@@ -6,7 +6,8 @@ import com.example.stretchy.database.data.ActivityType
 
 @Entity(tableName = "activity")
 data class ActivityEntity(
-    @PrimaryKey val activityId: Long,
+    @PrimaryKey
+    val activityId: Long,
     val name: String,
     val duration: Int,
     val activityType: ActivityType

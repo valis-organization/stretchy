@@ -47,8 +47,8 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
 
     private fun map(training: TrainingWithActivitiesEntity): TrainingWithActivity {
         val activitiesMapped: List<Activity> = training.activities
-            .map {
-                Activity(it.name, it.duration, it.activityType).apply {
+            .mapIndexed { activityOrder, it -> //TODO
+                Activity(it.name, activityOrder, it.duration, it.activityType).apply {
                     this.activityId = it.activityId
                 }
             }
@@ -72,9 +72,17 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
     private fun deleteActivitiesFromTraining(activities: List<Activity>, trainingId: Long) {
         activities.forEach { activity ->
             with(activity) {
-                db.activityDao().delete(ActivityEntity(activityId, name, duration, activityType))
+                db.activityDao()
+                    .delete(
+                        ActivityEntity(
+                            activityId,
+                            name,
+                            duration,
+                            activityType
+                        )
+                    )
                 db.trainingWithActivitiesDao()
-                    .delete(TrainingActivityEntity(trainingId, activityId))
+                    .delete(TrainingActivityEntity(trainingId, activityId, activityOrder))
             }
         }
     }
@@ -83,8 +91,10 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
         activities.forEach { activity ->
             with(activity) {
                 val aId = generateActivityId()
-                db.activityDao().add(ActivityEntity(aId, name, duration, activityType))
-                db.trainingWithActivitiesDao().insert(TrainingActivityEntity(trainingId, aId))
+                db.activityDao()
+                    .add(ActivityEntity(aId, name, duration, activityType))
+                db.trainingWithActivitiesDao()
+                    .insert(TrainingActivityEntity(trainingId, aId, activityOrder))
             }
         }
     }

@@ -7,7 +7,8 @@ import androidx.room.Entity
     primaryKeys = ["tId", "aId"]
 )
 class TrainingActivityEntity(
-    val tId : Long,
-    val aId : Long
+    val tId: Long,
+    val aId: Long,
+    val activityOrder: Int
 )
 
