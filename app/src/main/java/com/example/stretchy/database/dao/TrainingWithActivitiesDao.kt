@@ -17,6 +17,10 @@ interface TrainingWithActivitiesDao {
     @Query("SELECT * FROM training WHERE trainingId LIKE :id ")
     fun getTrainingsById(id: Long): TrainingWithActivitiesEntity
 
+    @Transaction
+    @Query("SELECT * FROM training_activities WHERE tId LIKE :id ")
+    fun getTrainingsActivitiesByTrainingId(id: Long): List<TrainingActivityEntity>
+
     @Delete
     fun delete(trainingActivity: TrainingActivityEntity)
 
