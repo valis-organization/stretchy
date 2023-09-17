@@ -261,7 +261,7 @@ fun CreateExerciseWidget(
             }
             AddOrEditExerciseButton(
                 exerciseName,
-                editedExercise.listId!!,
+                editedExercise.listId!!, //TODO
                 exerciseDuration,
                 viewModel,
                 editedExercise,

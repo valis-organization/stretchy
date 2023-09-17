@@ -54,7 +54,7 @@ class TrainingListViewModel(
 
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        getExercisesWithBreak(activities).forEach {activity ->
+        getExercisesWithBreak(activities).forEach { activity ->
             duration += activity.duration
         }
         return Training(
@@ -95,6 +95,7 @@ class TrainingListViewModel(
         }
         fetchTrainingList()
     }
+
     companion object {
         const val COPY = " copy"
     }
