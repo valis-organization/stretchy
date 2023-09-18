@@ -46,13 +46,18 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
     }
 
     private fun map(training: TrainingWithActivitiesEntity): TrainingWithActivity {
+        val trainingId = training.training.trainingId
+        val activityOrderMap =
+            db.trainingWithActivitiesDao().getTrainingsActivitiesByTrainingId(trainingId)
+                .associate { it.aId to it.activityOrder }
+
         val activitiesMapped: List<Activity> = training.activities
             .map {
-                Activity(it.name, it.duration, it.activityType).apply {
+                val activityOrder = activityOrderMap[it.activityId]
+                Activity(it.name, activityOrder!!, it.duration, it.activityType).apply {
                     this.activityId = it.activityId
                 }
             }
-
         with(training.training) {
             return TrainingWithActivity(
                 name,
@@ -61,6 +66,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
                 activitiesMapped
             ).apply { id = trainingId }
         }
+
     }
 
     private fun generateActivityId(): Long =
@@ -72,9 +78,17 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
     private fun deleteActivitiesFromTraining(activities: List<Activity>, trainingId: Long) {
         activities.forEach { activity ->
             with(activity) {
-                db.activityDao().delete(ActivityEntity(activityId, name, duration, activityType))
+                db.activityDao()
+                    .delete(
+                        ActivityEntity(
+                            activityId,
+                            name,
+                            duration,
+                            activityType
+                        )
+                    )
                 db.trainingWithActivitiesDao()
-                    .delete(TrainingActivityEntity(trainingId, activityId))
+                    .delete(TrainingActivityEntity(trainingId, activityId, activityOrder))
             }
         }
     }
@@ -82,9 +96,15 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
     private fun addTrainingWithActivitiesToDb(activities: List<Activity>, trainingId: Long) {
         activities.forEach { activity ->
             with(activity) {
-                val aId = generateActivityId()
-                db.activityDao().add(ActivityEntity(aId, name, duration, activityType))
-                db.trainingWithActivitiesDao().insert(TrainingActivityEntity(trainingId, aId))
+                var aId = generateActivityId()
+                val result = db.activityDao()
+                    .add(ActivityEntity(aId, name, duration, activityType))
+                if (result == -1L) {
+                    aId = db.activityDao().getConflictActivity(name, duration).activityId
+                }
+
+                db.trainingWithActivitiesDao()
+                    .insert(TrainingActivityEntity(trainingId, aId, activityOrder))
             }
         }
     }
