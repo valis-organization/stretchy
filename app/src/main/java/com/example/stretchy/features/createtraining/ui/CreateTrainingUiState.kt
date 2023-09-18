@@ -4,7 +4,8 @@ import com.example.stretchy.repository.Activity
 
 sealed class CreateTrainingUiState(
     open val saveButtonCanBeClicked: Boolean,
-    open val isTrainingChanged: Boolean
+    open val isTrainingChanged: Boolean,
+    open val isAutomaticBreakButtonClicked: Boolean
 ) {
     data class Success(
         val trainingId: Long?,
@@ -12,10 +13,11 @@ sealed class CreateTrainingUiState(
         val currentName: String,
         val activities: List<Activity>,
         override val isTrainingChanged: Boolean = false,
-        override val saveButtonCanBeClicked: Boolean = false
-    ) : CreateTrainingUiState(saveButtonCanBeClicked, isTrainingChanged)
+        override val saveButtonCanBeClicked: Boolean = false,
+        override val isAutomaticBreakButtonClicked: Boolean = false
+    ) : CreateTrainingUiState(saveButtonCanBeClicked, isTrainingChanged,isAutomaticBreakButtonClicked)
 
-    data class Error(val reason: Reason) : CreateTrainingUiState(false, false) {
+    data class Error(val reason: Reason) : CreateTrainingUiState(false, false, false) {
         sealed class Reason {
             object MissingTrainingName : Reason()
             object NotEnoughExercises : Reason()
@@ -23,9 +25,9 @@ sealed class CreateTrainingUiState(
         }
     }
 
-    object Init : CreateTrainingUiState(false, false)
+    object Init : CreateTrainingUiState(false, false, false)
 
-    object Done : CreateTrainingUiState(true, true)
+    object Done : CreateTrainingUiState(true, true, false)
 }
 
 sealed class CreateTrainingActivityItem(
