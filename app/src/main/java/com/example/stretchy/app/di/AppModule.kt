@@ -23,5 +23,5 @@ class AppModule {
     fun provideDataBase(application: Application): AppDatabase = Room.databaseBuilder(
         application.applicationContext,
         AppDatabase::class.java, AppDatabase.NAME
-    ).allowMainThreadQueries().addMigrations(MIGRATION_1_2).build()
+    ).addMigrations(MIGRATION_1_2).build()
 }

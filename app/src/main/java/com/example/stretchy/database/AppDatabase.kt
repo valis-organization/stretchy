@@ -32,7 +32,7 @@ abstract class AppDatabase : RoomDatabase() {
         val MIGRATION_1_2 = object : Migration(1, 2) {
             @SuppressLint("Range")
             override fun migrate(database: SupportSQLiteDatabase) {
-                fun addActivityOrder() {
+                fun addActivityOrderColumn() {
                     database.execSQL("ALTER TABLE training_activities ADD COLUMN activityOrder INTEGER NOT NULL DEFAULT 0")
 
                     database.execSQL(
@@ -41,11 +41,6 @@ abstract class AppDatabase : RoomDatabase() {
                                 "                    FROM training_activities AS ta " +
                                 "                    WHERE ta.tId = training_activities.tId " +
                                 "                    AND ta.aId <= training_activities.aId)"
-                    )
-
-                    database.execSQL(
-                        "INSERT INTO activity (name, duration, activityType) " +
-                                "VALUES ('', 5, 'BREAK')"
                     )
                 }
 
@@ -65,16 +60,13 @@ abstract class AppDatabase : RoomDatabase() {
                                 "PRIMARY KEY (tId, activityOrder))"
                     )
 
-                    // Copy data from the old table to the new one
                     database.execSQL(
                         "INSERT INTO training_activities_new (tId, aId, activityOrder) " +
                                 "SELECT tId, aId, activityOrder FROM training_activities"
                     )
 
-                    // Drop the old table
                     database.execSQL("DROP TABLE training_activities")
 
-                    // Rename the new table to the original table name
                     database.execSQL("ALTER TABLE training_activities_new RENAME TO training_activities")
                 }
 
@@ -184,7 +176,7 @@ abstract class AppDatabase : RoomDatabase() {
                     return activitiesEntities
                 }
 
-                fun fixDuplication() {
+                fun removeDuplicateActivities() {
                     fun ActivityEntity.isDuplicate(activityEntity: ActivityEntity) =
                         this.name == activityEntity.name && this.duration == activityEntity.duration
 
@@ -256,11 +248,11 @@ abstract class AppDatabase : RoomDatabase() {
                         val trainingActivityEntities = getTrainingActivitiesList()
                         clearTrainingActivitiesTable()
                         addBreaksBetweenActivities(trainingActivityEntities, breakId)
-                        fixDuplication()
+                        removeDuplicateActivities()
                     }
                 }
 
-                addActivityOrder()
+                addActivityOrderColumn()
                 addBreakActivity()
                 changePrimaryKeys()
                 addBreaksToTrainings()
