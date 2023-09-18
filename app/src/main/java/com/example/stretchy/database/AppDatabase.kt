@@ -199,8 +199,7 @@ abstract class AppDatabase : RoomDatabase() {
                         return false
                     }
 
-                    fun findDuplicates(): MutableMap<Long, List<Long>> {
-                        val activitiesList = getAllActivities()
+                    fun findDuplicates(activitiesList: List<ActivityEntity>): MutableMap<Long, List<Long>> {
                         val nonDuplicatesActivityList: MutableList<ActivityEntity> = mutableListOf()
                         val duplicatesMap: MutableMap<Long, List<Long>> = mutableMapOf()
 
@@ -238,8 +237,9 @@ abstract class AppDatabase : RoomDatabase() {
                         }
                     }
 
+                    val activities = getAllActivities()
                     clearActivitiesTable()
-                    removeDuplicatesFromRelation(findDuplicates())
+                    removeDuplicatesFromRelation(findDuplicates(activities))
                 }
 
                 fun addBreaksToTrainings() {
