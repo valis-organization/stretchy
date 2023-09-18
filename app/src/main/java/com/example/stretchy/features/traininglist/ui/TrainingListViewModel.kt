@@ -10,6 +10,7 @@ import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -28,7 +29,7 @@ class TrainingListViewModel(
 
     private fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val trainingWithActivityList = repository.getTrainingsWithActivities()
             if (trainingWithActivityList.isEmpty()) {
                 _uiState.value = TrainingListUiState.Empty
