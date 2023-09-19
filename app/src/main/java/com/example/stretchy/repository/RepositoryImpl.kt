@@ -1,5 +1,6 @@
 package com.example.stretchy.repository
 
+import android.util.Log
 import com.example.stretchy.database.AppDatabase
 import com.example.stretchy.database.entity.ActivityEntity
 import com.example.stretchy.database.entity.TrainingActivityEntity
@@ -47,16 +48,23 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
 
     private fun map(training: TrainingWithActivitiesEntity): TrainingWithActivity {
         val trainingId = training.training.trainingId
-        val activityOrderMap =
-            db.trainingWithActivitiesDao().getTrainingsActivitiesByTrainingId(trainingId)
-                .associate { it.aId to it.activityOrder }
 
+        val activityOrderMap: MutableMap<Long, MutableList<Int>> =
+            db.trainingWithActivitiesDao().getTrainingsActivitiesByTrainingId(trainingId)
+                .groupBy { it.aId }
+                .mapValues { (_, values) ->
+                    mutableListOf<Int>().apply {
+                        addAll(values.map { it.activityOrder })
+                    }
+                }.toMutableMap()
         val activitiesMapped: List<Activity> = training.activities
             .map {
-                val activityOrder = activityOrderMap[it.activityId]
-                Activity(it.name, activityOrder!!, it.duration, it.activityType).apply {
-                    this.activityId = it.activityId
-                }
+                val activityOrder = activityOrderMap[it.activityId]!!.first()
+                activityOrderMap[it.activityId]!!.removeAt(0)
+                Activity(it.name, activityOrder, it.duration, it.activityType)
+                    .apply {
+                        this.activityId = it.activityId
+                    }
             }
         with(training.training) {
             return TrainingWithActivity(

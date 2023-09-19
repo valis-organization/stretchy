@@ -9,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.stretchy.activity.di.ActivityComponent
+import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.extensions.daggerViewModel
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.composable.CreateTrainingComposable
@@ -42,10 +43,14 @@ fun Navigation(
         }
         composable(
             route = Screen.ExerciseCreatorScreen.route,
-            arguments = listOf(navArgument("id") { defaultValue = "-1" })
+            arguments = listOf(
+                navArgument("id") { defaultValue = "-1" },
+                navArgument("trainingType") {})
         ) {
             val trainingId = it.arguments?.getString("id")!!.toLong()
-            val component = CreateTrainingComponent.create(activityComponent, trainingId)
+            val trainingType = TrainingType.valueOf(it.arguments?.getString("trainingType")!!)
+            val component =
+                CreateTrainingComponent.create(activityComponent, trainingId, trainingType)
             val vm = createCreateTrainingViewModel(
                 component,
                 activityComponent.activity(),

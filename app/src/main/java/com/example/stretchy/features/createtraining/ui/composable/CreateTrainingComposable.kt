@@ -71,7 +71,7 @@ fun CreateTrainingComposable(
                     TrainingName(viewModel, trainingName)
                     isTrainingBeingEdited = state.editingTraining
                     Spacer(modifier = Modifier.height(24.dp))
-                    ExerciseList(exercises = state.activities, viewModel = viewModel)
+                    ExerciseList(exercises = removeBreaksFromView(state.activities), viewModel = viewModel)
                 }
                 is CreateTrainingUiState.Error -> {
                     HandleError(state = state, context = context)
@@ -547,4 +547,14 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
             ).show()
         }
     }
+}
+
+private fun removeBreaksFromView(activities: List<Activity>): MutableList<Activity> {
+    val new = mutableListOf<Activity>()
+    activities.forEach {
+        if(it.activityType != ActivityType.BREAK){
+            new.add(it)
+        }
+    }
+    return new
 }

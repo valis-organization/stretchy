@@ -69,7 +69,7 @@ class TrainingListViewModel(
 
     private fun TrainingType.toTrainingType(): Training.Type {
         return when (this) {
-            TrainingType.STRETCH -> Training.Type.STRETCHING
+            TrainingType.STRETCH -> Training.Type.STRETCH
             TrainingType.BODYWEIGHT -> Training.Type.BODY_WEIGHT
         }
     }

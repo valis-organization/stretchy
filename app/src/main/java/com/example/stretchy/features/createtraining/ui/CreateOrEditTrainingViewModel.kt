@@ -2,15 +2,23 @@ package com.example.stretchy.features.createtraining.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
+import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: Long) :
+class CreateOrEditTrainingViewModel(
+    val repository: Repository,
+    val trainingId: Long,
+    val automaticBreakPreferences: AutomaticBreakPreferences,
+    val trainingType: TrainingType
+) :
     ViewModel() {
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
         MutableStateFlow(CreateTrainingUiState.Init)
@@ -18,7 +26,7 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
 
     init {
         if (trainingId != -1L) {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
                 with(trainingWithActivities) {
                     _uiState.emit(
@@ -27,6 +35,7 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
                             true,
                             name,
                             activities,
+                            trainingType,
                             false,
                             isCreateTrainingButtonVisible(name, activities),
                         )
@@ -34,13 +43,14 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
                 }
             }
         } else {
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 _uiState.emit(
                     CreateTrainingUiState.Success(
                         trainingId,
                         false,
                         "",
                         emptyList(),
+                        trainingType,
                         false,
                         saveButtonCanBeClicked = false
                     )
@@ -78,7 +88,11 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
     fun addActivity(activityItem: Activity) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
-        currentList.add(activityItem)
+        val activityOrder = currentList.lastIndex
+        currentList.add(activityItem.copy(activityOrder = activityOrder))
+        if (stateSuccess.isAutomaticBreakButtonClicked) {
+            currentList.add(getAutoBreak(activityOrder + 1))
+        }
         emitActivitiesList(stateSuccess, currentList)
     }
 
@@ -131,12 +145,28 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
         }
     }
 
-    fun swapExercises(from: Int, to: Int) {
+    fun swapExercises(fromPosition: Int, toPosition: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val activities = getCurrentActivities(stateSuccess)
-        activities.apply { add(to, removeAt(from)) }
-        _uiState.value = stateSuccess.copy(activities = activities)
+        activities[fromPosition + 1].activityOrder = toPosition
+        activities[toPosition].activityOrder = fromPosition + 1
+        activities[fromPosition + 2].activityOrder = toPosition + 1
+        activities[toPosition + 1].activityOrder = fromPosition + 2
+
+        _uiState.value = stateSuccess.copy(activities = activities.sortedBy { it.activityOrder })
     }
+
+    fun enableAutoBreaks() {
+        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
+        _uiState.value = stateSuccess.copy(isAutomaticBreakButtonClicked = true)
+    }
+
+    fun disableAutoBreaks() {
+        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
+        _uiState.value = stateSuccess.copy(isAutomaticBreakButtonClicked = false)
+    }
+
+    fun updateAutoBreakDuration(durationInSec: Int) = automaticBreakPreferences.updateAutoBreakDuration(durationInSec)
 
     private fun currentActivitySizeList(): Int =
         (_uiState.value as? CreateTrainingUiState.Success)?.activities?.size ?: 0
@@ -214,5 +244,14 @@ class CreateOrEditTrainingViewModel(val repository: Repository, val trainingId: 
                 )
             )
         }
+    }
+
+    private fun getAutoBreak(breakActivityOrder: Int): Activity {
+        return Activity(
+            "",
+            activityOrder = breakActivityOrder,
+            automaticBreakPreferences.getCurrentAutoBreakDuration(),
+            ActivityType.BREAK
+        )
     }
 }
