@@ -2,7 +2,7 @@ package com.example.stretchy.features.createtraining.ui.data
 
 import android.content.Context
 
-class BreakDb(context: Context) {
+class AutomaticBreakPreferences(context: Context) {
     private val prefs = context.getSharedPreferences(AUTOMATIC_BREAK_DURATION, Context.MODE_PRIVATE)
 
     fun updateAutoBreakDuration(duration: Int) {

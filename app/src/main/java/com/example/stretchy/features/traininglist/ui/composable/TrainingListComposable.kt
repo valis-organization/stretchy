@@ -253,7 +253,7 @@ private fun TrainingComposable(
                         Row {
                             IconButton(
                                 onClick = {
-                                    navController.navigate("exerciseCreatorScreen?id=${training.id}")
+                                    navController.navigate("exerciseCreatorScreen?id=${training.id}&trainingType=${training.type}")
                                 },
                                 Modifier
                                     .size(20.dp)

@@ -5,7 +5,7 @@ import androidx.room.Room
 import com.example.stretchy.app.di.scope.ApplicationScope
 import com.example.stretchy.database.AppDatabase
 import com.example.stretchy.database.AppDatabase.Companion.MIGRATION_1_2
-import com.example.stretchy.features.createtraining.ui.data.BreakDb
+import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.RepositoryImpl
 import dagger.Module
@@ -28,7 +28,7 @@ class AppModule {
 
     @ApplicationScope
     @Provides
-    fun provideBreakDb(application: Application): BreakDb {
-        return BreakDb(application.applicationContext)
+    fun provideAutomaticBreakPreferences(application: Application): AutomaticBreakPreferences {
+        return AutomaticBreakPreferences(application.applicationContext)
     }
 }

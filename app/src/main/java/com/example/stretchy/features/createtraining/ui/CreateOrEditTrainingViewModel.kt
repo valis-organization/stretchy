@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.features.createtraining.ui.data.BreakDb
+import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
@@ -16,7 +16,8 @@ import kotlinx.coroutines.launch
 class CreateOrEditTrainingViewModel(
     val repository: Repository,
     val trainingId: Long,
-    val breakDb: BreakDb
+    val automaticBreakPreferences: AutomaticBreakPreferences,
+    val trainingType: TrainingType
 ) :
     ViewModel() {
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
@@ -34,6 +35,7 @@ class CreateOrEditTrainingViewModel(
                             true,
                             name,
                             activities,
+                            trainingType,
                             false,
                             isCreateTrainingButtonVisible(name, activities),
                         )
@@ -48,6 +50,7 @@ class CreateOrEditTrainingViewModel(
                         false,
                         "",
                         emptyList(),
+                        trainingType,
                         false,
                         saveButtonCanBeClicked = false
                     )
@@ -145,8 +148,8 @@ class CreateOrEditTrainingViewModel(
     fun swapExercises(fromPosition: Int, toPosition: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val activities = getCurrentActivities(stateSuccess)
-        activities[fromPosition+1].activityOrder = toPosition
-        activities[toPosition].activityOrder = fromPosition+1
+        activities[fromPosition + 1].activityOrder = toPosition
+        activities[toPosition].activityOrder = fromPosition + 1
         activities[fromPosition + 2].activityOrder = toPosition + 1
         activities[toPosition + 1].activityOrder = fromPosition + 2
 
@@ -163,7 +166,7 @@ class CreateOrEditTrainingViewModel(
         _uiState.value = stateSuccess.copy(isAutomaticBreakButtonClicked = false)
     }
 
-    fun updateAutoBreakDuration(durationInSec: Int) = breakDb.updateAutoBreakDuration(durationInSec)
+    fun updateAutoBreakDuration(durationInSec: Int) = automaticBreakPreferences.updateAutoBreakDuration(durationInSec)
 
     private fun currentActivitySizeList(): Int =
         (_uiState.value as? CreateTrainingUiState.Success)?.activities?.size ?: 0
@@ -247,7 +250,7 @@ class CreateOrEditTrainingViewModel(
         return Activity(
             "",
             activityOrder = breakActivityOrder,
-            breakDb.getCurrentAutoBreakDuration(),
+            automaticBreakPreferences.getCurrentAutoBreakDuration(),
             ActivityType.BREAK
         )
     }

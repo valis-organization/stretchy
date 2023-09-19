@@ -5,7 +5,7 @@ import com.example.stretchy.activity.MainActivity
 import com.example.stretchy.activity.di.scope.ActivityScope
 import com.example.stretchy.app.di.AppComponent
 import com.example.stretchy.app.di.AppComponent.Companion.appComponent
-import com.example.stretchy.features.createtraining.ui.data.BreakDb
+import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
 import com.example.stretchy.features.executetraining.sound.Speaker
 import com.example.stretchy.repository.Repository
 import dagger.BindsInstance
@@ -31,7 +31,7 @@ interface ActivityComponent {
     fun repository(): Repository
     fun activity(): ComponentActivity
     fun speaker() : Speaker
-    fun breakDB() : BreakDb
+    fun automaticBreakPreferences() : AutomaticBreakPreferences
 
     companion object {
         fun create(activity: MainActivity): ActivityComponent =
