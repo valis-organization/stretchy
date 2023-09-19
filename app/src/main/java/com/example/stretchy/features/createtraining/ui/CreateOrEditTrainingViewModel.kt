@@ -142,14 +142,15 @@ class CreateOrEditTrainingViewModel(
         }
     }
 
-    fun swapExercises(from: Int, to: Int) {
+    fun swapExercises(fromPosition: Int, toPosition: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val activities = getCurrentActivities(stateSuccess)
-        activities.apply { add(to, removeAt(from)) }
-        activities.forEachIndexed { index, it ->
-            it.activityOrder = index
-        }
-        _uiState.value = stateSuccess.copy(activities = activities)
+        activities[fromPosition+1].activityOrder = toPosition
+        activities[toPosition].activityOrder = fromPosition+1
+        activities[fromPosition + 2].activityOrder = toPosition + 1
+        activities[toPosition + 1].activityOrder = fromPosition + 2
+
+        _uiState.value = stateSuccess.copy(activities = activities.sortedBy { it.activityOrder })
     }
 
     fun enableAutoBreaks() {
@@ -161,6 +162,8 @@ class CreateOrEditTrainingViewModel(
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         _uiState.value = stateSuccess.copy(isAutomaticBreakButtonClicked = false)
     }
+
+    fun updateAutoBreakDuration(durationInSec: Int) = breakDb.updateAutoBreakDuration(durationInSec)
 
     private fun currentActivitySizeList(): Int =
         (_uiState.value as? CreateTrainingUiState.Success)?.activities?.size ?: 0
@@ -240,9 +243,7 @@ class CreateOrEditTrainingViewModel(
         }
     }
 
-    fun updateAutoBreakDuration(durationInSec: Int) = breakDb.updateAutoBreakDuration(durationInSec)
-
-    fun getAutoBreak(breakActivityOrder: Int): Activity {
+    private fun getAutoBreak(breakActivityOrder: Int): Activity {
         return Activity(
             "",
             activityOrder = breakActivityOrder,
