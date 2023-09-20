@@ -1,18 +1,21 @@
 package com.example.stretchy.repository
 
-import android.util.Log
 import com.example.stretchy.database.AppDatabase
 import com.example.stretchy.database.entity.ActivityEntity
 import com.example.stretchy.database.entity.TrainingActivityEntity
 import com.example.stretchy.database.entity.TrainingEntity
 import com.example.stretchy.database.entity.TrainingWithActivitiesEntity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class RepositoryImpl(private val db: AppDatabase) : Repository {
     override suspend fun addTrainingWithActivities(training: TrainingWithActivity) {
-        val tId = generateTrainingId()
-        addTrainingWithActivitiesToDb(training.activities, tId)
-        with(training) {
-            db.trainingDao().add(TrainingEntity(tId, name, trainingType, finished))
+        withContext(Dispatchers.IO){
+            val tId = generateTrainingId()
+            addTrainingWithActivitiesToDb(training.activities, tId)
+            with(training) {
+                db.trainingDao().add(TrainingEntity(tId, name, trainingType, finished))
+            }
         }
     }
 
@@ -20,31 +23,39 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
         trainingId: Long,
         editedTraining: TrainingWithActivity
     ) {
-        deleteActivitiesFromTraining(
-            getTrainingWithActivitiesById(trainingId).activities,
-            trainingId
-        )
-        addTrainingWithActivitiesToDb(editedTraining.activities, trainingId)
-        with(editedTraining) {
-            db.trainingDao().update(TrainingEntity(trainingId, name, trainingType, finished))
+        withContext(Dispatchers.IO){
+            deleteActivitiesFromTraining(
+                getTrainingWithActivitiesById(trainingId).activities,
+                trainingId
+            )
+            addTrainingWithActivitiesToDb(editedTraining.activities, trainingId)
+            with(editedTraining) {
+                db.trainingDao().update(TrainingEntity(trainingId, name, trainingType, finished))
+            }
         }
     }
 
     override suspend fun deleteTrainingById(trainingId: Long) {
-        val training = getTrainingWithActivitiesById(trainingId)
-        deleteActivitiesFromTraining(training.activities, trainingId)
-        db.trainingDao().deleteById(trainingId = trainingId)
+        withContext(Dispatchers.IO) {
+            val training = getTrainingWithActivitiesById(trainingId)
+            deleteActivitiesFromTraining(training.activities, trainingId)
+            db.trainingDao().deleteById(trainingId = trainingId)
+        }
     }
 
     override suspend fun getTrainingsWithActivities(): List<TrainingWithActivity> =
-        db.trainingWithActivitiesDao().getTrainings().map { activity ->
+        withContext(Dispatchers.IO) {
+            db.trainingWithActivitiesDao().getTrainings().map { activity ->
+                map(activity)
+            }
+        }
+
+    override suspend fun getTrainingWithActivitiesById(id: Long): TrainingWithActivity =
+        withContext(Dispatchers.IO) {
+            val activity = db.trainingWithActivitiesDao().getTrainingsById(id)
             map(activity)
         }
 
-    override suspend fun getTrainingWithActivitiesById(id: Long): TrainingWithActivity {
-        val activity = db.trainingWithActivitiesDao().getTrainingsById(id)
-        return map(activity)
-    }
 
     private fun map(training: TrainingWithActivitiesEntity): TrainingWithActivity {
         val trainingId = training.training.trainingId
