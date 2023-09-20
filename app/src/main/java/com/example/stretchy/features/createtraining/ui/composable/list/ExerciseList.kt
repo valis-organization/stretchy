@@ -1,14 +1,19 @@
-package com.example.stretchy.features.createtraining.ui.composable
+package com.example.stretchy.features.createtraining.ui.composable.list
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
+import com.example.stretchy.features.createtraining.ui.composable.CreateExerciseWidget
+import com.example.stretchy.features.createtraining.ui.composable.SwipeableExerciseItem
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.features.createtraining.ui.list.DragDropLazyList
 import com.example.stretchy.repository.Activity
@@ -31,12 +36,12 @@ fun ExerciseList(exercises: List<Activity>, viewModel: CreateOrEditTrainingViewM
                     interactionSource = MutableInteractionSource(),
                     indication = null
                 ) {
-                    editedExercise = Exercise(item.name, item.duration, index)
+                    editedExercise = Exercise(item.name, item.activityOrder, item.duration, index)
                     widgetVisible = true
                 }) {
             SwipeableExerciseItem(
                 vm = viewModel,
-                exercise = Exercise(item.name, item.duration, index)
+                exercise = Exercise(item.name, item.activityOrder, item.duration, index)
             )
         }
     }

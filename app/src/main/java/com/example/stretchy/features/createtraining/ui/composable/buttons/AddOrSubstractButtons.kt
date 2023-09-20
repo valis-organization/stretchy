@@ -1,4 +1,4 @@
-package com.example.stretchy.features.createtraining.ui.composable
+package com.example.stretchy.features.createtraining.ui.composable.buttons
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button

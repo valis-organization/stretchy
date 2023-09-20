@@ -13,10 +13,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.stretchy.R
+import com.example.stretchy.Screen
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
+import com.example.stretchy.features.createtraining.ui.composable.buttons.CreateOrEditTrainingButton
 import com.example.stretchy.features.createtraining.ui.composable.buttons.TrainingName
+import com.example.stretchy.features.createtraining.ui.composable.list.ExerciseList
 import com.example.stretchy.repository.Activity
 
 @Composable
@@ -53,7 +56,9 @@ fun CreateTrainingComposable(
                     HandleError(state = state, context = context)
                 }
                 is CreateTrainingUiState.Done -> {
-
+                    if (navController.currentDestination?.route != Screen.TrainingListScreen.route) {
+                        navController.navigate(Screen.TrainingListScreen.route)
+                    }
                 }
                 else -> {
                     TrainingName(viewModel, trainingName)

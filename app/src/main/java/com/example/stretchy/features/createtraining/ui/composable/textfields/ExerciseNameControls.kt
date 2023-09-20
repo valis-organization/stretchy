@@ -30,7 +30,7 @@ fun ExerciseNameControls(
     Text(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 8.dp),
+            .padding(top = 4.dp, bottom = 8.dp),
         text = stringResource(id = R.string.name),
         fontSize = 16.sp,
         fontWeight = FontWeight.Bold

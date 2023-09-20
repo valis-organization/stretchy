@@ -1,4 +1,4 @@
-package com.example.stretchy.features.createtraining.ui.composable
+package com.example.stretchy.features.createtraining.ui.composable.buttons
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -15,9 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.stretchy.R
-import com.example.stretchy.Screen
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
-import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
 import com.example.stretchy.theme.BananaMania
 
 @Composable
@@ -43,9 +41,6 @@ fun CreateOrEditTrainingButton(
                     viewModel.editTraining(trainingId = trainingId!!)
                 } else {
                     viewModel.createTraining()
-                }
-                if (viewModel.uiState.value is CreateTrainingUiState.Done) {
-                    navController.navigate(Screen.TrainingListScreen.route)
                 }
             }
         },

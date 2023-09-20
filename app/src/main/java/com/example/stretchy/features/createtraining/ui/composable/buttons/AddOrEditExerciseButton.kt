@@ -1,4 +1,4 @@
-package com.example.stretchy.features.createtraining.ui.composable
+package com.example.stretchy.features.createtraining.ui.composable.buttons
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,7 +19,6 @@ import com.example.stretchy.repository.Activity
 @Composable
 fun AddOrEditExerciseButton(
     exerciseName: String,
-    exerciseOrder: Int,
     exerciseDuration: Int,
     viewModel: CreateOrEditTrainingViewModel,
     editedExercise: Exercise,
@@ -30,7 +29,7 @@ fun AddOrEditExerciseButton(
     Button(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(bottom = 16.dp, top = 16.dp),
+            .padding(bottom = 8.dp, top = 2.dp),
         onClick = {
             if (exerciseName.isNotEmpty() && exerciseDuration != 0) {
                 onAddOrEditButtonClick()
@@ -39,10 +38,10 @@ fun AddOrEditExerciseButton(
                         viewModel.editActivity(
                             Activity(
                                 exerciseName,
-                                exerciseOrder,
+                                editedExercise.activityOrder,
                                 exerciseDuration,
                                 ActivityType.STRETCH
-                            ), editedExercise.listId!!
+                            )
                         )
                         Toast.makeText(context, R.string.exercise_edited, Toast.LENGTH_LONG)
                             .show()
@@ -51,7 +50,7 @@ fun AddOrEditExerciseButton(
                     viewModel.addActivity(
                         Activity(
                             exerciseName,
-                            exerciseOrder,
+                            null,
                             exerciseDuration,
                             ActivityType.STRETCH
                         )

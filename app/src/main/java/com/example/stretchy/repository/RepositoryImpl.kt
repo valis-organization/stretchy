@@ -107,7 +107,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
                         )
                     )
                 db.trainingWithActivitiesDao()
-                    .delete(TrainingActivityEntity(trainingId, activityId, activityOrder))
+                    .delete(TrainingActivityEntity(trainingId, activityId, activityOrder!!))
             }
         }
     }
@@ -123,7 +123,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
                 }
 
                 db.trainingWithActivitiesDao()
-                    .insert(TrainingActivityEntity(trainingId, aId, activityOrder))
+                    .insert(TrainingActivityEntity(trainingId, aId, activityOrder!!))
             }
         }
     }
