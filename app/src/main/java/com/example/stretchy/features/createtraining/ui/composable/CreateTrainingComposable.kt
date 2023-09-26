@@ -1,16 +1,19 @@
 package com.example.stretchy.features.createtraining.ui.composable
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Checkbox
+import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
@@ -43,11 +46,14 @@ fun CreateTrainingComposable(
                     trainingId = state.trainingId
                     trainingName = state.currentName
                     TrainingName(viewModel, trainingName)
+                    AutoBreakCheckbox(viewModel = viewModel)
                     isTrainingBeingEdited = state.editingTraining
                     Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(
                         exercises = state.activities,
                         viewModel = viewModel,
+                        trainingType = state.trainingType,
+                        isAutoBreakClicked = state.isAutomaticBreakButtonClicked
                     )
                 }
                 is CreateTrainingUiState.Error -> {
@@ -58,11 +64,7 @@ fun CreateTrainingComposable(
                         navController.navigate(Screen.TrainingListScreen.route)
                     }
                 }
-                else -> {
-                    TrainingName(viewModel, trainingName)
-                    Spacer(modifier = Modifier.height(24.dp))
-                    ExerciseList(emptyList(), viewModel = viewModel)
-                }
+                CreateTrainingUiState.Init -> {}
             }
         }
         Spacer(modifier = Modifier.height(200.dp))
@@ -74,7 +76,6 @@ fun CreateTrainingComposable(
 
 @Composable
 private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
-    Log.e("Error", state.reason.toString())
     when (state.reason) {
         CreateTrainingUiState.Error.Reason.MissingTrainingName -> {
             Toast.makeText(
@@ -100,3 +101,31 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
     }
 }
 
+@Composable
+private fun AutoBreakCheckbox(viewModel: CreateOrEditTrainingViewModel) {
+    var isAutoBreakChecked by remember { mutableStateOf(true) }
+
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Checkbox(
+            checked = isAutoBreakChecked,
+            onCheckedChange = {
+                isAutoBreakChecked = it
+                if (isAutoBreakChecked) {
+                    viewModel.enableAutoBreaks()
+                } else {
+                    viewModel.disableAutoBreaks()
+                }
+            },
+        )
+        Text(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp)
+                .weight(1f),
+            text = "auto breaks",
+            fontSize = 16.sp,
+
+            fontWeight = FontWeight.Bold
+        )
+    }
+}

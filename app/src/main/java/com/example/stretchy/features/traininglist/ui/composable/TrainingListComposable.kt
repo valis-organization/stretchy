@@ -31,9 +31,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
-import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.R
 import com.example.stretchy.common.convertSecondsToMinutes
+import com.example.stretchy.database.data.TrainingType
+import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.theme.White80
@@ -49,9 +50,10 @@ fun TrainingListComposable(
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
 ) {
+    val trainingType = TrainingType.STRETCH //TODO
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate("exerciseCreatorScreen") }) {
+            FloatingActionButton(onClick = { navController.navigate("exerciseCreatorScreen?trainingType=$trainingType") }) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = stringResource(id = R.string.desc_plus_icon)

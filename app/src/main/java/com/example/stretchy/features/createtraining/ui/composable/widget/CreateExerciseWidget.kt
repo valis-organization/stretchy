@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -22,10 +23,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stretchy.R
 import com.example.stretchy.database.data.ActivityType
+import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.composable.ExerciseNameControls
 import com.example.stretchy.features.createtraining.ui.composable.buttons.AddOrEditExerciseButton
@@ -44,6 +47,8 @@ fun CreateExerciseWidget(
     breakToEdit: BreakAfterExercise?,
     widgetVisible: Boolean,
     onAddOrEditButtonClick: () -> Unit,
+    trainingType: TrainingType,
+    isAutoBreakClicked: Boolean
 ) {
     AnimatedVisibility(visible = !widgetVisible) {
         AddExerciseWidget {
@@ -60,6 +65,8 @@ fun CreateExerciseWidget(
             exerciseToEdit,
             breakToEdit,
             onAddOrEditButtonClick,
+            trainingType,
+            isAutoBreakClicked
         )
     }
 }
@@ -96,6 +103,8 @@ private fun ExerciseAndBreakTabsWidget(
     exerciseToEdit: Exercise,
     breakToEdit: BreakAfterExercise?,
     onAddOrEditButtonClick: () -> Unit,
+    trainingType: TrainingType,
+    isAutoBreakClicked: Boolean
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs =
@@ -106,6 +115,12 @@ private fun ExerciseAndBreakTabsWidget(
     var currentBreak: BreakAfterExercise? by remember { mutableStateOf(BreakAfterExercise()) }
     if (breakToEdit != null) {
         currentBreak = breakToEdit.copy()
+    } else if (isAutoBreakClicked) {
+        currentBreak!!.duration = viewModel.getAutoBreakDuration()
+    }
+
+    var isTimelessExercise: Boolean by remember {
+        mutableStateOf(true)
     }
 
     val doesExerciseExists = currentExercise.name != ""
@@ -159,6 +174,10 @@ private fun ExerciseAndBreakTabsWidget(
                             currentExercise.name = it
                         },
                         onDurationChange = { currentExercise.duration = it },
+                        isTimelessExercise = isTimelessExercise,
+                        onCheckboxChange = {
+                            isTimelessExercise = !isTimelessExercise
+                        }
                     )
                     1 -> BreakTab(
                         editedBreak = currentBreak,
@@ -182,7 +201,10 @@ private fun ExerciseAndBreakTabsWidget(
                                             currentExercise.name,
                                             currentExercise.activityOrder,
                                             currentExercise.duration,
-                                            ActivityType.STRETCH
+                                            getActivityType(
+                                                isTimelessExercise = isTimelessExercise,
+                                                trainingType = trainingType
+                                            )
                                         )
                                     )
                                     Toast.makeText(
@@ -214,11 +236,16 @@ private fun ExerciseAndBreakTabsWidget(
                                             ActivityType.BREAK
                                         )
                                     )
+                                }else if(isBreakChanged(currentBreak,breakToEdit) && currentBreak!!.duration!! == 0 ){
+                                    viewModel.removeLocalActivity(currentExercise.activityOrder!!.plus(1))
                                 }
                             } else {
                                 if (isBreakInitialized(currentBreak)) {
                                     viewModel.addActivityWithBreak(
-                                        currentExercise.toActivity(),
+                                        currentExercise.toActivity(
+                                            trainingType,
+                                            isTimelessExercise
+                                        ),
                                         Activity(
                                             "",
                                             null,
@@ -228,7 +255,7 @@ private fun ExerciseAndBreakTabsWidget(
                                     )
                                 } else {
                                     viewModel.addActivity(
-                                        currentExercise.toActivity()
+                                        currentExercise.toActivity(trainingType, isTimelessExercise)
                                     )
                                 }
                                 Toast.makeText(context, R.string.exercise_added, Toast.LENGTH_LONG)
@@ -243,7 +270,10 @@ private fun ExerciseAndBreakTabsWidget(
                         }
                     },
                     isExerciseOrBreakBeingEdited = doesBreakExists || doesExerciseExists,
-                    isExerciseOrBreakChanged = isExerciseChanged(currentExercise,exerciseToEdit) || isBreakChanged(currentBreak, breakToEdit)
+                    isExerciseOrBreakChanged = isExerciseChanged(
+                        currentExercise,
+                        exerciseToEdit
+                    ) || isBreakChanged(currentBreak, breakToEdit)
                 )
             }
         }
@@ -254,7 +284,9 @@ private fun ExerciseAndBreakTabsWidget(
 private fun ExerciseTab(
     editedExercise: Exercise,
     onNameChange: (name: String) -> Unit,
-    onDurationChange: (duration: Int) -> Unit
+    onDurationChange: (duration: Int) -> Unit,
+    isTimelessExercise: Boolean,
+    onCheckboxChange: (isChecked: Boolean) -> Unit //temp
 ) {
     val sliderMinValue = 10
     val sliderMaxValue = 300
@@ -284,15 +316,20 @@ private fun ExerciseTab(
         fontSize = 16.sp,
         fontWeight = FontWeight.Bold
     )
-    Slider(
-        value = exerciseDuration.toFloat(),
-        onValueChange = {
-            exerciseDuration = it.toInt()
-            onDurationChange(exerciseDuration)
-        },
-        valueRange = 10f..sliderMaxValue.toFloat(),
-        modifier = Modifier.padding(top = 0.dp, bottom = 0.dp)
-    )
+    if (isTimelessExercise) {
+        TimelessExerciseCheckbox(onClick = { onCheckboxChange(it) }, isTimelessExercise = true)
+    } else {
+        TimelessExerciseCheckbox(onClick = { onCheckboxChange(it) }, isTimelessExercise = false)
+        Slider(
+            value = exerciseDuration.toFloat(),
+            onValueChange = {
+                exerciseDuration = it.toInt()
+                onDurationChange(exerciseDuration)
+            },
+            valueRange = 10f..sliderMaxValue.toFloat(),
+            modifier = Modifier.padding(top = 0.dp, bottom = 0.dp)
+        )
+    }
     AddOrSubtractButtons { changeValue ->
         if (exerciseDuration + changeValue in 10..300) {
             exerciseDuration += changeValue
@@ -306,7 +343,7 @@ private fun BreakTab(
     editedBreak: BreakAfterExercise?,
     onDurationChange: (duration: Int) -> Unit,
 ) {
-    val sliderMinValue = 1
+    val sliderMinValue = 0
     val sliderMaxValue = 300
     var breakDuration: Int by remember { mutableStateOf(sliderMinValue) }
     LaunchedEffect(editedBreak) {
@@ -332,10 +369,10 @@ private fun BreakTab(
         onValueChange = {
             breakDuration = it.toInt()
         },
-        valueRange = 10f..sliderMaxValue.toFloat(),
+        valueRange = sliderMinValue.toFloat()..sliderMaxValue.toFloat(),
     )
     AddOrSubtractButtons { changeValue ->
-        if (breakDuration + changeValue in 10..300) {
+        if (breakDuration + changeValue in sliderMinValue..sliderMaxValue) {
             breakDuration += changeValue
             onDurationChange(breakDuration)
         }
@@ -351,12 +388,18 @@ private fun isBreakChanged(currentBreak: BreakAfterExercise?, breakToEdit: Break
 private fun isBreakInitialized(currentBreak: BreakAfterExercise?) =
     currentBreak?.duration != 0 && currentBreak?.duration != null
 
-private fun Exercise.toActivity(): Activity = Activity(
-    this.name,
-    this.activityOrder,
-    this.duration,
-    ActivityType.STRETCH
-)
+private fun getActivityType(isTimelessExercise: Boolean, trainingType: TrainingType) =
+    if (trainingType == TrainingType.STRETCH) ActivityType.STRETCH
+    else if (isTimelessExercise) ActivityType.TIMELESS_EXERCISE
+    else ActivityType.EXERCISE
+
+private fun Exercise.toActivity(trainingType: TrainingType, isTimelessExercise: Boolean): Activity =
+    Activity(
+        this.name,
+        this.activityOrder,
+        this.duration,
+        getActivityType(isTimelessExercise = isTimelessExercise, trainingType)
+    )
 
 
 fun toDisplayableLength(exerciseDuration: Int): String {
@@ -366,5 +409,30 @@ fun toDisplayableLength(exerciseDuration: Int): String {
         "$mins min $rest sec"
     } else {
         "$exerciseDuration sec"
+    }
+}
+
+@Composable
+fun TimelessExerciseCheckbox(onClick: (isChecked: Boolean) -> Unit, isTimelessExercise: Boolean) {
+    var isChecked by remember { mutableStateOf(isTimelessExercise) }
+
+    Row(
+        verticalAlignment = CenterVertically
+    ) {
+        Checkbox(
+            checked = isChecked,
+            onCheckedChange = {
+                isChecked = it
+                onClick(isChecked)
+            },
+            modifier = Modifier.padding(0.dp)
+        )
+
+        Text(
+            text = "TimelessExercise",
+            textAlign = TextAlign.Start,
+            modifier = Modifier
+                .weight(1f)
+        )
     }
 }

@@ -39,6 +39,7 @@ class CreateOrEditTrainingViewModel(
                             trainingType,
                             false,
                             isCreateTrainingButtonVisible(name, activities),
+                            isAutomaticBreakButtonClicked = true
                         )
                     )
                 }
@@ -53,7 +54,8 @@ class CreateOrEditTrainingViewModel(
                         emptyList(),
                         trainingType,
                         false,
-                        saveButtonCanBeClicked = false
+                        saveButtonCanBeClicked = false,
+                        isAutomaticBreakButtonClicked = true
                     )
                 )
             }
@@ -117,9 +119,6 @@ class CreateOrEditTrainingViewModel(
         val currentList = getCurrentActivities(stateSuccess)
         val activityOrder = currentList.size
         currentList.add(activityItem.copy(activityOrder = activityOrder))
-        if (stateSuccess.isAutomaticBreakButtonClicked) {
-            currentList.add(getAutoBreak(activityOrder + 1))
-        }
 
         viewModelScope.launch {
             emitActivitiesList(stateSuccess, currentList)
@@ -217,6 +216,8 @@ class CreateOrEditTrainingViewModel(
 
     fun updateAutoBreakDuration(durationInSec: Int) =
         automaticBreakPreferences.updateAutoBreakDuration(durationInSec)
+
+    fun getAutoBreakDuration(): Int = automaticBreakPreferences.getCurrentAutoBreakDuration()
 
     private fun currentActivitySizeList(): Int =
         (_uiState.value as? CreateTrainingUiState.Success)?.activities?.size ?: 0

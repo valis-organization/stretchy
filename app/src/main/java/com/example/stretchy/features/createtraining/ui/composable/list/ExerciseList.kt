@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.database.data.ActivityType
+import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.composable.widget.CreateExerciseWidget
 import com.example.stretchy.features.createtraining.ui.data.BreakAfterExercise
@@ -23,6 +24,8 @@ import com.example.stretchy.repository.Activity
 fun ExerciseList(
     exercises: List<Activity>,
     viewModel: CreateOrEditTrainingViewModel,
+    trainingType: TrainingType,
+    isAutoBreakClicked : Boolean
 ) {
     var editedExercise by remember { mutableStateOf(Exercise()) }
     var breakToEdit: BreakAfterExercise? by remember { mutableStateOf(BreakAfterExercise()) }
@@ -72,7 +75,9 @@ fun ExerciseList(
         onAddOrEditButtonClick = {
             widgetVisible = !widgetVisible
             editedExercise = Exercise()
-        }
+        },
+        trainingType = trainingType,
+        isAutoBreakClicked = isAutoBreakClicked
     )
 }
 
