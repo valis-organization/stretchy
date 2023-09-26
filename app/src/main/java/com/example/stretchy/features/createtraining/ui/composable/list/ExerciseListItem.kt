@@ -1,4 +1,4 @@
-package com.example.stretchy.features.createtraining.ui.composable
+package com.example.stretchy.features.createtraining.ui.composable.list
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -14,10 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.R
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
+import com.example.stretchy.features.createtraining.ui.composable.widget.toDisplayableLength
+import com.example.stretchy.features.createtraining.ui.data.BreakAfterExercise
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.theme.BananaMania
 import com.example.stretchy.theme.WhiteSmoke
@@ -26,11 +29,12 @@ import com.example.stretchy.theme.WhiteSmoke
 @Composable
 fun SwipeableExerciseItem(
     vm: CreateOrEditTrainingViewModel,
-    exercise: Exercise
+    exercise: Exercise,
+    breakAfterExercise: BreakAfterExercise?
 ) {
     val dismissState = DismissState(initialValue = DismissValue.Default, confirmStateChange = {
         if (it == DismissValue.DismissedToEnd) {
-            vm.removeLocalActivity(exercise.listId!!)
+            vm.removeLocalActivity(exercise.activityOrder!!)
         }
         true
     })
@@ -71,6 +75,25 @@ fun SwipeableExerciseItem(
                     .weight(1f, fill = false),
                 contentAlignment = Alignment.Center
             ) {
+
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
+                    Box(
+                        Modifier
+                            .fillMaxHeight()
+                            .width(64.dp)
+                            .background(Color.Gray),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (breakAfterExercise != null) {
+                            Text(toDisplayableLength(breakAfterExercise.duration!!))
+                        } else {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_no_break),
+                                contentDescription = ""
+                            )
+                        }
+                    }
+                }
                 Row(
                     Modifier
                         .fillMaxWidth()
@@ -79,8 +102,26 @@ fun SwipeableExerciseItem(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text("${exercise.listId!!.plus(1)}")
+
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = exercise.name, Modifier.padding(start = 16.dp))
+                    }
+                    Box(
+                        Modifier
+                            .fillMaxHeight()
+                            .width(40.dp)
+                            .background(Color.Gray),
+                        contentAlignment = Alignment.CenterEnd
+                    ) {
+
+                    }
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
+                        Box(
+                            Modifier
+                                .fillMaxHeight()
+                                .width(40.dp)
+                                .background(Color.Gray)
+                        )
                     }
                 }
             }

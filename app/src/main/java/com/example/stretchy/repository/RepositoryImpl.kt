@@ -97,15 +97,6 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
     private fun deleteActivitiesFromTraining(activities: List<Activity>, trainingId: Long) {
         activities.forEach { activity ->
             with(activity) {
-                db.activityDao()
-                    .delete(
-                        ActivityEntity(
-                            activityId,
-                            name,
-                            duration,
-                            activityType
-                        )
-                    )
                 db.trainingWithActivitiesDao()
                     .delete(TrainingActivityEntity(trainingId, activityId, activityOrder!!))
             }

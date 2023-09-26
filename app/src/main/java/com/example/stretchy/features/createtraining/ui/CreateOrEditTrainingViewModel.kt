@@ -28,6 +28,7 @@ class CreateOrEditTrainingViewModel(
         if (trainingId != -1L) {
             viewModelScope.launch(Dispatchers.IO) {
                 val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+
                 with(trainingWithActivities) {
                     _uiState.emit(
                         CreateTrainingUiState.Success(
@@ -59,6 +60,22 @@ class CreateOrEditTrainingViewModel(
         }
     }
 
+
+    fun addBreakAfterActivity(activityItem: Activity) {
+        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
+        val currentList = getCurrentActivities(stateSuccess)
+        currentList.forEach { activity ->
+            if (activity.activityOrder!! >= activityItem.activityOrder!!) {
+                activity.activityOrder = activity.activityOrder!! + 1
+            }
+        }
+        currentList.add(activityItem)
+
+        viewModelScope.launch {
+            emitActivitiesList(stateSuccess, currentList)
+        }
+    }
+
     fun editTraining(trainingId: Long) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         viewModelScope.launch {
@@ -68,7 +85,7 @@ class CreateOrEditTrainingViewModel(
                     trainingId,
                     TrainingWithActivity(
                         stateSuccess.currentName,
-                        TrainingType.STRETCH,
+                        trainingType,
                         true,
                         stateSuccess.activities
                     )
@@ -78,10 +95,18 @@ class CreateOrEditTrainingViewModel(
         }
     }
 
-    fun removeLocalActivity(exerciseListPosition: Int) {
+    fun removeLocalActivity(activityOrder: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
-        currentList.removeAt(exerciseListPosition)
+        val activityToRemove = currentList.find { it.activityOrder == activityOrder }
+        val activityToRemoveIndex = currentList.indexOf(activityToRemove)
+        if (currentList[activityToRemoveIndex + 1].activityType == ActivityType.BREAK) {
+            val breakToRemove = currentList[activityToRemoveIndex + 1]
+            currentList.remove(breakToRemove)
+        }
+        currentList.remove(activityToRemove)
+        currentList.forEachIndexed { index, activity -> activity.activityOrder = index }
+
         viewModelScope.launch {
             emitActivitiesList(stateSuccess, currentList)
         }
@@ -90,11 +115,23 @@ class CreateOrEditTrainingViewModel(
     fun addActivity(activityItem: Activity) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
-        val activityOrder = currentList.lastIndex
+        val activityOrder = currentList.size
         currentList.add(activityItem.copy(activityOrder = activityOrder))
         if (stateSuccess.isAutomaticBreakButtonClicked) {
             currentList.add(getAutoBreak(activityOrder + 1))
         }
+
+        viewModelScope.launch {
+            emitActivitiesList(stateSuccess, currentList)
+        }
+    }
+
+    fun addActivityWithBreak(exercise: Activity, nextBreak: Activity) {
+        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
+        val currentList = getCurrentActivities(stateSuccess)
+        val activityOrder = currentList.size
+        currentList.add(exercise.copy(activityOrder = activityOrder))
+        currentList.add(nextBreak.copy(activityOrder = activityOrder + 1))
         viewModelScope.launch {
             emitActivitiesList(stateSuccess, currentList)
         }
@@ -191,7 +228,7 @@ class CreateOrEditTrainingViewModel(
                 repository.addTrainingWithActivities(
                     TrainingWithActivity(
                         success.currentName,
-                        TrainingType.STRETCH,
+                        trainingType,
                         true,
                         success.activities
                     )

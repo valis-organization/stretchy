@@ -14,13 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
-import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
 import com.example.stretchy.features.createtraining.ui.composable.buttons.CreateOrEditTrainingButton
 import com.example.stretchy.features.createtraining.ui.composable.buttons.TrainingName
 import com.example.stretchy.features.createtraining.ui.composable.list.ExerciseList
-import com.example.stretchy.repository.Activity
 
 @Composable
 fun CreateTrainingComposable(
@@ -48,8 +46,8 @@ fun CreateTrainingComposable(
                     isTrainingBeingEdited = state.editingTraining
                     Spacer(modifier = Modifier.height(24.dp))
                     ExerciseList(
-                        exercises = removeBreaksFromView(state.activities),
-                        viewModel = viewModel
+                        exercises = state.activities,
+                        viewModel = viewModel,
                     )
                 }
                 is CreateTrainingUiState.Error -> {
@@ -102,12 +100,3 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
     }
 }
 
-private fun removeBreaksFromView(activities: List<Activity>): MutableList<Activity> {
-    val new = mutableListOf<Activity>()
-    activities.forEach {
-        if (it.activityType != ActivityType.BREAK) {
-            new.add(it)
-        }
-    }
-    return new
-}
