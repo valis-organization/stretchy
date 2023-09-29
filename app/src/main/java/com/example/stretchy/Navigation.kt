@@ -25,11 +25,12 @@ import com.example.stretchy.features.traininglist.ui.composable.TrainingListComp
 fun Navigation(
     activityComponent: ActivityComponent,
     onExportClick: () -> Unit,
-    onImportClick: () -> Unit
+    onImportClick: () -> Unit,
+    startDestination: String
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screen.TrainingListScreen.route) {
-        composable(route = Screen.TrainingListScreen.route) {
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable(route = Screen.StretchingListScreen.route) {
             val vm = createTrainingListViewModel(
                 activityComponent,
                 LocalViewModelStoreOwner.current!!

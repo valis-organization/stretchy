@@ -98,7 +98,7 @@ private fun AddExerciseWidget(onAddOrEditButtonClick: () -> Unit) {
 }
 
 @Composable
-private fun ExerciseAndBreakTabsWidget(
+fun ExerciseAndBreakTabsWidget(
     viewModel: CreateOrEditTrainingViewModel,
     exerciseToEdit: Exercise,
     breakToEdit: BreakAfterExercise?,
@@ -120,7 +120,7 @@ private fun ExerciseAndBreakTabsWidget(
     }
 
     var isTimelessExercise: Boolean by remember {
-        mutableStateOf(true)
+        mutableStateOf(exerciseToEdit.duration == 0)
     }
 
     val doesExerciseExists = currentExercise.name != ""
@@ -192,7 +192,7 @@ private fun ExerciseAndBreakTabsWidget(
 
                 AddOrEditExerciseButton(
                     onClick = {
-                        if (currentExercise.name.isNotEmpty() && currentExercise.duration != 0) {
+                        if (currentExercise.name.isNotEmpty()) {
                             onAddOrEditButtonClick()
                             if (doesExerciseExists) {
                                 if (isExerciseChanged(currentExercise, exerciseToEdit)) {
@@ -236,8 +236,16 @@ private fun ExerciseAndBreakTabsWidget(
                                             ActivityType.BREAK
                                         )
                                     )
-                                }else if(isBreakChanged(currentBreak,breakToEdit) && currentBreak!!.duration!! == 0 ){
-                                    viewModel.removeLocalActivity(currentExercise.activityOrder!!.plus(1))
+                                } else if (isBreakChanged(
+                                        currentBreak,
+                                        breakToEdit
+                                    ) && currentBreak!!.duration!! == 0
+                                ) {
+                                    viewModel.removeLocalActivity(
+                                        currentExercise.activityOrder!!.plus(
+                                            1
+                                        )
+                                    )
                                 }
                             } else {
                                 if (isBreakInitialized(currentBreak)) {
@@ -304,22 +312,34 @@ private fun ExerciseTab(
             exerciseName = it
             onNameChange(exerciseName)
         })
-    Text(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp),
-        text = stringResource(R.string.duration) + " ${
-            toDisplayableLength(
-                exerciseDuration
-            )
-        }",
-        fontSize = 16.sp,
-        fontWeight = FontWeight.Bold
-    )
     if (isTimelessExercise) {
-        TimelessExerciseCheckbox(onClick = { onCheckboxChange(it) }, isTimelessExercise = true)
+        TimelessExerciseCheckbox(modifier = Modifier, onClick = {
+            exerciseDuration = editedExercise.duration
+            onDurationChange(exerciseDuration)
+            onCheckboxChange(it)
+        }, isTimelessExercise = true)
     } else {
-        TimelessExerciseCheckbox(onClick = { onCheckboxChange(it) }, isTimelessExercise = false)
+        Spacer(Modifier.height(4.dp))
+        Row(Modifier.height(20.dp), horizontalArrangement = Arrangement.SpaceBetween ) {
+            Text(
+                modifier = Modifier
+                    .padding(0.dp),
+                text = stringResource(R.string.duration) + " ${
+                    toDisplayableLength(
+                        exerciseDuration
+                    )
+                }",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.width(60.dp))
+            TimelessExerciseCheckbox(modifier = Modifier.padding(top=4.dp),onClick = {
+                exerciseDuration = 0
+                onDurationChange(exerciseDuration)
+                onCheckboxChange(it)
+            }, isTimelessExercise = false)
+        }
+
         Slider(
             value = exerciseDuration.toFloat(),
             onValueChange = {
@@ -329,11 +349,11 @@ private fun ExerciseTab(
             valueRange = 10f..sliderMaxValue.toFloat(),
             modifier = Modifier.padding(top = 0.dp, bottom = 0.dp)
         )
-    }
-    AddOrSubtractButtons { changeValue ->
-        if (exerciseDuration + changeValue in 10..300) {
-            exerciseDuration += changeValue
-            onDurationChange(exerciseDuration)
+        AddOrSubtractButtons { changeValue ->
+            if (exerciseDuration + changeValue in 10..300) {
+                exerciseDuration += changeValue
+                onDurationChange(exerciseDuration)
+            }
         }
     }
 }
@@ -413,10 +433,15 @@ fun toDisplayableLength(exerciseDuration: Int): String {
 }
 
 @Composable
-fun TimelessExerciseCheckbox(onClick: (isChecked: Boolean) -> Unit, isTimelessExercise: Boolean) {
+fun TimelessExerciseCheckbox(
+    modifier: Modifier = Modifier,
+    onClick: (isChecked: Boolean) -> Unit,
+    isTimelessExercise: Boolean
+) {
     var isChecked by remember { mutableStateOf(isTimelessExercise) }
 
     Row(
+        modifier = modifier,
         verticalAlignment = CenterVertically
     ) {
         Checkbox(

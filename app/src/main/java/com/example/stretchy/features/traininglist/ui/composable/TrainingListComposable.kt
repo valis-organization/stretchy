@@ -53,7 +53,9 @@ fun TrainingListComposable(
     val trainingType = TrainingType.STRETCH //TODO
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate("exerciseCreatorScreen?trainingType=$trainingType") }) {
+            FloatingActionButton(onClick = {
+                navController.navigate("exerciseCreatorScreen?trainingType=$trainingType")
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = stringResource(id = R.string.desc_plus_icon)

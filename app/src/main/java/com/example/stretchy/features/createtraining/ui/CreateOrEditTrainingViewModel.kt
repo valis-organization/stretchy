@@ -97,6 +97,29 @@ class CreateOrEditTrainingViewModel(
         }
     }
 
+    fun removeLocalActivityByListPosition(listPosition: Int) {
+        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
+        val currentList = getCurrentActivities(stateSuccess)
+        val listWithoutBreaks = getExercisesWithoutBreaks(activities = currentList)
+        val itemToDelete = listWithoutBreaks[listPosition]
+
+        if (currentList.getActivityByOrder(itemToDelete.activityOrder!!.plus(1))?.activityType == ActivityType.BREAK) {
+            currentList.removeByActivityOrder(itemToDelete.activityOrder!!.plus(1))
+        }
+        currentList.removeByActivityOrder(itemToDelete.activityOrder!!)
+
+        currentList.forEachIndexed { index, activity -> activity.activityOrder = index }
+        viewModelScope.launch {
+            emitActivitiesList(stateSuccess, currentList)
+        }
+    }
+
+    private fun MutableList<Activity>.getActivityByOrder(activityOrder: Int) =
+        this.find { it.activityOrder == activityOrder }
+
+    private fun MutableList<Activity>.removeByActivityOrder(activityOrder: Int) =
+        this.remove(this.getActivityByOrder(activityOrder = activityOrder))
+
     fun removeLocalActivity(activityOrder: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         val currentList = getCurrentActivities(stateSuccess)
@@ -195,13 +218,69 @@ class CreateOrEditTrainingViewModel(
 
     fun swapExercises(fromPosition: Int, toPosition: Int) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        val activities = getCurrentActivities(stateSuccess)
-        activities[fromPosition + 1].activityOrder = toPosition
-        activities[toPosition].activityOrder = fromPosition + 1
-        activities[fromPosition + 2].activityOrder = toPosition + 1
-        activities[toPosition + 1].activityOrder = fromPosition + 2
 
-        _uiState.value = stateSuccess.copy(activities = activities.sortedBy { it.activityOrder })
+        val activities = getCurrentActivities(stateSuccess)
+        val mappedActivitiesWithBreaks = mapActivitiesWithBreaks()
+        val swipedActivity = getExercisesWithoutBreaks(activities = activities)[fromPosition]
+
+        val currentActivityOnPosition =
+            getExercisesWithoutBreaks(activities = activities)[toPosition]
+
+        val activityOrderFromPosition = swipedActivity.activityOrder
+        val activityOrderToPosition = currentActivityOnPosition.activityOrder
+
+        mappedActivitiesWithBreaks[swipedActivity]?.activityOrder =
+            activityOrderToPosition!!.plus(1)
+        mappedActivitiesWithBreaks[currentActivityOnPosition]?.activityOrder =
+            activityOrderFromPosition!!.plus(1)
+
+        val mapWithSwipedActivityChanges = changeKey(
+            mappedActivitiesWithBreaks,
+            swipedActivity,
+            swipedActivity.copy(activityOrder = activityOrderToPosition)
+        )
+        val map = changeKey(
+            mapWithSwipedActivityChanges,
+            currentActivityOnPosition,
+            currentActivityOnPosition.copy(activityOrder = activityOrderFromPosition)
+        )
+        _uiState.value =
+            stateSuccess.copy(activities = (convertMapToList(map)).sortedBy { it.activityOrder })
+    }
+
+    private fun <K, V> changeKey(map: Map<K, V>, oldKey: K, newKey: K): Map<K, V> {
+        return map.mapKeys { (key, _) ->
+            if (key == oldKey) newKey else key
+        }
+    }
+
+    private fun mapActivitiesWithBreaks(): MutableMap<Activity, Activity?> {
+        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
+        val activities = getCurrentActivities(stateSuccess)
+        val activityMap = mutableMapOf<Activity, Activity?>()
+        var currentKey: Activity? = null
+        activities.forEach { activity ->
+            if (activity.activityType != ActivityType.BREAK) {
+                currentKey = activity
+                activityMap[activity] = null
+            } else {
+                activityMap[currentKey!!] = activity
+            }
+        }
+        return activityMap
+    }
+
+    fun convertMapToList(activityMap: Map<Activity, Activity?>): List<Activity> {
+        val resultList = mutableListOf<Activity>()
+
+        activityMap.forEach { (key, value) ->
+            resultList.add(key)
+            if (value != null) {
+                resultList.add(value)
+            }
+        }
+
+        return resultList
     }
 
     fun enableAutoBreaks() {
@@ -239,6 +318,16 @@ class CreateOrEditTrainingViewModel(
                 //todo toast
             }
         }
+    }
+
+    private fun getExercisesWithoutBreaks(activities: List<Activity>): MutableList<Activity> {
+        val new = mutableListOf<Activity>()
+        activities.forEach {
+            if (it.activityType != ActivityType.BREAK) {
+                new.add(it)
+            }
+        }
+        return new
     }
 
     private fun getCurrentActivities(state: CreateTrainingUiState.Success): MutableList<Activity> {
@@ -292,14 +381,5 @@ class CreateOrEditTrainingViewModel(
                 )
             )
         }
-    }
-
-    private fun getAutoBreak(breakActivityOrder: Int): Activity {
-        return Activity(
-            "",
-            activityOrder = breakActivityOrder,
-            automaticBreakPreferences.getCurrentAutoBreakDuration(),
-            ActivityType.BREAK
-        )
     }
 }

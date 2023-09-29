@@ -66,7 +66,7 @@ fun TrainingSummaryComposable(
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
-                    ) { navController.navigate(Screen.TrainingListScreen.route) }
+                    ) { navController.navigate(Screen.StretchingListScreen.route) }
                     .height(80.dp)
                     .fillMaxWidth()
                     .padding(12.dp),
