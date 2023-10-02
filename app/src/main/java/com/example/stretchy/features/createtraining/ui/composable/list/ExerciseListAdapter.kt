@@ -9,7 +9,6 @@ import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.data.BreakAfterExercise
 import com.example.stretchy.features.createtraining.ui.data.Exercise
-import com.example.stretchy.repository.Activity
 
 class ExerciseListAdapter(
     private val viewModel: CreateOrEditTrainingViewModel,
@@ -17,7 +16,7 @@ class ExerciseListAdapter(
     private val isAutoBreakClicked: Boolean,
     private val onEditClick: () -> Unit
 ) :
-    ListAdapter<Activity, ExerciseListAdapter.ViewHolder>(ItemDiffCallback()) {
+    ListAdapter<ExercisesWithBreaks, ExerciseListAdapter.ViewHolder>(ItemDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val context = parent.context
@@ -33,29 +32,54 @@ class ExerciseListAdapter(
             ExerciseListItem(
                 vm = viewModel,
                 exercise = Exercise(
-                    name = item.name,
-                    activityOrder = item.activityOrder,
-                    duration = item.duration,
-                    position
+                    id = item.exercise.id,
+                    name = item.exercise.name,
+                    activityOrder = null,
+                    duration = item.exercise.duration,
                 ),
-                BreakAfterExercise(5),
+                BreakAfterExercise(item.nextBreakDuration),
+                position = position,
                 trainingType = trainingType,
                 isAutoBreakClicked = isAutoBreakClicked,
-                onEditClick = onEditClick
+                onEditClick = onEditClick,
+                onExpand = {
+                    val mutableList = currentList.toMutableList()
+
+                    getCurrentExpandedItemPosition()?.let {
+                        mutableList[it] = getItem(it).copy(isExpanded = false)
+                    }
+                    mutableList[position] =
+                        getItem(position).copy(isExpanded = true)
+                    submitList(mutableList)
+                },
+                onCollapse = {
+                    val mutableList = currentList.toMutableList()
+                    mutableList[position] =
+                        getItem(position).copy(isExpanded = false)
+                    submitList(mutableList)
+                },
+                isExpanded = item.isExpanded
             )
         }
     }
 
     inner class ViewHolder(val composeView: ComposeView) : RecyclerView.ViewHolder(composeView)
 
-    private class ItemDiffCallback : DiffUtil.ItemCallback<Activity>() {
-        override fun areItemsTheSame(oldItem: Activity, newItem: Activity): Boolean {
-            return oldItem.activityOrder == newItem.activityOrder
-        }
-
-        override fun areContentsTheSame(oldItem: Activity, newItem: Activity): Boolean {
+    private class ItemDiffCallback : DiffUtil.ItemCallback<ExercisesWithBreaks>() {
+        override fun areItemsTheSame(
+            oldItem: ExercisesWithBreaks,
+            newItem: ExercisesWithBreaks
+        ): Boolean {
             return oldItem == newItem
         }
+
+        override fun areContentsTheSame(
+            oldItem: ExercisesWithBreaks,
+            newItem: ExercisesWithBreaks
+        ): Boolean {
+            return oldItem.hashCode() == newItem.hashCode()
+        }
+
     }
 
     fun onItemMove(fromPosition: Int, toPosition: Int) {
@@ -73,5 +97,10 @@ class ExerciseListAdapter(
         tempList.removeAt(from)
         tempList.add(to, item)
         submitList(tempList)
+    }
+
+    private fun getCurrentExpandedItemPosition(): Int? {
+        val position = currentList.indexOf(currentList.find { it.isExpanded })
+        return if (position != RecyclerView.NO_POSITION) position else null
     }
 }

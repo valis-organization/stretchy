@@ -29,9 +29,12 @@ fun ExerciseListItem(
     breakAfterExercise: BreakAfterExercise?,
     trainingType: TrainingType,
     isAutoBreakClicked: Boolean,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    position: Int,
+    isExpanded: Boolean,
+    onExpand: () -> Unit,
+    onCollapse: () -> Unit
 ) {
-    var isExpanded by remember { mutableStateOf(false) }
 
     if (!isExpanded) {
         Box(
@@ -49,10 +52,12 @@ fun ExerciseListItem(
                         .fillMaxHeight()
                         .width(64.dp)
                         .background(Color.Gray)
-                        .clickable { isExpanded = true },
+                        .clickable {
+                            onExpand()
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (breakAfterExercise != null) {
+                    if (breakAfterExercise?.duration != null) {
                         Text(toDisplayableLength(breakAfterExercise.duration!!))
                     } else {
                         Icon(
@@ -67,12 +72,12 @@ fun ExerciseListItem(
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 16.dp)
                         .clickable {
-                            isExpanded = true
+                            onExpand()
                         },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("${exercise.listId!!.plus(1)}")
+                    Text(position.toString())
 
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = exercise.name, Modifier.padding(start = 16.dp))
@@ -81,7 +86,7 @@ fun ExerciseListItem(
             }
         }
     } else {
-        val isTimelessExercise by remember { mutableStateOf(exercise.duration == 0) }
+        val isTimelessExercise by remember { mutableStateOf(breakAfterExercise?.duration == 0) }
         val layoutHeight = if (isTimelessExercise) 200.dp else 300.dp
 
         Box(Modifier.height(layoutHeight)) {
@@ -90,7 +95,7 @@ fun ExerciseListItem(
                 exerciseToEdit = exercise,
                 breakToEdit = breakAfterExercise,
                 onAddOrEditButtonClick = {
-                    isExpanded = false
+                    onCollapse()
                     onEditClick()
                 },
                 trainingType = trainingType,
