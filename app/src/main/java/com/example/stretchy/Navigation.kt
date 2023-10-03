@@ -59,7 +59,8 @@ fun Navigation(
             )
             CreateTrainingComposable(
                 navController = navController,
-                viewModel = vm
+                viewModel = vm,
+                trainingType = trainingType
             )
         }
         composable(

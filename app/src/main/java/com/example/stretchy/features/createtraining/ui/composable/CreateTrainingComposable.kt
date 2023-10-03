@@ -5,13 +5,17 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Checkbox
-import androidx.compose.material.Text
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,6 +29,7 @@ import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
+import com.example.stretchy.extensions.toActivityType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
 import com.example.stretchy.features.createtraining.ui.composable.buttons.CreateOrEditTrainingButton
@@ -37,72 +42,102 @@ import com.example.stretchy.repository.Activity
 @Composable
 fun CreateTrainingComposable(
     navController: NavController,
-    viewModel: CreateOrEditTrainingViewModel
+    viewModel: CreateOrEditTrainingViewModel,
+    trainingType: TrainingType
 ) {
     var trainingName: String by remember { mutableStateOf("") }
     var trainingId: Long? by remember { mutableStateOf(null) }
     var isTrainingBeingEdited by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-    ) {
-        Column(
-            Modifier
-                .padding(top = 16.dp)
-        ) {
-            when (val state = viewModel.uiState.collectAsState().value) {
-                is CreateTrainingUiState.Success -> {
-                    trainingId = state.trainingId
-                    trainingName = state.currentName
-                    TrainingName(viewModel, trainingName)
-                    AutoBreakCheckbox(viewModel = viewModel)
-                    isTrainingBeingEdited = state.editingTraining
-                    Spacer(modifier = Modifier.height(4.dp))
-                    RecyclerViewContainer(
-                        activitiesWithoutBreaks = state.activities.toExerciseWithBreaks(),
-                        viewModel = viewModel,
-                        state.trainingType,
-                        state.isAutomaticBreakButtonClicked
+
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = {
+                viewModel.addActivity(
+                    Activity(
+                        "",
+                        null,
+                        10,
+                        activityType = trainingType.toActivityType(true)
                     )
-                }
-                is CreateTrainingUiState.Error -> {
-                    HandleError(state = state, context = context)
-                }
-                is CreateTrainingUiState.Done -> {
-                    if (navController.currentDestination?.route != Screen.StretchingListScreen.route) {
-                        navController.navigate(Screen.StretchingListScreen.route)
+                )
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = stringResource(id = R.string.desc_plus_icon)
+                )
+            }
+        }) { padding ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(padding)
+        ) {
+            Column(
+                Modifier
+                    .height(600.dp)
+                    .padding(top = 16.dp)
+            ) {
+                when (val state = viewModel.uiState.collectAsState().value) {
+                    is CreateTrainingUiState.Success -> {
+                        trainingId = state.trainingId
+                        trainingName = state.currentName
+                        TrainingName(viewModel, trainingName)
+                        AutoBreakCheckbox(viewModel = viewModel)
+                        isTrainingBeingEdited = state.editingTraining
+                        Spacer(modifier = Modifier.height(4.dp))
+                        RecyclerViewContainer(
+                            activitiesWithoutBreaks = state.activities.toExerciseWithBreaks(),
+                            viewModel = viewModel,
+                            state.trainingType,
+                            state.isAutomaticBreakButtonClicked,
+                        )
                     }
+                    is CreateTrainingUiState.Error -> {
+                        HandleError(state = state, context = context)
+                    }
+                    is CreateTrainingUiState.Done -> {
+                        if (navController.currentDestination?.route != Screen.StretchingListScreen.route) {
+                            navController.navigate(Screen.StretchingListScreen.route)
+                        }
+                    }
+                    CreateTrainingUiState.Init -> {}
                 }
-                CreateTrainingUiState.Init -> {}
+            }
+            // Spacer(modifier = Modifier.height(200.dp))
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+                CreateOrEditTrainingButton(
+                    viewModel,
+                    isTrainingBeingEdited,
+                    navController,
+                    trainingId
+                )
             }
         }
-        Spacer(modifier = Modifier.height(200.dp))
-        Box(modifier = Modifier.align(Alignment.BottomCenter)) {
-            CreateOrEditTrainingButton(viewModel, isTrainingBeingEdited, navController, trainingId)
-        }
     }
-}
 
+}
 
 @Composable
 fun RecyclerViewContainer(
     activitiesWithoutBreaks: List<ExercisesWithBreaks>,
     viewModel: CreateOrEditTrainingViewModel,
     trainingType: TrainingType,
-    isAutoBreakClicked: Boolean
+    isAutoBreakClicked: Boolean,
 ) {
     val adapter: ExerciseListAdapter by remember {
         mutableStateOf(
             ExerciseListAdapter(
+                activitiesWithoutBreaks,
                 viewModel,
                 trainingType,
                 isAutoBreakClicked,
-                onEditClick = {})
+            ) {}
         )
     }
     adapter.submitList(activitiesWithoutBreaks)
+    //  adapter.submitList(activitiesWithoutBreaks)
 
     val dragAndReorderItemTouchHelper by lazy {
         val simpleItemTouchCallback =
@@ -119,8 +154,6 @@ fun RecyclerViewContainer(
                     val from = viewHolder.adapterPosition
                     val to = target.adapterPosition
                     adapter.moveItem(from, to)
-                    adapter.notifyItemMoved(from, to)
-
                     return true
                 }
 
@@ -151,7 +184,7 @@ fun RecyclerViewContainer(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder
                 ): Int {
-                    return if (adapter.currentList[position].isExpanded) 0 else super.getSwipeDirs(
+                    return if (activitiesWithoutBreaks[position].isExpanded) 0 else super.getSwipeDirs(
                         recyclerView,
                         viewHolder
                     )
@@ -225,7 +258,7 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
 @Composable
 private fun AutoBreakCheckbox(viewModel: CreateOrEditTrainingViewModel) {
     var isAutoBreakChecked by remember { mutableStateOf(true) }
-
+    var autoBreakDuration by remember { mutableStateOf("${viewModel.getAutoBreakDuration()}") }
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Checkbox(
             checked = isAutoBreakChecked,
@@ -241,12 +274,21 @@ private fun AutoBreakCheckbox(viewModel: CreateOrEditTrainingViewModel) {
         Text(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 8.dp)
                 .weight(1f),
-            text = "auto breaks",
+            text = "Append automatic break",
             fontSize = 16.sp,
-
             fontWeight = FontWeight.Bold
+        )
+        BasicTextField(
+            value = autoBreakDuration,
+            textStyle = TextStyle(fontSize = 16.sp),
+            singleLine = true,
+            onValueChange = {
+                autoBreakDuration = it
+                if (it.isNotBlank()) {
+                    viewModel.updateAutoBreakDuration(it.toInt())
+                }
+            },
         )
     }
 }
@@ -257,6 +299,7 @@ private fun List<Activity>.toExerciseWithBreaks(): List<ExercisesWithBreaks> {
         if (item.activityType != ActivityType.BREAK) {
             list.add(
                 ExercisesWithBreaks(
+                    index,
                     Exercise(
                         item.activityId.toInt(),
                         item.name,

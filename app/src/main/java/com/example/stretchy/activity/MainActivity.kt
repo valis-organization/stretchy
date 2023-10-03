@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -26,6 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.stretchy.BottomNavScreen
 import com.example.stretchy.Navigation
 import com.example.stretchy.R
+import com.example.stretchy.Screen
 import com.example.stretchy.activity.di.ActivityComponent
 
 
@@ -43,7 +46,7 @@ class MainActivity : ComponentActivity() {
     @Preview(showBackground = true)
     @Composable
     fun DefaultPreview() {
-        Navigation(
+ /*       Navigation(
             activityComponent,
             {
                 grantPermissions(WRITE_EXTERNAL_STORAGE)
@@ -51,7 +54,7 @@ class MainActivity : ComponentActivity() {
             {
                 grantPermissions(READ_EXTERNAL_STORAGE)
             }
-        )
+        )*/
     }
 
     private fun grantPermissions(permission: String) {
@@ -72,13 +75,17 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun BottomNavigationBar() {
+        // State of bottomBar, set state to false, if current page route is "car_details"
+        val bottomBarState = rememberSaveable { (mutableStateOf(true)) }
+
+
         val navController = rememberNavController()
 
         val screens = listOf(
             BottomNavScreen(
                 stringResource(id = R.string.stretching),
                 painterResource(id = R.drawable.ic_stretching),
-                stringResource(id = R.string.stretching)
+                Screen.StretchingListScreen.route
             ),
             BottomNavScreen(
                 stringResource(id = R.string.meta_training),
@@ -88,7 +95,7 @@ class MainActivity : ComponentActivity() {
             BottomNavScreen(
                 stringResource(id = R.string.training),
                 painterResource(id = R.drawable.ic_training),
-                stringResource(id = R.string.training)
+                Screen.TrainingListScreen.route
             ),
         )
 
@@ -113,10 +120,10 @@ class MainActivity : ComponentActivity() {
         ) { innerPadding ->
             NavHost(
                 navController = navController,
-                startDestination = stringResource(id = R.string.stretching),
+                startDestination = Screen.StretchingListScreen.route,
                 modifier = Modifier.padding(innerPadding)
             ) {
-                composable(getString(R.string.stretching)) {
+                composable(Screen.StretchingListScreen.route) {
                     Navigation(
                         activityComponent,
                         {
@@ -124,14 +131,40 @@ class MainActivity : ComponentActivity() {
                         },
                         {
                             grantPermissions(READ_EXTERNAL_STORAGE)
-                        }
+                        },
+                        Screen.StretchingListScreen.route
                     )
                 }
                 composable(getString(R.string.meta_training)) {
 
                 }
-                composable(getString(R.string.training)) {
-
+                composable(Screen.TrainingListScreen.route) {
+                    Navigation(
+                        activityComponent,
+                        {
+                            grantPermissions(WRITE_EXTERNAL_STORAGE)
+                        },
+                        {
+                            grantPermissions(READ_EXTERNAL_STORAGE)
+                        },
+                        Screen.TrainingListScreen.route
+                    )
+              /*      Scaffold(
+                        floatingActionButton = {
+                            FloatingActionButton(onClick = {
+                                val trainingType = TrainingType.BODYWEIGHT
+                                Log.e("asd", trainingType.toString())
+                                navController.navigate("exerciseCreatorScreen?trainingType=$trainingType")
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = stringResource(id = R.string.desc_plus_icon)
+                                )
+                            }
+                        }
+                    ) { contentPadding ->
+                        Box(Modifier.padding(contentPadding)) {}
+                    }*/
                 }
             }
         }

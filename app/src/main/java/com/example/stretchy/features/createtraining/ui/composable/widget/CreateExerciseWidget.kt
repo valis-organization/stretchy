@@ -1,5 +1,6 @@
 package com.example.stretchy.features.createtraining.ui.composable.widget
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -29,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.example.stretchy.R
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
+import com.example.stretchy.extensions.toActivityType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.composable.ExerciseNameControls
 import com.example.stretchy.features.createtraining.ui.composable.buttons.AddOrEditExerciseButton
@@ -192,6 +194,8 @@ fun ExerciseAndBreakTabsWidget(
 
                 AddOrEditExerciseButton(
                     onClick = {
+                        Log.e("name",currentExercise.name)
+                        Log.e("name",currentExercise.activityOrder.toString())
                         if (currentExercise.name.isNotEmpty()) {
                             onAddOrEditButtonClick()
                             if (doesExerciseExists) {
@@ -201,10 +205,7 @@ fun ExerciseAndBreakTabsWidget(
                                             currentExercise.name,
                                             currentExercise.activityOrder,
                                             currentExercise.duration,
-                                            getActivityType(
-                                                isTimelessExercise = isTimelessExercise,
-                                                trainingType = trainingType
-                                            )
+                                            trainingType.toActivityType(isTimelessExercise)
                                         )
                                     )
                                     Toast.makeText(
@@ -300,6 +301,9 @@ private fun ExerciseTab(
     val sliderMaxValue = 300
     var exerciseDuration: Int by remember { mutableStateOf(sliderMinValue) }
     var exerciseName: String by remember { mutableStateOf("") }
+    var durationBeforeTimelessExerciseSwitch: Int by remember {
+        mutableStateOf(if (editedExercise.duration == 0) sliderMaxValue
+        else editedExercise.duration) }
 
     LaunchedEffect(editedExercise) {
         exerciseName = editedExercise.name
@@ -314,13 +318,14 @@ private fun ExerciseTab(
         })
     if (isTimelessExercise) {
         TimelessExerciseCheckbox(modifier = Modifier, onClick = {
-            exerciseDuration = editedExercise.duration
+            exerciseDuration = durationBeforeTimelessExerciseSwitch
+
             onDurationChange(exerciseDuration)
             onCheckboxChange(it)
         }, isTimelessExercise = true)
     } else {
         Spacer(Modifier.height(4.dp))
-        Row(Modifier.height(20.dp), horizontalArrangement = Arrangement.SpaceBetween ) {
+        Row(Modifier.height(20.dp), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(
                 modifier = Modifier
                     .padding(0.dp),
@@ -333,7 +338,7 @@ private fun ExerciseTab(
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.width(60.dp))
-            TimelessExerciseCheckbox(modifier = Modifier.padding(top=4.dp),onClick = {
+            TimelessExerciseCheckbox(modifier = Modifier.padding(top = 4.dp), onClick = {
                 exerciseDuration = 0
                 onDurationChange(exerciseDuration)
                 onCheckboxChange(it)
@@ -343,6 +348,7 @@ private fun ExerciseTab(
         Slider(
             value = exerciseDuration.toFloat(),
             onValueChange = {
+                durationBeforeTimelessExerciseSwitch = editedExercise.duration
                 exerciseDuration = it.toInt()
                 onDurationChange(exerciseDuration)
             },
@@ -408,17 +414,17 @@ private fun isBreakChanged(currentBreak: BreakAfterExercise?, breakToEdit: Break
 private fun isBreakInitialized(currentBreak: BreakAfterExercise?) =
     currentBreak?.duration != 0 && currentBreak?.duration != null
 
-private fun getActivityType(isTimelessExercise: Boolean, trainingType: TrainingType) =
+/*private fun getActivityType(isTimelessExercise: Boolean, trainingType: TrainingType) =
     if (trainingType == TrainingType.STRETCH) ActivityType.STRETCH
     else if (isTimelessExercise) ActivityType.TIMELESS_EXERCISE
-    else ActivityType.EXERCISE
+    else ActivityType.EXERCISE*/
 
 private fun Exercise.toActivity(trainingType: TrainingType, isTimelessExercise: Boolean): Activity =
     Activity(
         this.name,
         this.activityOrder,
         this.duration,
-        getActivityType(isTimelessExercise = isTimelessExercise, trainingType)
+        trainingType.toActivityType(isTimelessExercise)
     )
 
 

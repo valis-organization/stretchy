@@ -77,7 +77,7 @@ fun ExerciseListItem(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(position.toString())
+                    Text("${position + 1}")
 
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         Text(text = exercise.name, Modifier.padding(start = 16.dp))
