@@ -2,20 +2,12 @@ package com.example.stretchy.features.createtraining.ui.composable.widget
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,7 +27,6 @@ import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewM
 import com.example.stretchy.features.createtraining.ui.composable.ExerciseNameControls
 import com.example.stretchy.features.createtraining.ui.composable.buttons.AddOrEditExerciseButton
 import com.example.stretchy.features.createtraining.ui.composable.buttons.AddOrSubtractButtons
-import com.example.stretchy.features.createtraining.ui.data.BreakAfterExercise
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.theme.BananaMania
@@ -43,90 +34,35 @@ import com.example.stretchy.theme.Caramel
 import com.example.stretchy.theme.Purple500
 
 @Composable
-fun CreateExerciseWidget(
-    viewModel: CreateOrEditTrainingViewModel,
-    exerciseToEdit: Exercise,
-    breakToEdit: BreakAfterExercise?,
-    widgetVisible: Boolean,
-    onAddOrEditButtonClick: () -> Unit,
-    trainingType: TrainingType,
-    isAutoBreakClicked: Boolean
-) {
-    AnimatedVisibility(visible = !widgetVisible) {
-        AddExerciseWidget {
-            onAddOrEditButtonClick()
-        }
-    }
-    AnimatedVisibility(
-        visible = widgetVisible,
-        enter = fadeIn(animationSpec = tween(500)),
-        exit = fadeOut(animationSpec = tween(500))
-    ) {
-        ExerciseAndBreakTabsWidget(
-            viewModel,
-            exerciseToEdit,
-            breakToEdit,
-            onAddOrEditButtonClick,
-            trainingType,
-            isAutoBreakClicked
-        )
-    }
-}
-
-@Composable
-private fun AddExerciseWidget(onAddOrEditButtonClick: () -> Unit) {
-    Card(
-        elevation = 4.dp,
-        modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .padding(top = 4.dp, start = 12.dp, end = 12.dp, bottom = 12.dp)
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp)
-                .background(color = Color(BananaMania.toArgb()))
-                .clickable {
-                    onAddOrEditButtonClick()
-                }
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = stringResource(id = R.string.desc_plus_icon)
-            )
-        }
-    }
-}
-
-@Composable
 fun ExerciseAndBreakTabsWidget(
     viewModel: CreateOrEditTrainingViewModel,
     exerciseToEdit: Exercise,
-    breakToEdit: BreakAfterExercise?,
+    nextBreakDurationToEdit: Int?,
     onAddOrEditButtonClick: () -> Unit,
     trainingType: TrainingType,
-    isAutoBreakClicked: Boolean
+    isAutoBreakClicked: Boolean,
+    onTabSizeChange: (activityType: ActivityType) -> Unit
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs =
         listOf(stringResource(id = R.string.exercise), stringResource(id = R.string.exercise_break))
 
+    val doesExerciseExists = exerciseToEdit.name != ""
+    val doesBreakExists = nextBreakDurationToEdit != null
+
     var currentExercise by remember { mutableStateOf(Exercise()) }
     currentExercise = exerciseToEdit.copy()
-    var currentBreak: BreakAfterExercise? by remember { mutableStateOf(BreakAfterExercise()) }
-    if (breakToEdit != null) {
-        currentBreak = breakToEdit.copy()
+    var currentBreakDuration: Int? by remember { mutableStateOf(0) }
+    if (doesBreakExists) {
+        currentBreakDuration = nextBreakDurationToEdit
     } else if (isAutoBreakClicked) {
-        currentBreak!!.duration = viewModel.getAutoBreakDuration()
+        currentBreakDuration = viewModel.getAutoBreakDuration()
     }
 
     var isTimelessExercise: Boolean by remember {
         mutableStateOf(exerciseToEdit.duration == 0)
     }
 
-    val doesExerciseExists = currentExercise.name != ""
-    val doesBreakExists = breakToEdit != null
 
     val context = LocalContext.current
 
@@ -170,105 +106,93 @@ fun ExerciseAndBreakTabsWidget(
                     .padding(start = 12.dp, end = 12.dp)
             ) {
                 when (selectedTabIndex) {
-                    0 -> ExerciseTab(
-                        editedExercise = currentExercise,
-                        onNameChange = {
-                            currentExercise.name = it
-                        },
-                        onDurationChange = { currentExercise.duration = it },
-                        isTimelessExercise = isTimelessExercise,
-                        onCheckboxChange = {
-                            isTimelessExercise = !isTimelessExercise
-                        }
-                    )
-                    1 -> BreakTab(
-                        editedBreak = currentBreak,
-                        onDurationChange = {
-                            if (currentBreak == null) {
-                                currentBreak = BreakAfterExercise()
+                    0 -> {
+                        ExerciseTab(
+                            editedExercise = currentExercise,
+                            onNameChange = {
+                                currentExercise.name = it
+                            },
+                            onDurationChange = { currentExercise.duration = it },
+                            isTimelessExercise = isTimelessExercise,
+                            onCheckboxChange = {
+                                isTimelessExercise = !isTimelessExercise
+                                if (isTimelessExercise) {
+                                    onTabSizeChange(ActivityType.TIMELESS_EXERCISE)
+                                } else {
+                                    onTabSizeChange(ActivityType.EXERCISE)
+                                }
                             }
-                            currentBreak?.duration = it
-                        },
-                    )
+                        )
+                    }
+                    1 -> {
+                        BreakTab(
+                            breakToEditDuration = currentBreakDuration,
+                            onDurationChange = {
+                                if (currentBreakDuration == null) {
+                                    currentBreakDuration = 0
+                                }
+                                currentBreakDuration = it
+                            },
+                        )
+                        onTabSizeChange(ActivityType.BREAK)
+                    }
                 }
 
                 AddOrEditExerciseButton(
                     onClick = {
-                        Log.e("name",currentExercise.name)
-                        Log.e("name",currentExercise.activityOrder.toString())
+                        Log.e("name", currentExercise.name)
+                        Log.e("name", currentExercise.activityOrder.toString())
                         if (currentExercise.name.isNotEmpty()) {
                             onAddOrEditButtonClick()
-                            if (doesExerciseExists) {
-                                if (isExerciseChanged(currentExercise, exerciseToEdit)) {
-                                    viewModel.editActivity(
-                                        Activity(
-                                            currentExercise.name,
-                                            currentExercise.activityOrder,
-                                            currentExercise.duration,
-                                            trainingType.toActivityType(isTimelessExercise)
-                                        )
+                            //       if (doesExerciseExists) {
+                            if (isExerciseChanged(currentExercise, exerciseToEdit)) {
+                                viewModel.editActivity(
+                                    Activity(
+                                        currentExercise.name,
+                                        currentExercise.activityOrder,
+                                        currentExercise.duration,
+                                        trainingType.toActivityType(isTimelessExercise)
                                     )
-                                    Toast.makeText(
-                                        context,
-                                        R.string.exercise_edited,
-                                        Toast.LENGTH_LONG
-                                    )
-                                        .show()
-                                }
-                                if (!doesBreakExists && isBreakInitialized(currentBreak)) {
-                                    viewModel.addBreakAfterActivity(
-                                        Activity(
-                                            "",
-                                            currentExercise.activityOrder!!.plus(1),
-                                            currentBreak!!.duration!!,
-                                            ActivityType.BREAK
-                                        )
-                                    )
-                                } else if (isBreakInitialized(currentBreak) && isBreakChanged(
-                                        currentBreak,
-                                        breakToEdit
-                                    )
-                                ) {
-                                    viewModel.editActivity(
-                                        Activity(
-                                            "",
-                                            currentExercise.activityOrder!!.plus(1),
-                                            currentBreak!!.duration!!,
-                                            ActivityType.BREAK
-                                        )
-                                    )
-                                } else if (isBreakChanged(
-                                        currentBreak,
-                                        breakToEdit
-                                    ) && currentBreak!!.duration!! == 0
-                                ) {
-                                    viewModel.removeLocalActivity(
-                                        currentExercise.activityOrder!!.plus(
-                                            1
-                                        )
-                                    )
-                                }
-                            } else {
-                                if (isBreakInitialized(currentBreak)) {
-                                    viewModel.addActivityWithBreak(
-                                        currentExercise.toActivity(
-                                            trainingType,
-                                            isTimelessExercise
-                                        ),
-                                        Activity(
-                                            "",
-                                            null,
-                                            currentBreak!!.duration!!,
-                                            ActivityType.BREAK
-                                        )
-                                    )
-                                } else {
-                                    viewModel.addActivity(
-                                        currentExercise.toActivity(trainingType, isTimelessExercise)
-                                    )
-                                }
-                                Toast.makeText(context, R.string.exercise_added, Toast.LENGTH_LONG)
+                                )
+                                Toast.makeText(
+                                    context,
+                                    R.string.exercise_edited,
+                                    Toast.LENGTH_LONG
+                                )
                                     .show()
+                            }
+                            if (!doesBreakExists && isBreakInitialized(currentBreakDuration)) {
+                                viewModel.addBreakAfterActivity(
+                                    Activity(
+                                        "",
+                                        currentExercise.activityOrder!!.plus(1),
+                                        currentBreakDuration!!,
+                                        ActivityType.BREAK
+                                    )
+                                )
+                            } else if (isBreakInitialized(currentBreakDuration) && isBreakChanged(
+                                    currentBreakDuration,
+                                    nextBreakDurationToEdit
+                                )
+                            ) {
+                                viewModel.editActivity(
+                                    Activity(
+                                        "",
+                                        currentExercise.activityOrder!!.plus(1),
+                                        currentBreakDuration!!,
+                                        ActivityType.BREAK
+                                    )
+                                )
+                            } else if (isBreakChanged(
+                                    currentBreakDuration,
+                                    nextBreakDurationToEdit
+                                ) && currentBreakDuration == 0
+                            ) {
+                                viewModel.removeLocalActivity(
+                                    currentExercise.activityOrder!!.plus(
+                                        1
+                                    )
+                                )
                             }
                         } else {
                             Toast.makeText(
@@ -282,7 +206,7 @@ fun ExerciseAndBreakTabsWidget(
                     isExerciseOrBreakChanged = isExerciseChanged(
                         currentExercise,
                         exerciseToEdit
-                    ) || isBreakChanged(currentBreak, breakToEdit)
+                    ) || isBreakChanged(currentBreakDuration, nextBreakDurationToEdit)
                 )
             }
         }
@@ -297,13 +221,16 @@ private fun ExerciseTab(
     isTimelessExercise: Boolean,
     onCheckboxChange: (isChecked: Boolean) -> Unit //temp
 ) {
-    val sliderMinValue = 10
+    val sliderMinValue = 1
     val sliderMaxValue = 300
     var exerciseDuration: Int by remember { mutableStateOf(sliderMinValue) }
     var exerciseName: String by remember { mutableStateOf("") }
     var durationBeforeTimelessExerciseSwitch: Int by remember {
-        mutableStateOf(if (editedExercise.duration == 0) sliderMaxValue
-        else editedExercise.duration) }
+        mutableStateOf(
+            if (editedExercise.duration == 0) sliderMaxValue
+            else editedExercise.duration
+        )
+    }
 
     LaunchedEffect(editedExercise) {
         exerciseName = editedExercise.name
@@ -366,15 +293,15 @@ private fun ExerciseTab(
 
 @Composable
 private fun BreakTab(
-    editedBreak: BreakAfterExercise?,
+    breakToEditDuration: Int?,
     onDurationChange: (duration: Int) -> Unit,
 ) {
     val sliderMinValue = 0
     val sliderMaxValue = 300
     var breakDuration: Int by remember { mutableStateOf(sliderMinValue) }
-    LaunchedEffect(editedBreak) {
-        if (editedBreak?.duration != null) {
-            breakDuration = editedBreak.duration!!
+    LaunchedEffect(breakToEditDuration) {
+        if (breakToEditDuration != null) {
+            breakDuration = breakToEditDuration
         }
     }
 
@@ -408,16 +335,11 @@ private fun BreakTab(
 private fun isExerciseChanged(currentExercise: Exercise, exerciseToEdit: Exercise) =
     currentExercise.name != exerciseToEdit.name || currentExercise.duration != exerciseToEdit.duration
 
-private fun isBreakChanged(currentBreak: BreakAfterExercise?, breakToEdit: BreakAfterExercise?) =
-    currentBreak?.duration != breakToEdit?.duration
+private fun isBreakChanged(currentBreakDuration: Int?, breakToEditDuration: Int?) =
+    currentBreakDuration != breakToEditDuration
 
-private fun isBreakInitialized(currentBreak: BreakAfterExercise?) =
-    currentBreak?.duration != 0 && currentBreak?.duration != null
-
-/*private fun getActivityType(isTimelessExercise: Boolean, trainingType: TrainingType) =
-    if (trainingType == TrainingType.STRETCH) ActivityType.STRETCH
-    else if (isTimelessExercise) ActivityType.TIMELESS_EXERCISE
-    else ActivityType.EXERCISE*/
+private fun isBreakInitialized(currentBreakDuration: Int?) =
+    currentBreakDuration != 0 && currentBreakDuration != null
 
 private fun Exercise.toActivity(trainingType: TrainingType, isTimelessExercise: Boolean): Activity =
     Activity(

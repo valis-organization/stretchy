@@ -5,7 +5,6 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
-import com.example.stretchy.features.createtraining.ui.data.BreakAfterExercise
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 import java.util.*
 
@@ -14,7 +13,7 @@ class ExerciseListAdapter(
     private val viewModel: CreateOrEditTrainingViewModel,
     private val trainingType: TrainingType,
     private val isAutoBreakClicked: Boolean,
-    private val onEditClick: () -> Unit
+    private val scrollToPosition: (position: Int) -> Unit
 ) :
     RecyclerView.Adapter<ExerciseListAdapter.ViewHolder>() {
 
@@ -41,11 +40,10 @@ class ExerciseListAdapter(
                     activityOrder = item.exercise.activityOrder,
                     duration = item.exercise.duration,
                 ),
-                BreakAfterExercise(item.nextBreakDuration),
+                item.nextBreakDuration,
                 position = position,
                 trainingType = trainingType,
                 isAutoBreakClicked = isAutoBreakClicked,
-                onEditClick = onEditClick,
                 onExpand = {
                     getCurrentExpandedItemPosition()?.let {
                         exercisesWithBreaks[it].isExpanded = false
@@ -53,6 +51,7 @@ class ExerciseListAdapter(
                     }
                     exercisesWithBreaks[position].isExpanded = true
                     notifyItemChanged(position)
+                    scrollToPosition(position)
                 },
                 onCollapse = {
                     exercisesWithBreaks[position].isExpanded = false
@@ -70,13 +69,45 @@ class ExerciseListAdapter(
         notifyItemMoved(from, to)
     }
 
+    fun submitList(newList: List<ExercisesWithBreaks>) {
+        exercisesWithBreaks = newList
+        if (exercisesWithBreaks.last().exercise.name == "") {
+            getCurrentExpandedItemPosition()?.let {
+                hideExpandedItem(position = it)
+            }
+            expandItem(position = exercisesWithBreaks.lastIndex)
+            scrollToPosition(exercisesWithBreaks.lastIndex)
+        }
+        notifyDataSetChanged()
+    }
+
     private fun getCurrentExpandedItemPosition(): Int? {
         val position = exercisesWithBreaks.indexOf(exercisesWithBreaks.find { it.isExpanded })
+        if (position != RecyclerView.NO_POSITION && exercisesWithBreaks[position].exercise.name == "") {
+            val newList = exercisesWithBreaks.toMutableList()
+            newList.removeAt(exercisesWithBreaks.lastIndex)
+            exercisesWithBreaks = newList
+            notifyDataSetChanged()
+            return null
+        }
         return if (position != RecyclerView.NO_POSITION) position else null
     }
 
-    fun submitList(newList: List<ExercisesWithBreaks>) {
-        exercisesWithBreaks = newList
-        notifyDataSetChanged()
+
+    private fun expandItem(position: Int) {
+        getCurrentExpandedItemPosition()?.let {
+            exercisesWithBreaks[it].isExpanded = false
+            notifyItemChanged(it)
+        }
+        exercisesWithBreaks[position].isExpanded = true
+        notifyItemChanged(position)
+        if (position == 0) {
+            scrollToPosition(0)
+        }
+    }
+
+    private fun hideExpandedItem(position: Int) {
+        exercisesWithBreaks[position].isExpanded = false
+        notifyItemChanged(position)
     }
 }

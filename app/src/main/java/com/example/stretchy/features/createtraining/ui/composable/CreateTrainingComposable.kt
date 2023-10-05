@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,9 +18,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.ItemTouchHelper.*
@@ -111,12 +114,11 @@ fun CreateTrainingComposable(
                     viewModel,
                     isTrainingBeingEdited,
                     navController,
-                    trainingId
+                    trainingId,
                 )
             }
         }
     }
-
 }
 
 @Composable
@@ -126,6 +128,7 @@ fun RecyclerViewContainer(
     trainingType: TrainingType,
     isAutoBreakClicked: Boolean,
 ) {
+    var recyclerView: RecyclerView? = null
     val adapter: ExerciseListAdapter by remember {
         mutableStateOf(
             ExerciseListAdapter(
@@ -133,7 +136,8 @@ fun RecyclerViewContainer(
                 viewModel,
                 trainingType,
                 isAutoBreakClicked,
-            ) {}
+                scrollToPosition = { recyclerView?.scrollToPosition(it) }
+            )
         )
     }
     adapter.submitList(activitiesWithoutBreaks)
@@ -209,16 +213,16 @@ fun RecyclerViewContainer(
 
     AndroidView(
         factory = { context ->
-            val recyclerView = RecyclerView(context)
-            recyclerView.layoutParams = ViewGroup.LayoutParams(
+            recyclerView = RecyclerView(context)
+            recyclerView!!.layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            recyclerView.adapter = adapter
-            recyclerView.layoutManager = LinearLayoutManager(context)
+            recyclerView!!.adapter = adapter
+            recyclerView!!.layoutManager = LinearLayoutManager(context)
             dragAndReorderItemTouchHelper.attachToRecyclerView(recyclerView)
             deleteItemTouchHelper.attachToRecyclerView(recyclerView)
-            recyclerView
+            recyclerView!!
 
         }, update = { recyclerView ->
             recyclerView.adapter = adapter
@@ -272,23 +276,33 @@ private fun AutoBreakCheckbox(viewModel: CreateOrEditTrainingViewModel) {
             },
         )
         Text(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            text = "Append automatic break",
+            modifier = Modifier,
+            maxLines = 1,
+            text = "Append automatic break: ",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold
         )
         BasicTextField(
+            modifier = Modifier.padding(start = 4.dp).width(32.dp),
             value = autoBreakDuration,
             textStyle = TextStyle(fontSize = 16.sp),
             singleLine = true,
             onValueChange = {
-                autoBreakDuration = it
-                if (it.isNotBlank()) {
-                    viewModel.updateAutoBreakDuration(it.toInt())
+                if(it.length <= 3 && it.isDigitsOnly()){
+                    autoBreakDuration = it
+                    if (it.isNotBlank()) {
+                        viewModel.updateAutoBreakDuration(it.toInt())
+                    }
                 }
             },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+        )
+        Text(
+            modifier = Modifier,
+            maxLines = 1,
+            text = "(secs)",
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
         )
     }
 }

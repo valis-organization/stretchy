@@ -125,7 +125,7 @@ class CreateOrEditTrainingViewModel(
         val currentList = getCurrentActivities(stateSuccess)
         val activityToRemove = currentList.find { it.activityOrder == activityOrder }
         val activityToRemoveIndex = currentList.indexOf(activityToRemove)
-        if (currentList[activityToRemoveIndex + 1].activityType == ActivityType.BREAK) {
+        if (currentList.getOrNull(activityToRemoveIndex + 1)?.activityType == ActivityType.BREAK) {
             val breakToRemove = currentList[activityToRemoveIndex + 1]
             currentList.remove(breakToRemove)
         }
