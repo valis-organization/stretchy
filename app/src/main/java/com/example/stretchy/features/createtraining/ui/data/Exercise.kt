@@ -6,7 +6,3 @@ data class Exercise(
     val activityOrder: Int? = null,
     var duration: Int = 10
 )
-
-data class BreakAfterExercise(
-    var duration: Int? = null
-)

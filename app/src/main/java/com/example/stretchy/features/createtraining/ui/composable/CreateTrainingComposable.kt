@@ -1,6 +1,7 @@
 package com.example.stretchy.features.createtraining.ui.composable
 
 import android.content.Context
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -31,8 +32,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.extensions.toActivityType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
 import com.example.stretchy.features.createtraining.ui.composable.buttons.CreateOrEditTrainingButton
@@ -45,25 +44,31 @@ import com.example.stretchy.repository.Activity
 @Composable
 fun CreateTrainingComposable(
     navController: NavController,
-    viewModel: CreateOrEditTrainingViewModel,
-    trainingType: TrainingType
+    viewModel: CreateOrEditTrainingViewModel
 ) {
     var trainingName: String by remember { mutableStateOf("") }
     var trainingId: Long? by remember { mutableStateOf(null) }
     var isTrainingBeingEdited by remember { mutableStateOf(false) }
+    var isListInitialized by remember { mutableStateOf(false) }
+    var isAutoBreakButtonClicked by remember { mutableStateOf(true) }
     val context = LocalContext.current
+    var exerciseList: List<ExercisesWithBreaks> by remember {
+        mutableStateOf(mutableListOf())
+    }
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                viewModel.addActivity(
-                    Activity(
-                        "",
-                        null,
-                        10,
-                        activityType = trainingType.toActivityType(true)
+                val newList = exerciseList.toMutableList()
+                newList.add(
+                    ExercisesWithBreaks(
+                        exerciseList.lastIndex + 1,
+                        Exercise(),
+                        if (isAutoBreakButtonClicked) viewModel.getAutoBreakDuration() else 0,
+                        isExpanded = true
                     )
                 )
+                exerciseList = newList
             }) {
                 Icon(
                     imageVector = Icons.Filled.Add,
@@ -79,8 +84,8 @@ fun CreateTrainingComposable(
         ) {
             Column(
                 Modifier
-                    .height(600.dp)
-                    .padding(top = 16.dp)
+                    .fillMaxHeight()
+                    .padding(top = 16.dp, bottom = 64.dp)
             ) {
                 when (val state = viewModel.uiState.collectAsState().value) {
                     is CreateTrainingUiState.Success -> {
@@ -89,12 +94,15 @@ fun CreateTrainingComposable(
                         TrainingName(viewModel, trainingName)
                         AutoBreakCheckbox(viewModel = viewModel)
                         isTrainingBeingEdited = state.editingTraining
+                        isAutoBreakButtonClicked = state.isAutomaticBreakButtonClicked
                         Spacer(modifier = Modifier.height(4.dp))
+                        if (!isListInitialized) {
+                            exerciseList = state.activities.toExerciseWithBreaks()
+                            isListInitialized = true
+                        }
                         RecyclerViewContainer(
-                            activitiesWithoutBreaks = state.activities.toExerciseWithBreaks(),
-                            viewModel = viewModel,
-                            state.trainingType,
-                            state.isAutomaticBreakButtonClicked,
+                            activitiesWithoutBreaks = exerciseList,
+                            onListChange = { exerciseList = it }
                         )
                     }
                     is CreateTrainingUiState.Error -> {
@@ -108,13 +116,12 @@ fun CreateTrainingComposable(
                     CreateTrainingUiState.Init -> {}
                 }
             }
-            // Spacer(modifier = Modifier.height(200.dp))
             Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                 CreateOrEditTrainingButton(
                     viewModel,
                     isTrainingBeingEdited,
-                    navController,
                     trainingId,
+                    exerciseList
                 )
             }
         }
@@ -124,24 +131,20 @@ fun CreateTrainingComposable(
 @Composable
 fun RecyclerViewContainer(
     activitiesWithoutBreaks: List<ExercisesWithBreaks>,
-    viewModel: CreateOrEditTrainingViewModel,
-    trainingType: TrainingType,
-    isAutoBreakClicked: Boolean,
+    onListChange: (exerciseList: List<ExercisesWithBreaks>) -> Unit
 ) {
     var recyclerView: RecyclerView? = null
     val adapter: ExerciseListAdapter by remember {
         mutableStateOf(
             ExerciseListAdapter(
                 activitiesWithoutBreaks,
-                viewModel,
-                trainingType,
-                isAutoBreakClicked,
-                scrollToPosition = { recyclerView?.scrollToPosition(it) }
+                scrollToPosition = { recyclerView?.scrollToPosition(it) },
+                onListChange
             )
         )
     }
     adapter.submitList(activitiesWithoutBreaks)
-    //  adapter.submitList(activitiesWithoutBreaks)
+    adapter.notifyDataSetChanged()
 
     val dragAndReorderItemTouchHelper by lazy {
         val simpleItemTouchCallback =
@@ -180,6 +183,8 @@ fun RecyclerViewContainer(
                     holder: RecyclerView.ViewHolder
                 ): Int {
                     val position = holder.adapterPosition
+                    Log.e("asditemcount ", adapter.itemCount.toString())
+                    Log.e("asdpos", position.toString())
                     return createSwipeFlags(position, recyclerView, holder)
                 }
 
@@ -188,7 +193,9 @@ fun RecyclerViewContainer(
                     recyclerView: RecyclerView,
                     viewHolder: RecyclerView.ViewHolder
                 ): Int {
-                    return if (activitiesWithoutBreaks[position].isExpanded) 0 else super.getSwipeDirs(
+                 //   adapter
+                //    Log.e("asd", activitiesWithoutBreaks[position].toString())
+                    return if (adapter.isItemExpanded(position)) 0 else super.getSwipeDirs(
                         recyclerView,
                         viewHolder
                     )
@@ -204,8 +211,8 @@ fun RecyclerViewContainer(
 
                 override fun onSwiped(viewHolder: RecyclerView.ViewHolder, swipeDir: Int) {
                     val position = viewHolder.adapterPosition
-                    viewModel.removeLocalActivityByListPosition(position)
-                    adapter.notifyItemRemoved(position)
+
+                    adapter.removeItem(position)
                 }
             }
         ItemTouchHelper(simpleItemTouchCallback)
@@ -283,12 +290,14 @@ private fun AutoBreakCheckbox(viewModel: CreateOrEditTrainingViewModel) {
             fontWeight = FontWeight.Bold
         )
         BasicTextField(
-            modifier = Modifier.padding(start = 4.dp).width(32.dp),
+            modifier = Modifier
+                .padding(start = 4.dp)
+                .width(32.dp),
             value = autoBreakDuration,
             textStyle = TextStyle(fontSize = 16.sp),
             singleLine = true,
             onValueChange = {
-                if(it.length <= 3 && it.isDigitsOnly()){
+                if (it.length <= 3 && it.isDigitsOnly()) {
                     autoBreakDuration = it
                     if (it.isNotBlank()) {
                         viewModel.updateAutoBreakDuration(it.toInt())
@@ -309,11 +318,12 @@ private fun AutoBreakCheckbox(viewModel: CreateOrEditTrainingViewModel) {
 
 private fun List<Activity>.toExerciseWithBreaks(): List<ExercisesWithBreaks> {
     val list = mutableListOf<ExercisesWithBreaks>()
+    // var listId = 0
     this.forEachIndexed() { index, item ->
         if (item.activityType != ActivityType.BREAK) {
             list.add(
                 ExercisesWithBreaks(
-                    index,
+                    list.lastIndex + 1,
                     Exercise(
                         item.activityId.toInt(),
                         item.name,

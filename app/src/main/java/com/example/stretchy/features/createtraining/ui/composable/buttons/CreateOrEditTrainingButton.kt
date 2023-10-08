@@ -13,17 +13,17 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
+import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.theme.BananaMania
 
 @Composable
 fun CreateOrEditTrainingButton(
     viewModel: CreateOrEditTrainingViewModel,
     isTrainingBeingEdited: Boolean,
-    navController: NavController,
-    trainingId: Long?
+    trainingId: Long?,
+    exerciseList: List<ExercisesWithBreaks>
 ) {
     val buttonCanBeClicked = viewModel.uiState.collectAsState().value.saveButtonCanBeClicked
     val buttonColor =
@@ -38,9 +38,9 @@ fun CreateOrEditTrainingButton(
         onClick = {
             if (buttonCanBeClicked) {
                 if (isTrainingBeingEdited) {
-                    viewModel.editTraining(trainingId = trainingId!!)
+                    viewModel.editTraining(exerciseList = exerciseList, trainingId = trainingId!!)
                 } else {
-                    viewModel.createTraining()
+                    viewModel.createTraining(exerciseList = exerciseList)
                 }
             }
         },

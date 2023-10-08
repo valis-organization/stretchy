@@ -16,24 +16,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.R
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.composable.widget.ExerciseAndBreakTabsWidget
+import com.example.stretchy.features.createtraining.ui.composable.widget.OnListExerciseHandler
 import com.example.stretchy.features.createtraining.ui.composable.widget.toDisplayableLength
-import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.theme.BananaMania
 
 @Composable
 fun ExerciseListItem(
-    vm: CreateOrEditTrainingViewModel,
-    exercise: Exercise,
-    nextBreakDuration: Int?,
-    trainingType: TrainingType,
-    isAutoBreakClicked: Boolean,
+    exerciseWithBreaks: ExercisesWithBreaks,
     position: Int,
     isExpanded: Boolean,
     onExpand: () -> Unit,
-    onCollapse: () -> Unit
+    onCollapse: () -> Unit,
+    onListExerciseHandler: OnListExerciseHandler
 ) {
 
     if (!isExpanded) {
@@ -57,8 +52,8 @@ fun ExerciseListItem(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    if (nextBreakDuration != null) {
-                        Text(toDisplayableLength(nextBreakDuration))
+                    if (exerciseWithBreaks.nextBreakDuration != 0 && exerciseWithBreaks.nextBreakDuration != null) {
+                        Text(toDisplayableLength(exerciseWithBreaks.nextBreakDuration!!))
                     } else {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_no_break),
@@ -80,7 +75,10 @@ fun ExerciseListItem(
                     Text("${position + 1}")
 
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(text = exercise.name, Modifier.padding(start = 16.dp))
+                        Text(
+                            text = exerciseWithBreaks.exercise.name,
+                            Modifier.padding(start = 16.dp)
+                        )
                     }
                 }
             }
@@ -92,22 +90,18 @@ fun ExerciseListItem(
 
         Box(Modifier.height(layoutHeight)) {
             ExerciseAndBreakTabsWidget(
-                viewModel = vm,
-                exerciseToEdit = exercise,
-                nextBreakDurationToEdit = nextBreakDuration,
+                exerciseWithBreakToEdit = exerciseWithBreaks,
                 onAddOrEditButtonClick = {
                     onCollapse()
                 },
-                trainingType = trainingType,
-                isAutoBreakClicked = isAutoBreakClicked,
                 onTabSizeChange = {
-                    layoutHeight = when(it){
+                    layoutHeight = when (it) {
                         ActivityType.STRETCH -> 300.dp
                         ActivityType.EXERCISE -> 300.dp
                         ActivityType.TIMELESS_EXERCISE -> 230.dp
                         ActivityType.BREAK -> 230.dp
                     }
-                }
+                }, onListExerciseHandler = onListExerciseHandler
             )
         }
     }
