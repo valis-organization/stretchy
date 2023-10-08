@@ -10,12 +10,10 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.*
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -46,15 +44,15 @@ class MainActivity : ComponentActivity() {
     @Preview(showBackground = true)
     @Composable
     fun DefaultPreview() {
- /*       Navigation(
-            activityComponent,
-            {
-                grantPermissions(WRITE_EXTERNAL_STORAGE)
-            },
-            {
-                grantPermissions(READ_EXTERNAL_STORAGE)
-            }
-        )*/
+        /*       Navigation(
+                   activityComponent,
+                   {
+                       grantPermissions(WRITE_EXTERNAL_STORAGE)
+                   },
+                   {
+                       grantPermissions(READ_EXTERNAL_STORAGE)
+                   }
+               )*/
     }
 
     private fun grantPermissions(permission: String) {
@@ -75,11 +73,8 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun BottomNavigationBar() {
-        // State of bottomBar, set state to false, if current page route is "car_details"
-        val bottomBarState = rememberSaveable { (mutableStateOf(true)) }
-
-
         val navController = rememberNavController()
+        var showBottomNavBar by remember { (mutableStateOf(true)) }
 
         val screens = listOf(
             BottomNavScreen(
@@ -101,21 +96,27 @@ class MainActivity : ComponentActivity() {
 
         Scaffold(
             bottomBar = {
-                BottomNavigation {
-                    val navBackStackEntry by navController.currentBackStackEntryAsState()
-                    val currentRoute = navBackStackEntry?.destination?.route
+                AnimatedVisibility(
+                    visible = showBottomNavBar,
+                    enter = slideInVertically(initialOffsetY = { it }),
+                    exit = shrinkVertically(),
+                    content = {
+                        BottomNavigation {
+                            val navBackStackEntry by navController.currentBackStackEntryAsState()
+                            val currentRoute = navBackStackEntry?.destination?.route
 
-                    screens.forEach { screen ->
-                        BottomNavigationItem(
-                            icon = { Icon(screen.icon, contentDescription = "") },
-                            label = { Text(text = screen.label) },
-                            selected = currentRoute == screen.route,
-                            onClick = {
-                                navController.navigate(screen.route)
+                            screens.forEach { screen ->
+                                BottomNavigationItem(
+                                    icon = { Icon(screen.icon, contentDescription = "") },
+                                    label = { Text(text = screen.label) },
+                                    selected = currentRoute == screen.route,
+                                    onClick = {
+                                        navController.navigate(screen.route)
+                                    }
+                                )
                             }
-                        )
-                    }
-                }
+                        }
+                    })
             }
         ) { innerPadding ->
             NavHost(
@@ -132,7 +133,9 @@ class MainActivity : ComponentActivity() {
                         {
                             grantPermissions(READ_EXTERNAL_STORAGE)
                         },
-                        Screen.StretchingListScreen.route
+                        Screen.StretchingListScreen.route,
+                        hideBottomNavBar = { showBottomNavBar = false },
+                        showBottomNavBar = {showBottomNavBar =true}
                     )
                 }
                 composable(getString(R.string.meta_training)) {
@@ -147,24 +150,10 @@ class MainActivity : ComponentActivity() {
                         {
                             grantPermissions(READ_EXTERNAL_STORAGE)
                         },
-                        Screen.TrainingListScreen.route
+                        Screen.TrainingListScreen.route,
+                        hideBottomNavBar = { showBottomNavBar = false },
+                        showBottomNavBar = {showBottomNavBar =true}
                     )
-              /*      Scaffold(
-                        floatingActionButton = {
-                            FloatingActionButton(onClick = {
-                                val trainingType = TrainingType.BODYWEIGHT
-                                Log.e("asd", trainingType.toString())
-                                navController.navigate("exerciseCreatorScreen?trainingType=$trainingType")
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Add,
-                                    contentDescription = stringResource(id = R.string.desc_plus_icon)
-                                )
-                            }
-                        }
-                    ) { contentPadding ->
-                        Box(Modifier.padding(contentPadding)) {}
-                    }*/
                 }
             }
         }

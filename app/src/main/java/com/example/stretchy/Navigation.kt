@@ -2,10 +2,12 @@ package com.example.stretchy
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.stretchy.activity.di.ActivityComponent
@@ -26,9 +28,24 @@ fun Navigation(
     activityComponent: ActivityComponent,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
-    startDestination: String
+    startDestination: String,
+    hideBottomNavBar: () -> Unit,
+    showBottomNavBar: () -> Unit
 ) {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    when (navBackStackEntry?.destination?.route) {
+        Screen.ExerciseCreatorScreen.route -> {
+            hideBottomNavBar()
+        }
+        Screen.StretchingListScreen.route -> {
+            showBottomNavBar()
+        }
+        Screen.ExecuteTrainingScreen.route -> {
+            hideBottomNavBar()
+        }
+    }
+
     NavHost(navController = navController, startDestination = startDestination) {
         composable(route = Screen.StretchingListScreen.route) {
             val vm = createTrainingListViewModel(
@@ -59,12 +76,11 @@ fun Navigation(
             )
             CreateTrainingComposable(
                 navController = navController,
-                viewModel = vm,
-                trainingType = trainingType
+                viewModel = vm
             )
         }
         composable(
-            route = "executeTraining?id={id}",
+            route = Screen.ExecuteTrainingScreen.route,
             arguments = listOf(navArgument("id") { defaultValue = "-1" })
         ) {
             val trainingId = it.arguments?.getString("id")!!.toLong()
