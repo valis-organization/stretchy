@@ -43,5 +43,7 @@
     <string name="desc_menu_icon">Menu icon</string>
     <string name="desc_edit_icon">Edit icon</string>
     <string name="desc_copy_icon">Copy icon</string>
+    <string name="append_auto_break">Append automatic break:</string>
+    <string name="secs">(secs)</string>
 
 </resources>

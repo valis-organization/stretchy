@@ -245,7 +245,6 @@ private fun ExerciseTab(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
-            Spacer(Modifier.width(60.dp))
             TimelessExerciseCheckbox(modifier = Modifier.padding(top = 4.dp), onClick = {
                 exerciseDuration = 0
                 onDurationChange(exerciseDuration)
@@ -361,7 +360,7 @@ fun toDisplayableLength(exerciseDuration: Int): String {
 }
 
 @Composable
-fun TimelessExerciseCheckbox(
+private fun TimelessExerciseCheckbox(
     modifier: Modifier = Modifier,
     onClick: (isChecked: Boolean) -> Unit,
     isTimelessExercise: Boolean

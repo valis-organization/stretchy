@@ -3,6 +3,7 @@ package com.example.stretchy.features.createtraining.ui.composable.list
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.stretchy.features.createtraining.ui.composable.list.listitem.ExerciseListItem
 import com.example.stretchy.features.createtraining.ui.composable.widget.OnListExerciseHandler
 import java.util.*
 
@@ -35,14 +36,11 @@ class ExerciseListAdapter(
                     getCurrentExpandedItemPosition()?.let {
                         hideExpandedItem(it)
                     }
-                    if (exercisesWithBreaks[exercisesWithBreaks.lastIndex].exercise.name == "") {
-                        removeItem(exercisesWithBreaks.lastIndex)
-                    }
+                    removeBlankItem()
                     expandItem(position)
                 },
                 onCollapse = {
-                    exercisesWithBreaks[position].isExpanded = false
-                    notifyItemChanged(position)
+                    hideExpandedItem(position)
                 },
                 isExpanded = item.isExpanded,
                 onListExerciseHandler = object : OnListExerciseHandler {
@@ -51,10 +49,7 @@ class ExerciseListAdapter(
                     }
 
                     override fun editExercise(exercise: ExercisesWithBreaks) {
-                        val newList = exercisesWithBreaks.toMutableList()
-                        newList[exercise.listId] = exercise
-                        exercisesWithBreaks = newList
-                        onListChange(exercisesWithBreaks)
+                        editCurrentExercise(exercise = exercise)
                     }
 
                     override fun removeBreak(position: Int) {
@@ -80,9 +75,7 @@ class ExerciseListAdapter(
         notifyDataSetChanged()
         getCurrentExpandedItemPosition()?.let {
             if (exercisesWithBreaks.lastIndex != it) {
-                exercisesWithBreaks[it].isExpanded = false
-                onListChange(exercisesWithBreaks)
-                notifyItemChanged(it)
+                hideExpandedItem(it)
             }
         }
         scrollToPosition(exercisesWithBreaks.lastIndex)
@@ -95,11 +88,26 @@ class ExerciseListAdapter(
         onListChange(exercisesWithBreaks)
     }
 
+    fun isItemExpanded(position: Int) = exercisesWithBreaks[position].isExpanded
+
+    fun removeItem(position: Int) {
+        val newList = exercisesWithBreaks.toMutableList()
+        newList.removeAt(position)
+        exercisesWithBreaks = newList
+        onListChange(exercisesWithBreaks)
+        notifyItemRemoved(position)
+    }
+
+    fun removeBlankItem() {
+        if (exercisesWithBreaks[exercisesWithBreaks.lastIndex].exercise.name == "") {
+            removeItem(exercisesWithBreaks.lastIndex)
+        }
+    }
+
     private fun getCurrentExpandedItemPosition(): Int? {
         val position = exercisesWithBreaks.indexOf(exercisesWithBreaks.find { it.isExpanded })
         return if (position != RecyclerView.NO_POSITION) position else null
     }
-
 
     private fun expandItem(position: Int) {
         exercisesWithBreaks[position].isExpanded = true
@@ -112,13 +120,10 @@ class ExerciseListAdapter(
         notifyItemChanged(position)
     }
 
-    fun isItemExpanded(position: Int) = exercisesWithBreaks[position].isExpanded
-
-    fun removeItem(position: Int) {
+    private fun editCurrentExercise(exercise: ExercisesWithBreaks) {
         val newList = exercisesWithBreaks.toMutableList()
-        newList.removeAt(position)
+        newList[exercise.listId] = exercise
         exercisesWithBreaks = newList
         onListChange(exercisesWithBreaks)
-        notifyItemRemoved(position)
     }
 }

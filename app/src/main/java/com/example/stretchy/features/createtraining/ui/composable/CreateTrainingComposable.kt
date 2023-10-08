@@ -1,13 +1,9 @@
 package com.example.stretchy.features.createtraining.ui.composable
 
 import android.content.Context
-import android.util.Log
-import android.view.ViewGroup
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,27 +13,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavController
-import androidx.recyclerview.widget.ItemTouchHelper
-import androidx.recyclerview.widget.ItemTouchHelper.*
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
+import com.example.stretchy.features.createtraining.ui.composable.buttons.AutoBreakCheckbox
 import com.example.stretchy.features.createtraining.ui.composable.buttons.CreateOrEditTrainingButton
 import com.example.stretchy.features.createtraining.ui.composable.buttons.TrainingName
-import com.example.stretchy.features.createtraining.ui.composable.list.ExerciseListAdapter
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
+import com.example.stretchy.features.createtraining.ui.composable.list.RecyclerView
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.repository.Activity
 
@@ -100,7 +87,7 @@ fun CreateTrainingComposable(
                             exerciseList = state.activities.toExerciseWithBreaks()
                             isListInitialized = true
                         }
-                        RecyclerViewContainer(
+                        RecyclerView(
                             activitiesWithoutBreaks = exerciseList,
                             onListChange = { exerciseList = it }
                         )
@@ -126,117 +113,6 @@ fun CreateTrainingComposable(
             }
         }
     }
-}
-
-@Composable
-fun RecyclerViewContainer(
-    activitiesWithoutBreaks: List<ExercisesWithBreaks>,
-    onListChange: (exerciseList: List<ExercisesWithBreaks>) -> Unit
-) {
-    var recyclerView: RecyclerView? = null
-    val adapter: ExerciseListAdapter by remember {
-        mutableStateOf(
-            ExerciseListAdapter(
-                activitiesWithoutBreaks,
-                scrollToPosition = { recyclerView?.scrollToPosition(it) },
-                onListChange
-            )
-        )
-    }
-    adapter.submitList(activitiesWithoutBreaks)
-    adapter.notifyDataSetChanged()
-
-    val dragAndReorderItemTouchHelper by lazy {
-        val simpleItemTouchCallback =
-            object : SimpleCallback(
-                UP or
-                        DOWN, 0
-            ) {
-
-                override fun onMove(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
-                ): Boolean {
-                    val from = viewHolder.adapterPosition
-                    val to = target.adapterPosition
-                    adapter.moveItem(from, to)
-                    return true
-                }
-
-                override fun onSwiped(
-                    viewHolder: RecyclerView.ViewHolder,
-                    direction: Int
-                ) {
-                }
-            }
-        ItemTouchHelper(simpleItemTouchCallback)
-    }
-    val deleteItemTouchHelper by lazy {
-        val simpleItemTouchCallback =
-            object : SimpleCallback(
-                0,
-                LEFT or RIGHT
-            ) {
-                override fun getSwipeDirs(
-                    recyclerView: RecyclerView,
-                    holder: RecyclerView.ViewHolder
-                ): Int {
-                    val position = holder.adapterPosition
-                    Log.e("asditemcount ", adapter.itemCount.toString())
-                    Log.e("asdpos", position.toString())
-                    return createSwipeFlags(position, recyclerView, holder)
-                }
-
-                private fun createSwipeFlags(
-                    position: Int,
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder
-                ): Int {
-                 //   adapter
-                //    Log.e("asd", activitiesWithoutBreaks[position].toString())
-                    return if (adapter.isItemExpanded(position)) 0 else super.getSwipeDirs(
-                        recyclerView,
-                        viewHolder
-                    )
-                }
-
-                override fun onMove(
-                    recyclerView: RecyclerView,
-                    viewHolder: RecyclerView.ViewHolder,
-                    target: RecyclerView.ViewHolder
-                ): Boolean {
-                    return false
-                }
-
-                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, swipeDir: Int) {
-                    val position = viewHolder.adapterPosition
-
-                    adapter.removeItem(position)
-                }
-            }
-        ItemTouchHelper(simpleItemTouchCallback)
-    }
-
-    AndroidView(
-        factory = { context ->
-            recyclerView = RecyclerView(context)
-            recyclerView!!.layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            recyclerView!!.adapter = adapter
-            recyclerView!!.layoutManager = LinearLayoutManager(context)
-            dragAndReorderItemTouchHelper.attachToRecyclerView(recyclerView)
-            deleteItemTouchHelper.attachToRecyclerView(recyclerView)
-            recyclerView!!
-
-        }, update = { recyclerView ->
-            recyclerView.adapter = adapter
-        },
-        modifier = Modifier
-            .fillMaxWidth()
-    )
 }
 
 @Composable
@@ -266,59 +142,8 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
     }
 }
 
-@Composable
-private fun AutoBreakCheckbox(viewModel: CreateOrEditTrainingViewModel) {
-    var isAutoBreakChecked by remember { mutableStateOf(true) }
-    var autoBreakDuration by remember { mutableStateOf("${viewModel.getAutoBreakDuration()}") }
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(
-            checked = isAutoBreakChecked,
-            onCheckedChange = {
-                isAutoBreakChecked = it
-                if (isAutoBreakChecked) {
-                    viewModel.enableAutoBreaks()
-                } else {
-                    viewModel.disableAutoBreaks()
-                }
-            },
-        )
-        Text(
-            modifier = Modifier,
-            maxLines = 1,
-            text = "Append automatic break: ",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-        BasicTextField(
-            modifier = Modifier
-                .padding(start = 4.dp)
-                .width(32.dp),
-            value = autoBreakDuration,
-            textStyle = TextStyle(fontSize = 16.sp),
-            singleLine = true,
-            onValueChange = {
-                if (it.length <= 3 && it.isDigitsOnly()) {
-                    autoBreakDuration = it
-                    if (it.isNotBlank()) {
-                        viewModel.updateAutoBreakDuration(it.toInt())
-                    }
-                }
-            },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-        )
-        Text(
-            modifier = Modifier,
-            maxLines = 1,
-            text = "(secs)",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
 private fun List<Activity>.toExerciseWithBreaks(): List<ExercisesWithBreaks> {
     val list = mutableListOf<ExercisesWithBreaks>()
-    // var listId = 0
     this.forEachIndexed() { index, item ->
         if (item.activityType != ActivityType.BREAK) {
             list.add(

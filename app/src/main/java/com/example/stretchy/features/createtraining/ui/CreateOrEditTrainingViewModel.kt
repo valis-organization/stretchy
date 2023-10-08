@@ -1,6 +1,5 @@
 package com.example.stretchy.features.createtraining.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.ActivityType
@@ -19,7 +18,7 @@ import kotlinx.coroutines.launch
 class CreateOrEditTrainingViewModel(
     val repository: Repository,
     val trainingId: Long,
-    val automaticBreakPreferences: AutomaticBreakPreferences,
+    private val automaticBreakPreferences: AutomaticBreakPreferences,
     val trainingType: TrainingType
 ) :
     ViewModel() {
@@ -41,7 +40,7 @@ class CreateOrEditTrainingViewModel(
                             activities,
                             trainingType,
                             false,
-                            isCreateTrainingButtonVisible(name, activities),
+                            isCreateTrainingButtonVisible(name),
                             isAutomaticBreakButtonClicked = true
                         )
                     )
@@ -92,8 +91,7 @@ class CreateOrEditTrainingViewModel(
                 _uiState.value = copy(
                     currentName = trainingName,
                     saveButtonCanBeClicked = isCreateTrainingButtonVisible(
-                        trainingName,
-                        activities
+                        trainingName
                     ),
                     isTrainingChanged = isTrainingChanged(
                         trainingId,
@@ -126,6 +124,7 @@ class CreateOrEditTrainingViewModel(
             }
         }
     }
+
     fun enableAutoBreaks() {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
         _uiState.value = stateSuccess.copy(isAutomaticBreakButtonClicked = true)
@@ -159,8 +158,7 @@ class CreateOrEditTrainingViewModel(
     }
 
     private fun isCreateTrainingButtonVisible(
-        currentName: String,
-        currentExercises: List<Activity>
+        currentName: String
     ) =
         currentName.isNotBlank()
 
@@ -215,7 +213,6 @@ class CreateOrEditTrainingViewModel(
                 activityOrder++
             }
         }
-        Log.e("asd",activityList.toString())
         return activityList
     }
 }
