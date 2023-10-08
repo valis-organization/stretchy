@@ -12,9 +12,8 @@ import com.example.stretchy.R
 
 @Composable
 fun AddOrEditExerciseButton(
-    onClick : () -> Unit,
-    isExerciseOrBreakBeingEdited : Boolean,
-    isExerciseOrBreakChanged : Boolean
+    onClick: () -> Unit,
+    isExerciseOrBreakBeingEdited: Boolean
 ) {
     Button(
         modifier = Modifier
@@ -24,15 +23,11 @@ fun AddOrEditExerciseButton(
             onClick()
         }
     ) {
-              if (isExerciseOrBreakBeingEdited) {
-                  if (isExerciseOrBreakChanged) {
-                      Text(text = stringResource(id = R.string.save_changes))
-                  } else {
-                      Text(text = stringResource(id = R.string.close_item))
-                  }
-              } else {
-                  Text(text = stringResource(id = R.string.add_exercise))
-              }
+        if (isExerciseOrBreakBeingEdited) {
+            Text(text = stringResource(id = R.string.save_changes))
+        } else {
+            Text(text = stringResource(id = R.string.add_exercise))
+        }
     }
 }
 

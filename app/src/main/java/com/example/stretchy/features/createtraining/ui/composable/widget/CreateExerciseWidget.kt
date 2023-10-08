@@ -153,7 +153,7 @@ fun ExerciseAndBreakTabsWidget(
                         if (currentExerciseWithBreak.exercise.name.isNotEmpty()) {
                             onAddOrEditButtonClick()
                             if (doesExerciseExists) {
-                                if (isExerciseBeingEdited(
+                                if (isExerciseOrBreakBeingEdited(
                                         currentExerciseWithBreak,
                                         exerciseWithBreakToEdit,
                                         doesBreakExists
@@ -173,11 +173,7 @@ fun ExerciseAndBreakTabsWidget(
                                 ) {
                                     onListExerciseHandler.removeBreak(currentExerciseWithBreak.listId)
                                 }
-                            } /*else {
-                                onListExerciseHandler.addExercise(
-                                    currentExerciseWithBreak
-                                )
-                            }*/
+                            }
                         } else {
                             Toast.makeText(
                                 context,
@@ -187,7 +183,7 @@ fun ExerciseAndBreakTabsWidget(
                         }
                     },
                     isExerciseOrBreakBeingEdited = doesBreakExists || doesExerciseExists,
-                    isExerciseOrBreakChanged = isExerciseOrBreakChanged
+                //    isExerciseOrBreakChanged = isExerciseOrBreakChanged,
                 )
             }
         }
@@ -332,7 +328,7 @@ fun isExerciseOrBreakChanged(
 private fun isBreakInitialized(currentBreakDuration: Int?) =
     currentBreakDuration != 0 && currentBreakDuration != null
 
-private fun isExerciseBeingEdited(
+private fun isExerciseOrBreakBeingEdited(
     currentExercise: ExercisesWithBreaks,
     exerciseToEdit: ExercisesWithBreaks,
     doesBreakExists: Boolean

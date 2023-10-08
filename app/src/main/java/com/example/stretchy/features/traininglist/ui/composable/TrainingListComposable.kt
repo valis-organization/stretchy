@@ -49,8 +49,8 @@ fun TrainingListComposable(
     navController: NavController,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
+    trainingType: TrainingType
 ) {
-    val trainingType = TrainingType.STRETCH //TODO
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {

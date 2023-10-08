@@ -4,7 +4,9 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.Icon
+import androidx.compose.material.Scaffold
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
@@ -17,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
-import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.CreateTrainingUiState
 import com.example.stretchy.features.createtraining.ui.composable.buttons.AutoBreakCheckbox
@@ -26,7 +27,6 @@ import com.example.stretchy.features.createtraining.ui.composable.buttons.Traini
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.composable.list.RecyclerView
 import com.example.stretchy.features.createtraining.ui.data.Exercise
-import com.example.stretchy.repository.Activity
 
 @Composable
 fun CreateTrainingComposable(
@@ -36,6 +36,7 @@ fun CreateTrainingComposable(
     var trainingName: String by remember { mutableStateOf("") }
     var trainingId: Long? by remember { mutableStateOf(null) }
     var isTrainingBeingEdited by remember { mutableStateOf(false) }
+    var isTrainingChanged by remember { mutableStateOf(false) }
     var isListInitialized by remember { mutableStateOf(false) }
     var isAutoBreakButtonClicked by remember { mutableStateOf(true) }
     val context = LocalContext.current
@@ -84,12 +85,17 @@ fun CreateTrainingComposable(
                         isAutoBreakButtonClicked = state.isAutomaticBreakButtonClicked
                         Spacer(modifier = Modifier.height(4.dp))
                         if (!isListInitialized) {
-                            exerciseList = state.activities.toExerciseWithBreaks()
+                            exerciseList = state.exercisesWithBreaks
                             isListInitialized = true
                         }
                         RecyclerView(
                             activitiesWithoutBreaks = exerciseList,
-                            onListChange = { exerciseList = it }
+                            onListChange = {
+                                exerciseList = it
+                                if (exerciseList != state.exercisesWithBreaks) {
+                                    isTrainingChanged = true
+                                }
+                            }
                         )
                     }
                     is CreateTrainingUiState.Error -> {
@@ -140,28 +146,4 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
             ).show()
         }
     }
-}
-
-private fun List<Activity>.toExerciseWithBreaks(): List<ExercisesWithBreaks> {
-    val list = mutableListOf<ExercisesWithBreaks>()
-    this.forEachIndexed() { index, item ->
-        if (item.activityType != ActivityType.BREAK) {
-            list.add(
-                ExercisesWithBreaks(
-                    list.lastIndex + 1,
-                    Exercise(
-                        item.activityId.toInt(),
-                        item.name,
-                        item.activityOrder,
-                        item.duration
-                    ),
-                    if (this.getOrNull(index + 1)?.activityType == ActivityType.BREAK) this.getOrNull(
-                        index + 1
-                    )?.duration
-                    else null, false
-                )
-            )
-        }
-    }
-    return list
 }

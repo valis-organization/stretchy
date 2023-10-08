@@ -28,6 +28,7 @@ import com.example.stretchy.Navigation
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.activity.di.ActivityComponent
+import com.example.stretchy.database.data.TrainingType
 
 
 class MainActivity : ComponentActivity() {
@@ -135,7 +136,8 @@ class MainActivity : ComponentActivity() {
                         },
                         Screen.StretchingListScreen.route,
                         hideBottomNavBar = { showBottomNavBar = false },
-                        showBottomNavBar = {showBottomNavBar =true}
+                        showBottomNavBar = {showBottomNavBar =true},
+                        trainingType = TrainingType.STRETCH
                     )
                 }
                 composable(getString(R.string.meta_training)) {
@@ -152,7 +154,8 @@ class MainActivity : ComponentActivity() {
                         },
                         Screen.TrainingListScreen.route,
                         hideBottomNavBar = { showBottomNavBar = false },
-                        showBottomNavBar = {showBottomNavBar =true}
+                        showBottomNavBar = {showBottomNavBar =true},
+                        trainingType = TrainingType.BODYWEIGHT
                     )
                 }
             }

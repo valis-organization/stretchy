@@ -18,7 +18,8 @@ import kotlinx.coroutines.launch
 class TrainingListViewModel(
     val repository: Repository,
     private val dataImporterImpl: DataImporterImpl,
-    private val dataExporterImpl: DataExporterImpl
+    private val dataExporterImpl: DataExporterImpl,
+    private val trainingType: TrainingType
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState
@@ -34,8 +35,14 @@ class TrainingListViewModel(
             if (trainingWithActivityList.isEmpty()) {
                 _uiState.value = TrainingListUiState.Empty
             } else {
-                _uiState.value =
-                    TrainingListUiState.Loaded(trainingWithActivityList.map { it.toTraining() })
+                val list: List<Training> = trainingWithActivityList.mapToTraining()
+                if (list.isEmpty()) {
+                    _uiState.value = TrainingListUiState.Empty
+                } else {
+                    _uiState.value =
+                        TrainingListUiState.Loaded(list)
+                }
+
             }
         }
     }
@@ -51,6 +58,16 @@ class TrainingListViewModel(
         viewModelScope.launch {
             dataExporterImpl.exportData()
         }
+    }
+
+    private fun List<TrainingWithActivity>.mapToTraining(): List<Training> {
+        val list = mutableListOf<Training>()
+        this.forEach {
+            if (it.trainingType == trainingType) {
+                list.add(it.toTraining())
+            }
+        }
+        return list
     }
 
     private fun TrainingWithActivity.toTraining(): Training {

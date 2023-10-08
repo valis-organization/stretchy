@@ -1,7 +1,7 @@
 package com.example.stretchy.features.createtraining.ui
 
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.repository.Activity
+import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 
 sealed class CreateTrainingUiState(
     open val saveButtonCanBeClicked: Boolean,
@@ -12,7 +12,7 @@ sealed class CreateTrainingUiState(
         val trainingId: Long?,
         val editingTraining: Boolean,
         val currentName: String,
-        val activities: List<Activity>,
+        val exercisesWithBreaks: List<ExercisesWithBreaks>,
         val trainingType: TrainingType,
         override val isTrainingChanged: Boolean = false,
         override val saveButtonCanBeClicked: Boolean = false,

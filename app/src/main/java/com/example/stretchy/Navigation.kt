@@ -30,7 +30,8 @@ fun Navigation(
     onImportClick: () -> Unit,
     startDestination: String,
     hideBottomNavBar: () -> Unit,
-    showBottomNavBar: () -> Unit
+    showBottomNavBar: () -> Unit,
+    trainingType: TrainingType
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -41,22 +42,48 @@ fun Navigation(
         Screen.StretchingListScreen.route -> {
             showBottomNavBar()
         }
+        Screen.TrainingListScreen.route -> {
+            showBottomNavBar()
+        }
         Screen.ExecuteTrainingScreen.route -> {
             hideBottomNavBar()
         }
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
-        composable(route = Screen.StretchingListScreen.route) {
+        composable(
+            route = Screen.TrainingListScreen.route,
+        ) {
+            val component = TrainingListComponent.create(activityComponent, trainingType)
             val vm = createTrainingListViewModel(
-                activityComponent,
+                component,
+                activityComponent.activity(),
                 LocalViewModelStoreOwner.current!!
             )
             TrainingListComposable(
                 navController = navController,
                 viewModel = vm,
                 onExportClick = onExportClick,
-                onImportClick = onImportClick
+                onImportClick = onImportClick,
+                trainingType = trainingType
+            )
+        }
+
+        composable(
+            route = Screen.StretchingListScreen.route
+        ) {
+            val component = TrainingListComponent.create(activityComponent, trainingType)
+            val vm = createTrainingListViewModel(
+                component,
+                activityComponent.activity(),
+                LocalViewModelStoreOwner.current!!
+            )
+            TrainingListComposable(
+                navController = navController,
+                viewModel = vm,
+                onExportClick = onExportClick,
+                onImportClick = onImportClick,
+                trainingType = trainingType
             )
         }
         composable(
@@ -121,12 +148,12 @@ private fun createCreateTrainingViewModel(
 }
 
 private fun createTrainingListViewModel(
-    activityComponent: ActivityComponent,
+    trainingListComponent: TrainingListComponent,
+    componentActivity: ComponentActivity,
     viewModelStoreOwner: ViewModelStoreOwner,
 ): TrainingListViewModel {
-    val component = TrainingListComponent.create(activityComponent)
-    val provider = component.viewModelProvider()
-    val vm by activityComponent.activity()
-        .daggerViewModel(owner = viewModelStoreOwner) { provider }
+    //val component = TrainingListComponent.create(activityComponent)
+    val provider = trainingListComponent.viewModelProvider()
+    val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
     return vm
 }

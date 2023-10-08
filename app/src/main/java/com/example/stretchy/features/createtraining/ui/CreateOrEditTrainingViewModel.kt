@@ -7,6 +7,7 @@ import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.extensions.toActivityType
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
+import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
@@ -37,7 +38,7 @@ class CreateOrEditTrainingViewModel(
                             trainingId,
                             true,
                             name,
-                            activities,
+                            activities.toExerciseWithBreaks(),
                             trainingType,
                             false,
                             isCreateTrainingButtonVisible(name),
@@ -96,7 +97,7 @@ class CreateOrEditTrainingViewModel(
                     isTrainingChanged = isTrainingChanged(
                         trainingId,
                         trainingName,
-                        activities
+                        exercisesWithBreaks
                     )
                 )
             }
@@ -165,17 +166,12 @@ class CreateOrEditTrainingViewModel(
     private suspend fun isTrainingChanged(
         trainingId: Long?,
         trainingName: String,
-        activities: List<Activity>
+        exerciseList: List<ExercisesWithBreaks>
     ): Boolean {
         if (trainingId != null && trainingId >= 0) {
             val trainingFromDb = repository.getTrainingWithActivitiesById(trainingId)
             if (trainingFromDb.name == trainingName) {
-                if (trainingFromDb.activities.size == activities.size) {
-                    trainingFromDb.activities.forEachIndexed { index, activity ->
-                        if (activity != activities[index]) {
-                            return true
-                        }
-                    }
+                if (trainingFromDb.activities.toExerciseWithBreaks() == exerciseList) {
                     return false
                 }
             }
@@ -214,6 +210,30 @@ class CreateOrEditTrainingViewModel(
             }
         }
         return activityList
+    }
+
+    private fun List<Activity>.toExerciseWithBreaks(): List<ExercisesWithBreaks> {
+        val list = mutableListOf<ExercisesWithBreaks>()
+        this.forEachIndexed() { index, item ->
+            if (item.activityType != ActivityType.BREAK) {
+                list.add(
+                    ExercisesWithBreaks(
+                        list.lastIndex + 1,
+                        Exercise(
+                            item.activityId.toInt(),
+                            item.name,
+                            item.activityOrder,
+                            item.duration
+                        ),
+                        if (this.getOrNull(index + 1)?.activityType == ActivityType.BREAK) this.getOrNull(
+                            index + 1
+                        )?.duration
+                        else null, false
+                    )
+                )
+            }
+        }
+        return list
     }
 }
 
