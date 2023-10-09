@@ -2,12 +2,13 @@ package com.example.stretchy.features.traininglist.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
-import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
+import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
@@ -72,16 +73,26 @@ class TrainingListViewModel(
 
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        getExercisesWithBreak(activities).forEach { activity ->
+        this.activities.forEach { activity ->
             duration += activity.duration
         }
         return Training(
             this.id.toString(),
             this.name,
-            this.activities.size,
+            this.activities.getExercisesSize(),
             duration,
             this.trainingType.toTrainingType()
         )
+    }
+
+    private fun List<Activity>.getExercisesSize(): Int {
+        var size = 0
+        this.forEach {
+            if (it.activityType != ActivityType.BREAK) {
+                size++
+            }
+        }
+        return size
     }
 
     private fun TrainingType.toTrainingType(): Training.Type {

@@ -113,11 +113,13 @@ fun ExerciseAndBreakTabsWidget(
                                     exerciseWithBreakToEdit
                                 )
                             },
-                            onDurationChange = { currentExerciseWithBreak.exercise.duration = it
+                            onDurationChange = {
+                                currentExerciseWithBreak.exercise.duration = it
                                 isExerciseOrBreakChanged = isExerciseOrBreakChanged(
                                     currentExerciseWithBreak,
                                     exerciseWithBreakToEdit
-                                )},
+                                )
+                            },
                             isTimelessExercise = isTimelessExercise,
                             onCheckboxChange = {
                                 isTimelessExercise = !isTimelessExercise
@@ -182,8 +184,7 @@ fun ExerciseAndBreakTabsWidget(
                             ).show()
                         }
                     },
-                    isExerciseOrBreakBeingEdited = doesBreakExists || doesExerciseExists,
-                //    isExerciseOrBreakChanged = isExerciseOrBreakChanged,
+                    isExerciseOrBreakBeingEdited = doesExerciseExists
                 )
             }
         }
@@ -204,7 +205,7 @@ private fun ExerciseTab(
     var exerciseName: String by remember { mutableStateOf("") }
     var durationBeforeTimelessExerciseSwitch: Int by remember {
         mutableStateOf(
-            if (editedExercise.duration == 0) sliderMaxValue
+            if (editedExercise.duration == 0) sliderMinValue
             else editedExercise.duration
         )
     }

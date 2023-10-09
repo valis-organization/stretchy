@@ -93,7 +93,6 @@ fun Navigation(
                 navArgument("trainingType") {})
         ) {
             val trainingId = it.arguments?.getString("id")!!.toLong()
-            val trainingType = TrainingType.valueOf(it.arguments?.getString("trainingType")!!)
             val component =
                 CreateTrainingComponent.create(activityComponent, trainingId, trainingType)
             val vm = createCreateTrainingViewModel(
@@ -152,7 +151,6 @@ private fun createTrainingListViewModel(
     componentActivity: ComponentActivity,
     viewModelStoreOwner: ViewModelStoreOwner,
 ): TrainingListViewModel {
-    //val component = TrainingListComponent.create(activityComponent)
     val provider = trainingListComponent.viewModelProvider()
     val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
     return vm

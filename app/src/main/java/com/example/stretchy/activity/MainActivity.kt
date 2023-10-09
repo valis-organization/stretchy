@@ -10,14 +10,15 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,20 +41,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             BottomNavigationBar()
         }
-    }
-
-    @Preview(showBackground = true)
-    @Composable
-    fun DefaultPreview() {
-        /*       Navigation(
-                   activityComponent,
-                   {
-                       grantPermissions(WRITE_EXTERNAL_STORAGE)
-                   },
-                   {
-                       grantPermissions(READ_EXTERNAL_STORAGE)
-                   }
-               )*/
     }
 
     private fun grantPermissions(permission: String) {

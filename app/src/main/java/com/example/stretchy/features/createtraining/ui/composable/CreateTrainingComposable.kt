@@ -47,16 +47,8 @@ fun CreateTrainingComposable(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                val newList = exerciseList.toMutableList()
-                newList.add(
-                    ExercisesWithBreaks(
-                        exerciseList.lastIndex + 1,
-                        Exercise(),
-                        if (isAutoBreakButtonClicked) viewModel.getAutoBreakDuration() else 0,
-                        isExpanded = true
-                    )
-                )
-                exerciseList = newList
+                exerciseList =
+                    getListWithNewExercise(exerciseList, isAutoBreakButtonClicked, viewModel)
             }) {
                 Icon(
                     imageVector = Icons.Filled.Add,
@@ -146,4 +138,21 @@ private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
             ).show()
         }
     }
+}
+
+private fun getListWithNewExercise(
+    exerciseList: List<ExercisesWithBreaks>,
+    isAutoBreakButtonClicked: Boolean,
+    viewModel: CreateOrEditTrainingViewModel
+): MutableList<ExercisesWithBreaks> {
+    val newList = exerciseList.toMutableList()
+    newList.add(
+        ExercisesWithBreaks(
+            exerciseList.lastIndex + 1,
+            Exercise(),
+            if (isAutoBreakButtonClicked) viewModel.getAutoBreakDuration() else 0,
+            isExpanded = true
+        )
+    )
+    return newList
 }
