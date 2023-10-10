@@ -26,6 +26,7 @@ import com.example.stretchy.features.createtraining.ui.composable.buttons.Create
 import com.example.stretchy.features.createtraining.ui.composable.buttons.TrainingName
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.composable.list.RecyclerView
+import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 
 @Composable
@@ -43,17 +44,23 @@ fun CreateTrainingComposable(
     var exerciseList: List<ExercisesWithBreaks> by remember {
         mutableStateOf(mutableListOf())
     }
+    var isFloatingButtonVisible by remember {
+        mutableStateOf(true)
+    }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = {
-                exerciseList =
-                    getListWithNewExercise(exerciseList, isAutoBreakButtonClicked, viewModel)
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = stringResource(id = R.string.desc_plus_icon)
-                )
+            if (isFloatingButtonVisible) {
+                FloatingActionButton(onClick = {
+                    exerciseList =
+                        getListWithNewExercise(exerciseList, isAutoBreakButtonClicked, viewModel)
+                    isFloatingButtonVisible = false
+                }) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = stringResource(id = R.string.desc_plus_icon)
+                    )
+                }
             }
         }) { padding ->
         Box(
@@ -84,9 +91,20 @@ fun CreateTrainingComposable(
                             activitiesWithoutBreaks = exerciseList,
                             onListChange = {
                                 exerciseList = it
+                                viewModel.setExercises(exerciseList)
                                 if (exerciseList != state.exercisesWithBreaks) {
                                     isTrainingChanged = true
                                 }
+                            },
+                            addExerciseButtonHandler = object : AddExerciseButtonHandler{
+                                override fun hideButton() {
+                                    isFloatingButtonVisible = false
+                                }
+
+                                override fun showButton() {
+                                    isFloatingButtonVisible = true
+                                }
+
                             }
                         )
                     }

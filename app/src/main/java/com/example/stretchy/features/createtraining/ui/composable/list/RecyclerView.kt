@@ -8,11 +8,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 
 @Composable
 fun RecyclerView(
     activitiesWithoutBreaks: List<ExercisesWithBreaks>,
-    onListChange: (exerciseList: List<ExercisesWithBreaks>) -> Unit
+    onListChange: (exerciseList: List<ExercisesWithBreaks>) -> Unit,
+    addExerciseButtonHandler: AddExerciseButtonHandler
 ) {
     var recyclerView: RecyclerView? by remember { mutableStateOf(null) }
     val adapter: ExerciseListAdapter by remember {
@@ -20,7 +22,8 @@ fun RecyclerView(
             ExerciseListAdapter(
                 activitiesWithoutBreaks,
                 scrollToPosition = { recyclerView?.scrollToPosition(it) },
-                onListChange
+                onListChange,
+                addExerciseButtonHandler
             )
         )
     }

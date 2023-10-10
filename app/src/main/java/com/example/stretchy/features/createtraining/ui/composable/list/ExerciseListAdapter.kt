@@ -4,13 +4,14 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.stretchy.features.createtraining.ui.composable.list.listitem.ExerciseListItem
-import com.example.stretchy.features.createtraining.ui.composable.widget.OnListExerciseHandler
+import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 import java.util.*
 
 class ExerciseListAdapter(
     private var exercisesWithBreaks: List<ExercisesWithBreaks>,
     private val scrollToPosition: (position: Int) -> Unit,
-    private val onListChange: (exerciseList: List<ExercisesWithBreaks>) -> Unit
+    private val onListChange: (exerciseList: List<ExercisesWithBreaks>) -> Unit,
+    private val addExerciseButtonHandler: AddExerciseButtonHandler
 ) :
     RecyclerView.Adapter<ExerciseListAdapter.ViewHolder>() {
 
@@ -41,23 +42,10 @@ class ExerciseListAdapter(
                 },
                 onCollapse = {
                     hideExpandedItem(position)
+                    onListChange(exercisesWithBreaks)
                 },
                 isExpanded = item.isExpanded,
-                onListExerciseHandler = object : OnListExerciseHandler {
-                    override fun addExercise(exercise: ExercisesWithBreaks) {
-                        addNewExercise(exercise = exercise)
-                    }
-
-                    override fun editExercise(exercise: ExercisesWithBreaks) {
-                        editCurrentExercise(exercise = exercise)
-                    }
-
-                    override fun removeBreak(position: Int) {
-                        exercisesWithBreaks[position].nextBreakDuration = null
-                        onListChange(exercisesWithBreaks)
-                    }
-
-                }
+                addExerciseButtonHandler = addExerciseButtonHandler
             )
         }
     }
@@ -67,24 +55,21 @@ class ExerciseListAdapter(
     fun moveItem(from: Int, to: Int) {
         Collections.swap(exercisesWithBreaks, from, to)
         notifyItemMoved(from, to)
-        onListChange(exercisesWithBreaks)
     }
 
     fun submitList(newList: List<ExercisesWithBreaks>) {
         exercisesWithBreaks = newList
         notifyDataSetChanged()
-        getCurrentExpandedItemPosition()?.let {
-            if (exercisesWithBreaks.lastIndex != it) {
-                hideExpandedItem(it)
+        if (newList.isNotEmpty()) {
+            if (exercisesWithBreaks[exercisesWithBreaks.lastIndex].exercise.name == "") {
+                scrollToPosition(exercisesWithBreaks.lastIndex)
+            }
+            getCurrentExpandedItemPosition()?.let {
+                if (exercisesWithBreaks.lastIndex != it) {
+                    hideExpandedItem(it)
+                }
             }
         }
-        scrollToPosition(exercisesWithBreaks.lastIndex)
-    }
-
-    fun addNewExercise(exercise: ExercisesWithBreaks) {
-        val newList = exercisesWithBreaks.toMutableList()
-        newList.add(exercise)
-        exercisesWithBreaks = newList
         onListChange(exercisesWithBreaks)
     }
 
@@ -98,9 +83,10 @@ class ExerciseListAdapter(
         notifyItemRemoved(position)
     }
 
-    fun removeBlankItem() {
+    private fun removeBlankItem() {
         if (exercisesWithBreaks[exercisesWithBreaks.lastIndex].exercise.name == "") {
             removeItem(exercisesWithBreaks.lastIndex)
+            addExerciseButtonHandler.showButton()
         }
     }
 
@@ -112,18 +98,10 @@ class ExerciseListAdapter(
     private fun expandItem(position: Int) {
         exercisesWithBreaks[position].isExpanded = true
         notifyItemChanged(position)
-        scrollToPosition(position)
     }
 
     private fun hideExpandedItem(position: Int) {
         exercisesWithBreaks[position].isExpanded = false
         notifyItemChanged(position)
-    }
-
-    private fun editCurrentExercise(exercise: ExercisesWithBreaks) {
-        val newList = exercisesWithBreaks.toMutableList()
-        newList[exercise.listId] = exercise
-        exercisesWithBreaks = newList
-        onListChange(exercisesWithBreaks)
     }
 }

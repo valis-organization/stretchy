@@ -33,15 +33,16 @@ class CreateOrEditTrainingViewModel(
                 val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
 
                 with(trainingWithActivities) {
+                    val exerciseList = activities.toExerciseWithBreaks()
                     _uiState.emit(
                         CreateTrainingUiState.Success(
                             trainingId,
                             true,
                             name,
-                            activities.toExerciseWithBreaks(),
+                            exerciseList,
                             trainingType,
                             false,
-                            isCreateTrainingButtonVisible(name),
+                            isCreateTrainingButtonVisible(name, exerciseList),
                             isAutomaticBreakButtonClicked = true
                         )
                     )
@@ -92,11 +93,32 @@ class CreateOrEditTrainingViewModel(
                 _uiState.value = copy(
                     currentName = trainingName,
                     saveButtonCanBeClicked = isCreateTrainingButtonVisible(
-                        trainingName
+                        trainingName,
+                        exercisesWithBreaks
                     ),
                     isTrainingChanged = isTrainingChanged(
                         trainingId,
                         trainingName,
+                        exercisesWithBreaks
+                    )
+                )
+            }
+        }
+    }
+
+    fun setExercises(exerciseList: List<ExercisesWithBreaks>) {
+        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
+        with(stateSuccess) {
+            viewModelScope.launch {
+                _uiState.value = copy(
+                    exercisesWithBreaks = exerciseList,
+                    saveButtonCanBeClicked = isCreateTrainingButtonVisible(
+                        currentName,
+                        exerciseList
+                    ),
+                    isTrainingChanged = isTrainingChanged(
+                        trainingId,
+                        currentName,
                         exercisesWithBreaks
                     )
                 )
@@ -159,9 +181,10 @@ class CreateOrEditTrainingViewModel(
     }
 
     private fun isCreateTrainingButtonVisible(
-        currentName: String
+        currentName: String,
+        exerciseList: List<ExercisesWithBreaks>
     ) =
-        currentName.isNotBlank()
+        currentName.isNotBlank() && exerciseList.size >= 2 && exerciseList[exerciseList.lastIndex].exercise.name.isNotBlank()
 
     private suspend fun isTrainingChanged(
         trainingId: Long?,

@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -30,8 +31,11 @@ fun CollapsedItem(
             .fillMaxSize()
             .height(72.dp)
             .padding(8.dp)
-            .background(Color(BananaMania.toArgb()))
-            .clip(RoundedCornerShape(10.dp)),
+            .clip(RoundedCornerShape(10.dp))
+            .clickable {
+                onExpand()
+            }
+            .background(Color(BananaMania.toArgb())),
         contentAlignment = Alignment.Center
     ) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.CenterEnd) {
@@ -39,10 +43,7 @@ fun CollapsedItem(
                 Modifier
                     .fillMaxHeight()
                     .width(64.dp)
-                    .background(Color.Gray)
-                    .clickable {
-                        onExpand()
-                    },
+                    .background(Gray),
                 contentAlignment = Alignment.Center
             ) {
                 if (exerciseWithBreaks.nextBreakDuration != 0 && exerciseWithBreaks.nextBreakDuration != null) {
@@ -58,10 +59,7 @@ fun CollapsedItem(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp)
-                    .clickable {
-                        onExpand()
-                    },
+                    .padding(start = 16.dp, end = 40.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {

@@ -6,16 +6,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
+import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 import com.example.stretchy.features.createtraining.ui.composable.widget.ExerciseAndBreakTabsWidget
-import com.example.stretchy.features.createtraining.ui.composable.widget.OnListExerciseHandler
 
 @Composable
 fun ExpandedItem(
     exerciseWithBreaks: ExercisesWithBreaks,
     onCollapse: () -> Unit,
-    onListExerciseHandler: OnListExerciseHandler
+    addExerciseButtonHandler: AddExerciseButtonHandler
 ) {
-    var layoutHeight by remember { mutableStateOf(300.dp) }
+    var layoutHeight by remember { mutableStateOf(if (exerciseWithBreaks.exercise.duration == 0) 230.dp else 300.dp) }
 
     Box(androidx.compose.ui.Modifier.height(layoutHeight)) {
         ExerciseAndBreakTabsWidget(
@@ -30,7 +30,8 @@ fun ExpandedItem(
                     ActivityType.TIMELESS_EXERCISE -> 230.dp
                     ActivityType.BREAK -> 230.dp
                 }
-            }, onListExerciseHandler = onListExerciseHandler
+            },
+            addExerciseButtonHandler = addExerciseButtonHandler
         )
     }
 }

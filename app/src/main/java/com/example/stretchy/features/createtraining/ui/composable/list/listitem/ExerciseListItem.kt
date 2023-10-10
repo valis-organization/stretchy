@@ -2,7 +2,7 @@ package com.example.stretchy.features.createtraining.ui.composable.list.listitem
 
 import androidx.compose.runtime.Composable
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
-import com.example.stretchy.features.createtraining.ui.composable.widget.OnListExerciseHandler
+import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 
 @Composable
 fun ExerciseListItem(
@@ -11,7 +11,7 @@ fun ExerciseListItem(
     isExpanded: Boolean,
     onExpand: () -> Unit,
     onCollapse: () -> Unit,
-    onListExerciseHandler: OnListExerciseHandler
+    addExerciseButtonHandler: AddExerciseButtonHandler
 ) {
 
     if (!isExpanded) {
@@ -19,6 +19,10 @@ fun ExerciseListItem(
             onExpand()
         }
     } else {
-        ExpandedItem(exerciseWithBreaks, onCollapse, onListExerciseHandler)
+        ExpandedItem(
+            exerciseWithBreaks,
+            onCollapse,
+            addExerciseButtonHandler
+        )
     }
 }

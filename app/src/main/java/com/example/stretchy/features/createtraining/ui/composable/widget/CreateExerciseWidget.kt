@@ -1,6 +1,5 @@
 package com.example.stretchy.features.createtraining.ui.composable.widget
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,11 +7,12 @@ import androidx.compose.material.*
 import androidx.compose.material.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment.Companion.CenterVertically
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -29,19 +29,19 @@ import com.example.stretchy.theme.BananaMania
 import com.example.stretchy.theme.Caramel
 import com.example.stretchy.theme.Purple500
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ExerciseAndBreakTabsWidget(
     onAddOrEditButtonClick: () -> Unit,
     onTabSizeChange: (activityType: ActivityType) -> Unit,
-    onListExerciseHandler: OnListExerciseHandler,
-    exerciseWithBreakToEdit: ExercisesWithBreaks
+    addExerciseButtonHandler: AddExerciseButtonHandler,
+    exerciseWithBreakToEdit: ExercisesWithBreaks,
 ) {
     var selectedTabIndex by remember { mutableStateOf(0) }
     val tabs =
         listOf(stringResource(id = R.string.exercise), stringResource(id = R.string.exercise_break))
 
     val doesExerciseExists = exerciseWithBreakToEdit.exercise.name != ""
-    val doesBreakExists = exerciseWithBreakToEdit.nextBreakDuration != null
 
     val currentExerciseWithBreak by remember {
         mutableStateOf(exerciseWithBreakToEdit)
@@ -49,19 +49,6 @@ fun ExerciseAndBreakTabsWidget(
     var isTimelessExercise: Boolean by remember {
         mutableStateOf(exerciseWithBreakToEdit.exercise.duration == 0)
     }
-    var isExerciseOrBreakChanged by remember {
-        mutableStateOf(
-            isExerciseChanged(
-                currentExerciseWithBreak.exercise,
-                exerciseWithBreakToEdit.exercise
-            ) || isBreakChanged(
-                currentExerciseWithBreak.nextBreakDuration,
-                exerciseWithBreakToEdit.nextBreakDuration
-            )
-        )
-    }
-
-    val context = LocalContext.current
 
     Card(
         elevation = 4.dp,
@@ -107,18 +94,16 @@ fun ExerciseAndBreakTabsWidget(
                         ExerciseTab(
                             editedExercise = currentExerciseWithBreak.exercise,
                             onNameChange = {
-                                currentExerciseWithBreak.exercise.name = it
-                                isExerciseOrBreakChanged = isExerciseOrBreakChanged(
-                                    currentExerciseWithBreak,
-                                    exerciseWithBreakToEdit
-                                )
+
+                                if (it.isNotBlank()) {
+                                    currentExerciseWithBreak.exercise.name = it
+                                    addExerciseButtonHandler.showButton()
+                                } else {
+                                    addExerciseButtonHandler.hideButton()
+                                }
                             },
                             onDurationChange = {
                                 currentExerciseWithBreak.exercise.duration = it
-                                isExerciseOrBreakChanged = isExerciseOrBreakChanged(
-                                    currentExerciseWithBreak,
-                                    exerciseWithBreakToEdit
-                                )
                             },
                             isTimelessExercise = isTimelessExercise,
                             onCheckboxChange = {
@@ -149,39 +134,12 @@ fun ExerciseAndBreakTabsWidget(
                         onTabSizeChange(ActivityType.BREAK)
                     }
                 }
-
+                val keyboardController = LocalSoftwareKeyboardController.current
                 AddOrEditExerciseButton(
                     onClick = {
                         if (currentExerciseWithBreak.exercise.name.isNotEmpty()) {
                             onAddOrEditButtonClick()
-                            if (doesExerciseExists) {
-                                if (isExerciseOrBreakBeingEdited(
-                                        currentExerciseWithBreak,
-                                        exerciseWithBreakToEdit,
-                                        doesBreakExists
-                                    )
-                                ) {
-                                    onListExerciseHandler.editExercise(currentExerciseWithBreak)
-                                    Toast.makeText(
-                                        context,
-                                        R.string.exercise_edited,
-                                        Toast.LENGTH_LONG
-                                    )
-                                        .show()
-                                } else if (isBreakChanged(
-                                        currentExerciseWithBreak.nextBreakDuration,
-                                        exerciseWithBreakToEdit.nextBreakDuration
-                                    ) && currentExerciseWithBreak.nextBreakDuration == 0
-                                ) {
-                                    onListExerciseHandler.removeBreak(currentExerciseWithBreak.listId)
-                                }
-                            }
-                        } else {
-                            Toast.makeText(
-                                context,
-                                R.string.specify_exercise_name,
-                                Toast.LENGTH_LONG
-                            ).show()
+                            keyboardController?.hide()
                         }
                     },
                     isExerciseOrBreakBeingEdited = doesExerciseExists
@@ -308,44 +266,6 @@ private fun BreakTab(
         }
     }
 }
-
-private fun isExerciseChanged(currentExercise: Exercise, exerciseToEdit: Exercise) =
-    currentExercise.name != exerciseToEdit.name || currentExercise.duration != exerciseToEdit.duration
-
-private fun isBreakChanged(currentBreakDuration: Int?, breakToEditDuration: Int?) =
-    currentBreakDuration != breakToEditDuration
-
-fun isExerciseOrBreakChanged(
-    currentExerciseWithBreak: ExercisesWithBreaks,
-    exerciseWithBreakToEdit: ExercisesWithBreaks
-) = isExerciseChanged(
-    currentExerciseWithBreak.exercise,
-    exerciseWithBreakToEdit.exercise
-) || isBreakChanged(
-    currentExerciseWithBreak.nextBreakDuration,
-    exerciseWithBreakToEdit.nextBreakDuration
-)
-
-private fun isBreakInitialized(currentBreakDuration: Int?) =
-    currentBreakDuration != 0 && currentBreakDuration != null
-
-private fun isExerciseOrBreakBeingEdited(
-    currentExercise: ExercisesWithBreaks,
-    exerciseToEdit: ExercisesWithBreaks,
-    doesBreakExists: Boolean
-): Boolean {
-    return isExerciseChanged(
-        currentExercise.exercise,
-        exerciseToEdit.exercise
-    ) || (!doesBreakExists && isBreakInitialized(
-        currentExercise.nextBreakDuration
-    )) || (isBreakInitialized(currentExercise.nextBreakDuration) && isBreakChanged(
-        currentExercise.nextBreakDuration,
-        exerciseToEdit.nextBreakDuration
-    )
-            )
-}
-
 fun toDisplayableLength(exerciseDuration: Int): String {
     return if (exerciseDuration >= 60) {
         val mins = exerciseDuration / 60

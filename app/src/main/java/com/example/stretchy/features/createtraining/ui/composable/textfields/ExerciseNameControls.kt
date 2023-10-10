@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -21,11 +24,13 @@ import androidx.compose.ui.unit.sp
 import com.example.stretchy.R
 import com.example.stretchy.theme.WhiteSmoke
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ExerciseNameControls(
     currentName: String,
     onNameEntered: (value: String) -> Unit
 ) {
+    val keyboardController = LocalSoftwareKeyboardController.current
     var exerciseName = currentName
     Text(
         modifier = Modifier
@@ -56,6 +61,11 @@ fun ExerciseNameControls(
                 exerciseName = it
                 onNameEntered(it)
             },
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    keyboardController?.hide() // Hide the keyboard when the "Done" action is triggered
+                }
+            )
         )
     }
 }
