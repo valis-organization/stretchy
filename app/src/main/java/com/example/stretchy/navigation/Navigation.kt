@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -35,20 +36,7 @@ fun Navigation(
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    when (navBackStackEntry?.destination?.route) {
-        Screen.ExerciseCreatorScreen.route -> {
-            hideBottomNavBar()
-        }
-        Screen.StretchingListScreen.route -> {
-            showBottomNavBar()
-        }
-        Screen.TrainingListScreen.route -> {
-            showBottomNavBar()
-        }
-        Screen.ExecuteTrainingScreen.route -> {
-            hideBottomNavBar()
-        }
-    }
+    handleBottomNavBarVisibility(navBackStackEntry, hideBottomNavBar, showBottomNavBar)
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(
@@ -154,4 +142,24 @@ private fun createTrainingListViewModel(
     val provider = trainingListComponent.viewModelProvider()
     val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
     return vm
+}
+
+private fun handleBottomNavBarVisibility(
+    navBackStackEntry: NavBackStackEntry?, hideBottomNavBar: () -> Unit,
+    showBottomNavBar: () -> Unit
+) {
+    when (navBackStackEntry?.destination?.route) {
+        Screen.ExerciseCreatorScreen.route -> {
+            hideBottomNavBar()
+        }
+        Screen.StretchingListScreen.route -> {
+            showBottomNavBar()
+        }
+        Screen.TrainingListScreen.route -> {
+            showBottomNavBar()
+        }
+        Screen.ExecuteTrainingScreen.route -> {
+            hideBottomNavBar()
+        }
+    }
 }
