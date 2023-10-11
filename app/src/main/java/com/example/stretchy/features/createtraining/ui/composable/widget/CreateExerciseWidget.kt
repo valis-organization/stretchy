@@ -22,7 +22,7 @@ import com.example.stretchy.R
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.createtraining.ui.composable.ExerciseNameControls
 import com.example.stretchy.features.createtraining.ui.composable.buttons.AddOrEditExerciseButton
-import com.example.stretchy.features.createtraining.ui.composable.buttons.AddOrSubtractButtons
+import com.example.stretchy.features.createtraining.ui.composable.buttons.IncreaseOrDecreaseActivityDurationButtons
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.theme.BananaMania
@@ -217,7 +217,7 @@ private fun ExerciseTab(
             valueRange = sliderMinValue.toFloat()..sliderMaxValue.toFloat(),
             modifier = Modifier.padding(top = 0.dp, bottom = 0.dp)
         )
-        AddOrSubtractButtons { changeValue ->
+        IncreaseOrDecreaseActivityDurationButtons { changeValue ->
             if (exerciseDuration + changeValue in sliderMinValue..300) {
                 exerciseDuration += changeValue
                 onDurationChange(exerciseDuration)
@@ -259,7 +259,7 @@ private fun BreakTab(
         },
         valueRange = sliderMinValue.toFloat()..sliderMaxValue.toFloat(),
     )
-    AddOrSubtractButtons { changeValue ->
+    IncreaseOrDecreaseActivityDurationButtons { changeValue ->
         if (breakDuration + changeValue in sliderMinValue..sliderMaxValue) {
             breakDuration += changeValue
             onDurationChange(breakDuration)

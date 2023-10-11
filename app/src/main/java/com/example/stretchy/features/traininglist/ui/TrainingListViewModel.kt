@@ -79,13 +79,13 @@ class TrainingListViewModel(
         return Training(
             this.id.toString(),
             this.name,
-            this.activities.getExercisesSize(),
+            this.activities.getExercisesCount(),
             duration,
             this.trainingType.toTrainingType()
         )
     }
 
-    private fun List<Activity>.getExercisesSize(): Int {
+    private fun List<Activity>.getExercisesCount(): Int {
         var size = 0
         this.forEach {
             if (it.activityType != ActivityType.BREAK) {

@@ -11,8 +11,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 
 @Composable
-fun RecyclerView(
-    activitiesWithoutBreaks: List<ExercisesWithBreaks>,
+fun ActivitiesList(
+    activitiesWithBreaks: List<ExercisesWithBreaks>,
     onListChange: (exerciseList: List<ExercisesWithBreaks>) -> Unit,
     addExerciseButtonHandler: AddExerciseButtonHandler
 ) {
@@ -20,21 +20,21 @@ fun RecyclerView(
     val adapter: ExerciseListAdapter by remember {
         mutableStateOf(
             ExerciseListAdapter(
-                activitiesWithoutBreaks,
+                activitiesWithBreaks,
                 scrollToPosition = { recyclerView?.scrollToPosition(it) },
                 onListChange,
                 addExerciseButtonHandler
             )
         )
     }
-    adapter.submitList(activitiesWithoutBreaks)
+    adapter.submitList(activitiesWithBreaks)
 
     val dragAndReorderItemTouchHelper by lazy {
-        val simpleItemTouchCallback = getDragAndReorderSimpleItemCallback(adapter)
+        val simpleItemTouchCallback = dragAndDropSimpleItemCallback(adapter)
         ItemTouchHelper(simpleItemTouchCallback)
     }
     val deleteItemTouchHelper by lazy {
-        val simpleItemTouchCallback = getSwipeToDeleteSimpleItemCallback(adapter)
+        val simpleItemTouchCallback = swipeToDeleteSimpleItemCallback(adapter)
         ItemTouchHelper(simpleItemTouchCallback)
     }
 
@@ -59,7 +59,7 @@ fun RecyclerView(
     )
 }
 
-private fun getDragAndReorderSimpleItemCallback(adapter: ExerciseListAdapter) =
+private fun dragAndDropSimpleItemCallback(adapter: ExerciseListAdapter) =
     object : ItemTouchHelper.SimpleCallback(
         ItemTouchHelper.UP or
                 ItemTouchHelper.DOWN, 0
@@ -83,7 +83,7 @@ private fun getDragAndReorderSimpleItemCallback(adapter: ExerciseListAdapter) =
         }
     }
 
-private fun getSwipeToDeleteSimpleItemCallback(adapter: ExerciseListAdapter) =
+private fun swipeToDeleteSimpleItemCallback(adapter: ExerciseListAdapter) =
     object : ItemTouchHelper.SimpleCallback(
         0,
         ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT

@@ -5,7 +5,7 @@ import com.example.stretchy.features.createtraining.ui.composable.list.Exercises
 import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 
 @Composable
-fun ExerciseListItem(
+fun ActivityListItem(
     exerciseWithBreaks: ExercisesWithBreaks,
     position: Int,
     isExpanded: Boolean,
@@ -15,7 +15,7 @@ fun ExerciseListItem(
 ) {
 
     if (!isExpanded) {
-        CollapsedItem(exerciseWithBreaks = exerciseWithBreaks, position = position) {
+        CollapsedActivityItem(exerciseWithBreaks = exerciseWithBreaks, position = position) {
             onExpand()
         }
     } else {

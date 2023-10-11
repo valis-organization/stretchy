@@ -3,7 +3,7 @@ package com.example.stretchy.features.createtraining.ui.composable.list
 import android.view.ViewGroup
 import androidx.compose.ui.platform.ComposeView
 import androidx.recyclerview.widget.RecyclerView
-import com.example.stretchy.features.createtraining.ui.composable.list.listitem.ExerciseListItem
+import com.example.stretchy.features.createtraining.ui.composable.list.listitem.ActivityListItem
 import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 import java.util.*
 
@@ -30,7 +30,7 @@ class ExerciseListAdapter(
 
         val item = exercisesWithBreaks[position]
         holder.composeView.setContent {
-            ExerciseListItem(
+            ActivityListItem(
                 item,
                 position = position,
                 onExpand = {

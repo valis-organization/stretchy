@@ -21,7 +21,7 @@ import com.example.stretchy.features.createtraining.ui.composable.widget.toDispl
 import com.example.stretchy.theme.BananaMania
 
 @Composable
-fun CollapsedItem(
+fun CollapsedActivityItem(
     exerciseWithBreaks: ExercisesWithBreaks,
     position: Int,
     onExpand: () -> Unit

@@ -8,7 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun AddOrSubtractButtons(onTextEntered: (value: Int) -> Unit) {
+fun IncreaseOrDecreaseActivityDurationButtons(onTextEntered: (value: Int) -> Unit) {
     val modifier = Modifier
         .width(44.dp)
         .padding(end = 6.dp)

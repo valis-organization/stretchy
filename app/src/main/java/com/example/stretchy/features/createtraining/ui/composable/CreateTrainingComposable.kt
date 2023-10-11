@@ -25,7 +25,7 @@ import com.example.stretchy.features.createtraining.ui.composable.buttons.AutoBr
 import com.example.stretchy.features.createtraining.ui.composable.buttons.CreateOrEditTrainingButton
 import com.example.stretchy.features.createtraining.ui.composable.buttons.TrainingName
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
-import com.example.stretchy.features.createtraining.ui.composable.list.RecyclerView
+import com.example.stretchy.features.createtraining.ui.composable.list.ActivitiesList
 import com.example.stretchy.features.createtraining.ui.composable.widget.AddExerciseButtonHandler
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 
@@ -87,8 +87,8 @@ fun CreateTrainingComposable(
                             exerciseList = state.exercisesWithBreaks
                             isListInitialized = true
                         }
-                        RecyclerView(
-                            activitiesWithoutBreaks = exerciseList,
+                        ActivitiesList(
+                            activitiesWithBreaks = exerciseList,
                             onListChange = {
                                 exerciseList = it
                                 viewModel.setExercises(exerciseList)
