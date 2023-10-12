@@ -11,7 +11,6 @@ import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -26,32 +25,30 @@ class TrainingListViewModel(
     val uiState: StateFlow<TrainingListUiState> = _uiState
 
     init {
-        fetchTrainingList()
+        viewModelScope.launch {
+            fetchTrainingList()
+        }
     }
 
-    private fun fetchTrainingList() {
+    private suspend fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
-        viewModelScope.launch(Dispatchers.IO) {
-            val trainingWithActivityList = repository.getTrainingsWithActivities()
-            if (trainingWithActivityList.isEmpty()) {
+        val trainingWithActivityList = repository.getTrainingsWithActivities()
+        if (trainingWithActivityList.isEmpty()) {
+            _uiState.value = TrainingListUiState.Empty
+        } else {
+            val list: List<Training> = trainingWithActivityList.mapToTraining()
+            if (list.isEmpty()) {
                 _uiState.value = TrainingListUiState.Empty
             } else {
-                val list: List<Training> = trainingWithActivityList.mapToTraining()
-                if (list.isEmpty()) {
-                    _uiState.value = TrainingListUiState.Empty
-                } else {
-                    _uiState.value =
-                        TrainingListUiState.Loaded(list)
-                }
-
+                _uiState.value =
+                    TrainingListUiState.Loaded(list)
             }
+
         }
     }
 
     suspend fun import() {
-        viewModelScope.launch {
-            dataImporterImpl.importData()
-        }
+        dataImporterImpl.importData()
         fetchTrainingList()
     }
 
@@ -72,17 +69,25 @@ class TrainingListViewModel(
     }
 
     private fun TrainingWithActivity.toTraining(): Training {
-        var duration = 0
-        this.activities.forEach { activity ->
-            duration += activity.duration
-        }
         return Training(
             this.id.toString(),
             this.name,
             this.activities.getExercisesCount(),
-            duration,
+            calculateTrainingDuration(activities),
             this.trainingType.toTrainingType()
         )
+    }
+
+    private fun calculateTrainingDuration(activities: List<Activity>): Int {
+        var duration = 0
+        activities.forEach { activity ->
+            duration += if (activity.duration == 0 || activity.activityType == ActivityType.TIMELESS_EXERCISE) {
+                TIMELESS_EXERCISE_ESTIMATED_DURATION_SECS
+            } else {
+                activity.duration
+            }
+        }
+        return duration
     }
 
     private fun List<Activity>.getExercisesCount(): Int {
@@ -103,8 +108,10 @@ class TrainingListViewModel(
     }
 
     fun deleteTraining(training: Training) {
-        viewModelScope.launch { repository.deleteTrainingById(training.id.toLong()) }
-        fetchTrainingList()
+        viewModelScope.launch {
+            repository.deleteTrainingById(training.id.toLong())
+            fetchTrainingList()
+        }
     }
 
     fun copyTraining(training: Training) {
@@ -121,11 +128,12 @@ class TrainingListViewModel(
                     )
                 }
             }
+            fetchTrainingList()
         }
-        fetchTrainingList()
     }
 
     companion object {
         const val COPY = " copy"
+        const val TIMELESS_EXERCISE_ESTIMATED_DURATION_SECS = 90
     }
 }

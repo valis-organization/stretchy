@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 
 class RepositoryImpl(private val db: AppDatabase) : Repository {
     override suspend fun addTrainingWithActivities(training: TrainingWithActivity) {
-        withContext(Dispatchers.IO){
+        withContext(Dispatchers.IO) {
             val tId = generateTrainingId()
             addTrainingWithActivitiesToDb(training.activities, tId)
             with(training) {
@@ -23,7 +23,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
         trainingId: Long,
         editedTraining: TrainingWithActivity
     ) {
-        withContext(Dispatchers.IO){
+        withContext(Dispatchers.IO) {
             deleteActivitiesFromTraining(
                 getTrainingWithActivitiesById(trainingId).activities,
                 trainingId
@@ -45,20 +45,19 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
 
     override suspend fun getTrainingsWithActivities(): List<TrainingWithActivity> =
         withContext(Dispatchers.IO) {
-            db.trainingWithActivitiesDao().getTrainings().map { activity ->
-                map(activity)
+            db.trainingWithActivitiesDao().getTrainings().map { training ->
+                training.mapToTrainingWithActivity()
             }
         }
 
     override suspend fun getTrainingWithActivitiesById(id: Long): TrainingWithActivity =
         withContext(Dispatchers.IO) {
-            val activity = db.trainingWithActivitiesDao().getTrainingsById(id)
-            map(activity)
+            val training = db.trainingWithActivitiesDao().getTrainingsById(id)
+            training.mapToTrainingWithActivity()
         }
 
-
-    private fun map(training: TrainingWithActivitiesEntity): TrainingWithActivity {
-        val trainingId = training.training.trainingId
+    private fun TrainingWithActivitiesEntity.mapToTrainingWithActivity(): TrainingWithActivity {
+        val trainingId = this.training.trainingId
 
         val activityOrderMap: MutableMap<Long, MutableList<Int>> =
             db.trainingWithActivitiesDao().getTrainingsActivitiesByTrainingId(trainingId)
@@ -68,7 +67,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
                         addAll(values.map { it.activityOrder })
                     }
                 }.toMutableMap()
-        val activitiesMapped: List<Activity> = training.activities
+        val activitiesMapped: List<Activity> = this.activities
             .map {
                 val activityOrder = activityOrderMap[it.activityId]!!.first()
                 activityOrderMap[it.activityId]!!.removeAt(0)
@@ -77,7 +76,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
                         this.activityId = it.activityId
                     }
             }
-        with(training.training) {
+        with(this.training) {
             return TrainingWithActivity(
                 name,
                 trainingType,
