@@ -59,7 +59,12 @@ fun TrainingListItemComposable(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            TrainingName(name = training.name)
+                            Text(
+                                text = training.name,
+                                fontSize = 22.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.weight(1f)
+                            )
                             Row {
                                 EditIconButton(
                                     navController = navController,
@@ -79,15 +84,6 @@ fun TrainingListItemComposable(
             }
         )
     }
-}
-
-@Composable
-private fun TrainingName(name: String) {
-    Text(
-        text = name,
-        fontSize = 22.sp,
-        fontWeight = FontWeight.Bold
-    )
 }
 
 @Composable
