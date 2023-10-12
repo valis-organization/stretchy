@@ -3,7 +3,7 @@
     <string name="dummy_button">Dummy Button</string>
     <string name="dummy_content">DUMMY\nCONTENT</string>
     <string name="title_activity_main">MainActivity</string>
-    <string name="total_time">Total time</string>
+    <string name="estimated_time">Estimated time</string>
     <string name="exercises">Exercises</string>
     <string name="exercises_not_added">You did not add any exercises yet!</string>
     <string name="do_it_by_add_button">Do it by clicking + button</string>
