@@ -2,10 +2,13 @@ package com.example.stretchy
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.stretchy.activity.di.ActivityComponent
@@ -25,20 +28,50 @@ import com.example.stretchy.features.traininglist.ui.composable.TrainingListComp
 fun Navigation(
     activityComponent: ActivityComponent,
     onExportClick: () -> Unit,
-    onImportClick: () -> Unit
+    onImportClick: () -> Unit,
+    startDestination: String,
+    hideBottomNavBar: () -> Unit,
+    showBottomNavBar: () -> Unit,
+    trainingType: TrainingType
 ) {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = Screen.TrainingListScreen.route) {
-        composable(route = Screen.TrainingListScreen.route) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    handleBottomNavBarVisibility(navBackStackEntry, hideBottomNavBar, showBottomNavBar)
+
+    NavHost(navController = navController, startDestination = startDestination) {
+        composable(
+            route = Screen.TrainingListScreen.route,
+        ) {
+            val component = TrainingListComponent.create(activityComponent, trainingType)
             val vm = createTrainingListViewModel(
-                activityComponent,
+                component,
+                activityComponent.activity(),
                 LocalViewModelStoreOwner.current!!
             )
             TrainingListComposable(
                 navController = navController,
                 viewModel = vm,
                 onExportClick = onExportClick,
-                onImportClick = onImportClick
+                onImportClick = onImportClick,
+                trainingType = trainingType
+            )
+        }
+
+        composable(
+            route = Screen.StretchingListScreen.route
+        ) {
+            val component = TrainingListComponent.create(activityComponent, trainingType)
+            val vm = createTrainingListViewModel(
+                component,
+                activityComponent.activity(),
+                LocalViewModelStoreOwner.current!!
+            )
+            TrainingListComposable(
+                navController = navController,
+                viewModel = vm,
+                onExportClick = onExportClick,
+                onImportClick = onImportClick,
+                trainingType = trainingType
             )
         }
         composable(
@@ -48,7 +81,6 @@ fun Navigation(
                 navArgument("trainingType") {})
         ) {
             val trainingId = it.arguments?.getString("id")!!.toLong()
-            val trainingType = TrainingType.valueOf(it.arguments?.getString("trainingType")!!)
             val component =
                 CreateTrainingComponent.create(activityComponent, trainingId, trainingType)
             val vm = createCreateTrainingViewModel(
@@ -62,7 +94,7 @@ fun Navigation(
             )
         }
         composable(
-            route = "executeTraining?id={id}",
+            route = Screen.ExecuteTrainingScreen.route,
             arguments = listOf(navArgument("id") { defaultValue = "-1" })
         ) {
             val trainingId = it.arguments?.getString("id")!!.toLong()
@@ -103,12 +135,31 @@ private fun createCreateTrainingViewModel(
 }
 
 private fun createTrainingListViewModel(
-    activityComponent: ActivityComponent,
+    trainingListComponent: TrainingListComponent,
+    componentActivity: ComponentActivity,
     viewModelStoreOwner: ViewModelStoreOwner,
 ): TrainingListViewModel {
-    val component = TrainingListComponent.create(activityComponent)
-    val provider = component.viewModelProvider()
-    val vm by activityComponent.activity()
-        .daggerViewModel(owner = viewModelStoreOwner) { provider }
+    val provider = trainingListComponent.viewModelProvider()
+    val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
     return vm
+}
+
+private fun handleBottomNavBarVisibility(
+    navBackStackEntry: NavBackStackEntry?, hideBottomNavBar: () -> Unit,
+    showBottomNavBar: () -> Unit
+) {
+    when (navBackStackEntry?.destination?.route) {
+        Screen.ExerciseCreatorScreen.route -> {
+            hideBottomNavBar()
+        }
+        Screen.StretchingListScreen.route -> {
+            showBottomNavBar()
+        }
+        Screen.TrainingListScreen.route -> {
+            showBottomNavBar()
+        }
+        Screen.ExecuteTrainingScreen.route -> {
+            hideBottomNavBar()
+        }
+    }
 }

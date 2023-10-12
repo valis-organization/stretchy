@@ -2,12 +2,13 @@ package com.example.stretchy.features.traininglist.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
-import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
+import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +19,8 @@ import kotlinx.coroutines.launch
 class TrainingListViewModel(
     val repository: Repository,
     private val dataImporterImpl: DataImporterImpl,
-    private val dataExporterImpl: DataExporterImpl
+    private val dataExporterImpl: DataExporterImpl,
+    private val trainingType: TrainingType
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState
@@ -34,8 +36,14 @@ class TrainingListViewModel(
             if (trainingWithActivityList.isEmpty()) {
                 _uiState.value = TrainingListUiState.Empty
             } else {
-                _uiState.value =
-                    TrainingListUiState.Loaded(trainingWithActivityList.map { it.toTraining() })
+                val list: List<Training> = trainingWithActivityList.mapToTraining()
+                if (list.isEmpty()) {
+                    _uiState.value = TrainingListUiState.Empty
+                } else {
+                    _uiState.value =
+                        TrainingListUiState.Loaded(list)
+                }
+
             }
         }
     }
@@ -53,18 +61,38 @@ class TrainingListViewModel(
         }
     }
 
+    private fun List<TrainingWithActivity>.mapToTraining(): List<Training> {
+        val list = mutableListOf<Training>()
+        this.forEach {
+            if (it.trainingType == trainingType) {
+                list.add(it.toTraining())
+            }
+        }
+        return list
+    }
+
     private fun TrainingWithActivity.toTraining(): Training {
         var duration = 0
-        getExercisesWithBreak(activities).forEach { activity ->
+        this.activities.forEach { activity ->
             duration += activity.duration
         }
         return Training(
             this.id.toString(),
             this.name,
-            this.activities.size,
+            this.activities.getExercisesCount(),
             duration,
             this.trainingType.toTrainingType()
         )
+    }
+
+    private fun List<Activity>.getExercisesCount(): Int {
+        var size = 0
+        this.forEach {
+            if (it.activityType != ActivityType.BREAK) {
+                size++
+            }
+        }
+        return size
     }
 
     private fun TrainingType.toTrainingType(): Training.Type {
