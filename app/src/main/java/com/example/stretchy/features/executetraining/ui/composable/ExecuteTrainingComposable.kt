@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -62,12 +63,11 @@ fun ExecuteTrainingComposable(
             navController.popBackStack()
         }
     }
-    var disableExerciseAnimation =
-        true //The first exercise cannot be animated because at the beginning of training the timer is stopped
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     var direction by remember { mutableStateOf(-1) }
+    var isTogglingTimerEnabled by remember { mutableStateOf(true) }
 
     Scaffold(scaffoldState = scaffoldState) { padding ->
         if (showSnackbar) {
@@ -93,7 +93,9 @@ fun ExecuteTrainingComposable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) {
-                        viewModel.toggleStartStopTimer()
+                        if (isTogglingTimerEnabled) {
+                            viewModel.toggleStartStopTimer()
+                        }
                     }
                     .pointerInput(Unit) {
                         detectDragGestures(onDrag = { change, dragAmount ->
@@ -101,7 +103,6 @@ fun ExecuteTrainingComposable(
                             val (x, _) = dragAmount
                             when {
                                 x > 0 -> {
-
                                     direction = 0
                                 }
                                 x < 0 -> {
@@ -143,16 +144,26 @@ fun ExecuteTrainingComposable(
                                 currentTime = item.currentTime,
                                 totalTime = item.totalExerciseTime,
                                 trainingProgressPercent = item.trainingProgressPercent,
-                                disableExerciseAnimation = disableExerciseAnimation
                             )
-                            disableExerciseAnimation = false
+                            isTogglingTimerEnabled = true
                         }
-                        is ActivityItem.Break -> BreakComposable(
-                            nextExerciseName = item.nextExercise,
-                            currentTime = item.currentTime,
-                            totalTime = item.totalExerciseTime,
-                            trainingProgressPercent = item.trainingProgressPercent
-                        )
+                        is ActivityItem.Break -> {
+                            BreakComposable(
+                                nextExerciseName = item.nextExercise,
+                                currentTime = item.currentTime,
+                                totalTime = item.totalExerciseTime,
+                                trainingProgressPercent = item.trainingProgressPercent
+                            )
+                            isTogglingTimerEnabled = true
+                        }
+                        is ActivityItem.TimelessExercise -> {
+                            TimelessExerciseComposable(
+                                exerciseName = item.name,
+                                nextExerciseName = item.nextExercise,
+                                trainingProgressPercent = item.trainingProgressPercent
+                            )
+                            isTogglingTimerEnabled = false
+                        }
                         else -> {
 
                         }
@@ -216,6 +227,7 @@ private fun consumeBreakEndsState(
     }
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun BreakComposable(
     nextExerciseName: String,
@@ -223,7 +235,6 @@ fun BreakComposable(
     totalTime: Int,
     trainingProgressPercent: Float
 ) {
-    var showAnimation by remember { mutableStateOf(false) } //if set to true fade-in animations appear
     Column(
         verticalArrangement = Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -234,19 +245,15 @@ fun BreakComposable(
             color = Color.LightGray,
             fontWeight = FontWeight.Bold
         )
-        if (!showAnimation) {  //prevents "screen jumping" due to invisible texts
-            TextSpacer(fontSize = 32.sp)
-        }
-        AnimatedVisibility(
-            visible = showAnimation,
-            enter = textFadeInProperties()
+        AnimatedContent(
+            targetState = nextExerciseName
         ) {
             Box(
                 Modifier
                     .padding(start = 24.dp, end = 24.dp)
                     .weight(1f, fill = false)
             ) {
-                Text(text = nextExerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                Text(text = it, fontSize = 32.sp, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(modifier = Modifier.height(100.dp))
@@ -262,37 +269,31 @@ fun BreakComposable(
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         AnimatedTrainingProgressBar(percentage = trainingProgressPercent)
     }
-    showAnimation = true
 }
 
+@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun ExerciseComposable(
     exerciseName: String,
     nextExerciseName: String?,
     currentTime: Float,
     totalTime: Int,
-    trainingProgressPercent: Float,
-    disableExerciseAnimation: Boolean
+    trainingProgressPercent: Float
 ) {
-    var showAnimation by remember { mutableStateOf(disableExerciseAnimation) } //if set to true fade-in animations appear
     Column(
         verticalArrangement = Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         TextSpacer(fontSize = 16.sp)
-        if (!showAnimation) {
-            TextSpacer(fontSize = 32.sp)
-        }
-        AnimatedVisibility(
-            visible = showAnimation,
-            enter = textFadeInProperties()
+        AnimatedContent(
+            targetState = exerciseName
         ) {
             Box(
                 Modifier
                     .padding(start = 24.dp, end = 24.dp)
                     .weight(1f, fill = false)
             ) {
-                Text(text = exerciseName, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                Text(text = it, fontSize = 32.sp, fontWeight = FontWeight.Bold)
             }
         }
         Spacer(modifier = Modifier.height(100.dp))
@@ -313,26 +314,79 @@ fun ExerciseComposable(
             TextSpacer(fontSize = 16.sp)
         }
         Spacer(modifier = Modifier.height(8.dp))
-        if (!showAnimation) {
-            TextSpacer(fontSize = 24.sp)
-        }
-        AnimatedVisibility(
-            visible = showAnimation,
-            enter = textFadeInProperties()
+        AnimatedContent(
+            targetState = nextExerciseName
         ) {
             Box(
                 Modifier
                     .padding(start = 24.dp, end = 24.dp)
                     .weight(1f, fill = false)
             ) {
-                Text(text = nextExerciseName ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                Text(text = it ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
         TrainingProgressBar(percentage = trainingProgressPercent)
     }
-    showAnimation = true
+}
+
+@OptIn(ExperimentalAnimationApi::class)
+@Composable
+fun TimelessExerciseComposable(
+    exerciseName: String,
+    nextExerciseName: String?,
+    trainingProgressPercent: Float
+) {
+    Column(
+        verticalArrangement = Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        TextSpacer(fontSize = 16.sp)
+        AnimatedContent(
+            targetState = exerciseName
+        ) {
+            Box(
+                Modifier
+                    .padding(start = 24.dp, end = 24.dp)
+                    .weight(1f, fill = false)
+            ) {
+                Text(text = it, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+        Spacer(modifier = Modifier.height(100.dp))
+        Icon(
+            painter = painterResource(id = R.drawable.ic_no_break),
+            contentDescription = "",
+            modifier = Modifier.size(300.dp)
+        )
+        Spacer(modifier = Modifier.height(36.dp))
+        if (!nextExerciseName.isNullOrBlank()) {
+            Text(
+                text = "Swipe for next exercise",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.LightGray
+            )
+        } else {
+            TextSpacer(fontSize = 16.sp)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        AnimatedContent(
+            targetState = nextExerciseName
+        ) {
+            Box(
+                Modifier
+                    .padding(start = 24.dp, end = 24.dp)
+                    .weight(1f, fill = false)
+            ) {
+                Text(text = it ?: "", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+        TrainingProgressBar(percentage = trainingProgressPercent)
+    }
 }
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -436,10 +490,6 @@ fun TrainingProgressBar(
 @Composable
 fun TextSpacer(fontSize: TextUnit) {
     Text("", fontSize = fontSize)
-}
-
-private fun textFadeInProperties(): EnterTransition {
-    return fadeIn(initialAlpha = 0f, animationSpec = tween(500))
 }
 
 @Composable

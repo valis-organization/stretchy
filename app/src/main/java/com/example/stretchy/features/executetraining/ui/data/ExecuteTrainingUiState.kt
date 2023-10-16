@@ -34,6 +34,12 @@ sealed class ActivityItem(
         override val trainingProgressPercent: Float
     ) : ActivityItem(nextExercise, currentTime, totalExerciseTime, trainingProgressPercent)
 
+    data class TimelessExercise(
+        val name: String,
+        override val nextExercise: String?,
+        override val trainingProgressPercent: Float
+    ) : ActivityItem(nextExercise, 0F, 0, trainingProgressPercent)
+
     data class Break(
         override val nextExercise: String,
         override val currentTime: Float,
