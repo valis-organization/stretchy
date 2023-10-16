@@ -7,19 +7,21 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.foundation.layout.Arrangement.Center
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +67,7 @@ fun ExecuteTrainingComposable(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState: ScaffoldState = rememberScaffoldState()
+    var direction by remember { mutableStateOf(-1) }
 
     Scaffold(scaffoldState = scaffoldState) { padding ->
         if (showSnackbar) {
@@ -85,14 +88,41 @@ fun ExecuteTrainingComposable(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Box(
-                modifier = Modifier.clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    viewModel.toggleStartStopTimer()
-                },
+                modifier = Modifier
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) {
+                        viewModel.toggleStartStopTimer()
+                    }
+                    .pointerInput(Unit) {
+                        detectDragGestures(onDrag = { change, dragAmount ->
+                            change.consume()
+                            val (x, _) = dragAmount
+                            when {
+                                x > 0 -> {
+
+                                    direction = 0
+                                }
+                                x < 0 -> {
+                                    direction = 1
+                                }
+                            }
+                        }, onDragEnd = {
+                            when (direction) {
+                                0 -> {
+                                    viewModel.previousExercise()
+                                }
+                                1 -> {
+                                    viewModel.nextExercise()
+                                }
+                            }
+                        })
+
+                    },
                 contentAlignment = Alignment.Center
             ) {
+
                 val state = viewModel.uiState.collectAsState().value
                 consumeReadExerciseEvent(state.readExerciseNameEvent, coroutineScope, speaker)
                 consumeActivityFinishedState(state.activityFinishesEvent, coroutineScope, player)

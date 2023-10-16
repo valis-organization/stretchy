@@ -6,12 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
-import com.example.stretchy.features.executetraining.ui.data.*
+import com.example.stretchy.features.executetraining.ui.data.ActivityItem
+import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
+import com.example.stretchy.features.executetraining.ui.data.TrainingCompleted
 import com.example.stretchy.features.executetraining.ui.data.event.ActivityFinishesEvent
 import com.example.stretchy.features.executetraining.ui.data.event.BreakEndsEvent
 import com.example.stretchy.features.executetraining.ui.data.event.ReadExerciseNameEvent
 import com.example.stretchy.features.executetraining.ui.data.event.TrainingCompletedEvent
-import com.example.stretchy.features.traininglist.ui.data.getExercisesWithBreak
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,7 +45,10 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private var lastActivityBreakSoundPosted: Long? = null
     private var startingTimestamp = 0L
     private var trainingProgressPercent = 0f
+    private var index = 0
 
+    private var isExerciseSkipped = false
+    private var backToExercise = false
 
     init {
         if (!startingTimestampSaved) {
@@ -53,34 +57,62 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
             val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
-            getExercisesWithBreak(trainingWithActivities.activities).let { activitiesWithBreaks ->
-                activitiesWithBreaks.forEachIndexed { index, activity ->
-                    timer.setDuration(activity.duration)
-                    timer.flow.takeWhile { it >= 0 }.collect { currentSeconds ->
-                        when (activity.activityType) {
-                            ActivityType.STRETCH -> {
-                                handleStretch(
-                                    activity,
-                                    activitiesWithBreaks.getOrNull(index + 2)?.name,
-                                    currentSeconds,
-                                    index == 0
-                                )
-                            }
-                            ActivityType.BREAK -> {
-                                handleBreak(
-                                    activity,
-                                    activitiesWithBreaks.getOrNull(index + 1)?.name,
-                                    currentSeconds
-                                )
-                            }
-                            else -> {}
-                        }
+            trainingWithActivities.activities.let { activitiesWithBreaks ->
+                //TODO code/algorithm of skipping exercise improvements in viewmodel branch
+                while (true) {
+                    if (isExerciseSkipped || backToExercise) {
+                        isExerciseSkipped = false
+                        backToExercise = false
+                        isPaused = true
+                        timer.pause()
                     }
+                    val activity = activitiesWithBreaks[index]
+                    timer.setDuration(activity.duration)
+                    timer.flow.takeWhile { it >= 0 }
+                        .collect { currentSeconds ->
+                            if (isExerciseSkipped) {
+                                val nextExercise = activitiesWithBreaks.getOrNull(index + 1)
+                                if (nextExercise != null && nextExercise.activityType == ActivityType.BREAK) {
+                                    index++
+                                }
+                                timer.setDuration(0)
+                            } else if (backToExercise) {
+                                val previousActivity = activitiesWithBreaks.getOrNull(index - 1)
+                                if (previousActivity != null && previousActivity.activityType == ActivityType.BREAK) {
+                                    index--
+                                }
+                                timer.setDuration(0)
+                            }
+                            when (activity.activityType) {
+                                ActivityType.STRETCH -> {
+                                    handleStretch(
+                                        activity,
+                                        activitiesWithBreaks.getOrNull(index + 2)?.name,
+                                        currentSeconds,
+                                        index == 0
+                                    )
+                                }
+                                ActivityType.BREAK -> {
+                                    handleBreak(
+                                        activity,
+                                        activitiesWithBreaks.getOrNull(index + 1)?.name,
+                                        currentSeconds
+                                    )
+                                }
+                                else -> {}
+                            }
+                        }
                     if (activity.activityType == ActivityType.STRETCH) {
                         increaseTrainingPercentageCount(trainingWithActivities.activities.size)
                     }
                     if (isTrainingFinished(trainingWithActivities.activities, index)) {
                         handleTrainingFinishedState(trainingWithActivities.activities.size)
+                        break
+                    }
+                    if (!backToExercise) {
+                        index++
+                    } else {
+                        index--
                     }
                 }
             }
@@ -127,7 +159,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             isLoading = false,
             error = null,
             success = ActivityItem.Break(
-                nextExerciseName!!,
+                nextExerciseName ?: "",
                 currentSeconds,
                 activity.duration,
                 trainingProgressPercent
@@ -222,6 +254,14 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         Log.i("Start date", "Started on ${startDate.time}")
         startingTimestamp = startDate.timeInMillis
         startingTimestampSaved = true
+    }
+
+    fun nextExercise() {
+        isExerciseSkipped = true
+    }
+
+    fun previousExercise() {
+        backToExercise = true
     }
 
     companion object {
