@@ -6,19 +6,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
-import com.example.stretchy.features.executetraining.ui.data.ActivityItem
-import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
-import com.example.stretchy.features.executetraining.ui.data.TrainingCompleted
+import com.example.stretchy.features.executetraining.ui.data.*
 import com.example.stretchy.features.executetraining.ui.data.event.ActivityFinishesEvent
 import com.example.stretchy.features.executetraining.ui.data.event.BreakEndsEvent
 import com.example.stretchy.features.executetraining.ui.data.event.ReadExerciseNameEvent
 import com.example.stretchy.features.executetraining.ui.data.event.TrainingCompletedEvent
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
+import com.example.stretchy.repository.TrainingWithActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.lang.Thread.sleep
 import java.util.*
 
 class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
@@ -28,6 +30,10 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             null,
             null,
             null,
+            0F,
+            0F,
+            null,
+            0,
             null,
             null,
             null,
@@ -44,11 +50,11 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private var activityFinishedEventPosted: Long? = null
     private var lastActivityBreakSoundPosted: Long? = null
     private var startingTimestamp = 0L
-    private var trainingProgressPercent = 0f
     private var index = 0
 
     private var isExerciseSkipped = false
-    private var backToExercise = false
+    private lateinit var trainingWithActivities: TrainingWithActivity
+
 
     init {
         if (!startingTimestampSaved) {
@@ -56,123 +62,243 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         }
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+            trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+            initializeDisplayableList()
+
             trainingWithActivities.activities.let { activitiesWithBreaks ->
-                //TODO code/algorithm of skipping exercise improvements in viewmodel branch
                 while (true) {
-                    if (isExerciseSkipped || backToExercise) {
-                        isExerciseSkipped = false
-                        backToExercise = false
-                        isPaused = true
-                        timer.pause()
-                    }
-                    val activity = activitiesWithBreaks[index]
-                    timer.setDuration(activity.duration)
-                    timer.flow.takeWhile { it >= 0 }
-                        .collect { currentSeconds ->
-                            if (isExerciseSkipped) {
-                                val nextExercise = activitiesWithBreaks.getOrNull(index + 1)
-                                if (nextExercise != null && nextExercise.activityType == ActivityType.BREAK) {
-                                    index++
-                                }
-                                timer.setDuration(0)
-                            } else if (backToExercise) {
-                                val previousActivity = activitiesWithBreaks.getOrNull(index - 1)
-                                if (previousActivity != null && previousActivity.activityType == ActivityType.BREAK) {
-                                    index--
-                                }
-                                timer.setDuration(0)
-                            }
-                            when (activity.activityType) {
-                                ActivityType.STRETCH -> {
-                                    handleStretch(
-                                        activity,
-                                        activitiesWithBreaks.getOrNull(index + 2)?.name,
-                                        currentSeconds,
-                                        index == 0
-                                    )
-                                }
-                                ActivityType.BREAK -> {
-                                    handleBreak(
-                                        activity,
-                                        activitiesWithBreaks.getOrNull(index + 1)?.name,
-                                        currentSeconds
-                                    )
-                                }
-                                else -> {}
-                            }
-                        }
-                    if (activity.activityType == ActivityType.STRETCH) {
-                        increaseTrainingPercentageCount(trainingWithActivities.activities.size)
-                    }
-                    if (isTrainingFinished(trainingWithActivities.activities, index)) {
-                        handleTrainingFinishedState(trainingWithActivities.activities.size)
+                    val currentActivity = activitiesWithBreaks[index]
+
+                    presetCurrentExercise(currentActivity)
+                    countDownTimeCurrentActivity(currentActivity)
+                    afterActivityEnds(currentActivity)
+                    if (trainingFinished()) {
                         break
                     }
-                    if (!backToExercise) {
-                        index++
-                    } else {
-                        index--
-                    }
+
                 }
             }
         }
     }
 
-    private fun handleStretch(
-        activity: Activity,
-        nextExerciseName: String?,
-        currentSeconds: Float,
-        isFirstExercise: Boolean,
-    ) {
-        _uiState.value = _uiState.value.copy(
-            isLoading = false,
-            error = null,
-            success = ActivityItem.Exercise(
-                activity.name,
-                nextExerciseName,
-                currentSeconds,
-                activity.duration,
-                trainingProgressPercent
-            ),
-            readExerciseNameEvent = if (isFirstExercise) {
-                postReadExerciseNameEvent(
-                    activity.activityId,
-                    activity.name
-                )
-            } else {
-                _uiState.value.readExerciseNameEvent
-            },
-            activityFinishesEvent = postActivityFinishesEvent(
-                activity.activityId,
-                currentSeconds
-            )
-        )
+    fun changePage(destinationPage: Int, isSkippedByUser: Boolean) {
+        val currentPage = _uiState.value.page
+        if (currentPage != destinationPage) {
+            viewModelScope.launch {
+                restorePreviousExerciseOnPreviousPage(page = currentPage)
+            }
+            _uiState.value.trainingProgressPercent = getPercentageForPage(destinationPage)
+            Log.e("Asd",_uiState.value.trainingProgressPercent.toString())
+            if (isSkippedByUser) {
+                isExerciseSkipped = true
+                val nextIndex = getNextActivityIndexByDestinationPage(currentPage, destinationPage)
+                if (nextIndex != null) {
+                    index = nextIndex
+                }
+                val currentActivity = trainingWithActivities.activities[index]
+                handleSwipeWhenTimerIsPausedEdgeCase(currentActivity)
+            }
+            _uiState.value.page = destinationPage
+        }
     }
 
-    private fun handleBreak(
-        activity: Activity,
+    fun endTraining() {
+        handleTrainingFinishedState(_uiState.value.displayableActivityItemListWithBreakMerged!!.size)
+    }
+
+    fun toggleStartStopTimer() {
+        Log.e(TIMER_LOG_TAG, "toggle start stop")
+        if (!isPaused) {
+            pauseTimer()
+        } else {
+            startTimer()
+        }
+    }
+
+    private fun handleSwipeWhenTimerIsPausedEdgeCase(currentActivity: Activity) {
+        //Timer has to be started if initially it's paused, so it can move to the next exercise.
+        if (isPaused && currentActivity.activityType != ActivityType.TIMELESS_EXERCISE) {
+            startTimer()
+        }
+    }
+
+    private fun trainingFinished(): Boolean {
+        if (isTrainingFinished(trainingWithActivities.activities, index)) {
+            handleTrainingFinishedState(_uiState.value.displayableActivityItemListWithBreakMerged!!.size)
+            return true
+        }
+        return false
+    }
+
+    private fun getNextActivityIndexByDestinationPage(
+        currentPage: Int,
+        destinationPage: Int
+    ): Int? {
+        val activities = trainingWithActivities.activities
+        var newIndex: Int? = index
+        if (destinationPage > currentPage) {
+            newIndex = newIndex?.plus(
+                if (activities.getOrNull(index + 1)?.activityType != ActivityType.BREAK) {
+                    1
+                } else {
+                    2
+                }
+            )
+        } else {
+            newIndex = newIndex?.minus(
+                if (activities.getOrNull(index - 1)?.activityType != ActivityType.BREAK) {
+                    1
+                } else {
+                    2
+                }
+            )
+        }
+        if (newIndex == null || activities.getOrNull(newIndex) == null) {
+            return null
+        }
+        return newIndex
+    }
+
+    private suspend fun restorePreviousExerciseOnPreviousPage(page: Int) {
+        withContext(Dispatchers.IO) {
+            sleep(250)
+            val list: MutableList<ActivityType> =
+                _uiState.value.activityTypes as MutableList<ActivityType>
+            _uiState.value.displayableActivityItemListWithBreakMerged?.get(page)?.exercise?.toActivityType()
+                ?.let {
+                    list.set(
+                        page,
+                        it
+                    )
+                }
+            _uiState.value.activityTypes = list
+        }
+    }
+
+    private fun getPercentageForPage(index: Int): Float {
+        return index.toFloat() / _uiState.value.displayableActivityItemListWithBreakMerged!!.size.toFloat()
+    }
+
+    private fun presetCurrentExercise(currentActivity: Activity) {
+        if (isExerciseSkipped) {
+            isExerciseSkipped = false
+            pauseTimer()
+        }
+        if (currentActivity.activityType != ActivityType.TIMELESS_EXERCISE) {
+            timer.setDuration(currentActivity.duration)
+        } else {
+            pauseTimer()
+        }
+    }
+
+    private suspend fun countDownTimeCurrentActivity(currentActivity: Activity) {
+        timer.flow.takeWhile { it >= 0 && !isExerciseSkipped }
+            .collect { currentSeconds ->
+                _uiState.value = _uiState.value.copy(currentSeconds = currentSeconds)
+                when (currentActivity.activityType) {
+                    ActivityType.STRETCH, ActivityType.EXERCISE -> {
+                        handleTimedActivity(
+                            isFirstExercise = index == 0,
+                            currentActivity = currentActivity,
+                            currentSeconds = currentSeconds
+                        )
+                    }
+                    ActivityType.TIMELESS_EXERCISE -> {
+                        handleTimedActivity(
+                            isFirstExercise = index == 0,
+                            currentActivity = currentActivity,
+                            currentSeconds = 0F
+                        )
+                    }
+                    ActivityType.BREAK -> {
+                        handleBreak(
+                            currentActivity = currentActivity,
+                            currentSeconds = currentSeconds,
+                        )
+                    }
+                }
+            }
+    }
+
+    private fun afterActivityEnds(currentActivity: Activity) {
+        var currentPage = _uiState.value.page
+        if (!isExerciseSkipped) {
+            index++
+        }
+        if (currentActivity.activityType == ActivityType.BREAK && !isExerciseSkipped) {
+            currentPage++
+            changePage(destinationPage = currentPage, false)
+        }
+    }
+
+    private fun Activity.toActivityItem(
+        uniqueId: Int,
         nextExerciseName: String?,
-        currentSeconds: Float,
-    ) {
-        _uiState.value = _uiState.value.copy(
-            isLoading = false,
-            error = null,
-            success = ActivityItem.Break(
+        currentSeconds: Float
+    ): DisplayableActivityItem {
+        return when (this.activityType) {
+            ActivityType.STRETCH -> DisplayableActivityItem.Exercise(
+                this.name,
+                uniqueId,
+                nextExerciseName,
+                currentSeconds,
+                this.duration
+            )
+            ActivityType.EXERCISE -> DisplayableActivityItem.Exercise(
+                this.name,
+                uniqueId,
+                nextExerciseName,
+                currentSeconds,
+                this.duration
+            )
+            ActivityType.TIMELESS_EXERCISE -> DisplayableActivityItem.TimelessExercise(
+                name = this.name, uniqueId,
+                nextExerciseName
+            )
+            ActivityType.BREAK -> DisplayableActivityItem.Break(
+                uniqueId,
                 nextExerciseName ?: "",
                 currentSeconds,
-                activity.duration,
-                trainingProgressPercent
-            ),
-            readExerciseNameEvent = postReadExerciseNameEvent(
-                activity.activityId,
-                activity.name
-            ),
-            breakEndsEvent = postBreakFinishesEvent(
-                activity.activityId,
-                currentSeconds
+                this.duration
             )
-        )
+        }
+    }
+
+    private fun List<Activity>.toActivityItemsExercisesWithBreaksMerged(): List<ActivityItemExerciseAndBreakMerged> {
+        val activityItemList = mutableListOf<ActivityItemExerciseAndBreakMerged>()
+        this.forEachIndexed { index, activity ->
+            if (activity.activityType != ActivityType.BREAK) {
+                val nextActivityName =
+                    if (this.getOrNull(index + 1)?.activityType != ActivityType.BREAK) this.getOrNull(
+                        index + 1
+                    )?.name ?: "" else
+                        this.getOrNull(index + 2)?.name ?: ""
+                val breakActivity =
+                    if (this.getOrNull(index + 1)?.activityType == ActivityType.BREAK) this.getOrNull(
+                        index + 1
+                    ) else null
+                var breakAfterActivity: DisplayableActivityItem.Break? = null
+                if (breakActivity != null) {
+                    breakAfterActivity = breakActivity.toActivityItem(
+                        index + 1,
+                        nextActivityName,
+                        breakActivity.duration.toFloat()
+                    ) as DisplayableActivityItem.Break
+                }
+
+                activityItemList.add(
+                    ActivityItemExerciseAndBreakMerged(
+                        activity.toActivityItem(
+                            index,
+                            nextActivityName,
+                            activity.duration.toFloat() * 1000
+                        ),
+                        breakAfterActivity
+                    )
+                )
+            }
+        }
+        return activityItemList
     }
 
     private fun handleTrainingFinishedState(allExercisesCount: Int) {
@@ -181,7 +307,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             error = null,
-            success = null,
+            displayableActivityItemListWithBreakMerged = null,
             readExerciseNameEvent = null,
             trainingCompleted = TrainingCompleted(
                 currentTrainingTime = convertSecondsToMinutes(
@@ -194,11 +320,10 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     }
 
     private fun isTrainingFinished(activities: List<Activity>, index: Int): Boolean {
+        if (activities.lastIndex == index) {
+            return activities[index].activityType == ActivityType.BREAK
+        }
         return activities.getOrNull(index + 1) == null
-    }
-
-    private fun increaseTrainingPercentageCount(activitiesCount: Int) {
-        trainingProgressPercent += 1 / activitiesCount.toFloat()
     }
 
     private fun postActivityFinishesEvent(
@@ -237,16 +362,60 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         }
     }
 
-    fun toggleStartStopTimer() {
-        if (!isPaused) {
-            isPaused = true
-            Log.i(TIMER_LOG_TAG, "Timer is paused.")
-            timer.pause()
-        } else {
-            isPaused = false
-            Log.i(TIMER_LOG_TAG, "Timer is resumed.")
-            timer.start()
-        }
+    private fun pauseTimer() {
+        isPaused = true
+        Log.i(TIMER_LOG_TAG, "Timer is paused.")
+        timer.pause()
+    }
+
+    private fun startTimer() {
+        isPaused = false
+        Log.i(TIMER_LOG_TAG, "Timer is resumed.")
+        timer.start()
+    }
+
+    private fun handleTimedActivity(
+        isFirstExercise: Boolean,
+        currentActivity: Activity,
+        currentSeconds: Float
+    ) {
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            error = null,
+            readExerciseNameEvent = if (isFirstExercise) {
+                postReadExerciseNameEvent(
+                    currentActivity.activityId,
+                    currentActivity.name
+                )
+            } else {
+                _uiState.value.readExerciseNameEvent
+            },
+            activityFinishesEvent = postActivityFinishesEvent(
+                currentActivity.activityId,
+                currentSeconds
+            )
+        )
+    }
+
+    private fun handleBreak(
+        currentActivity: Activity,
+        currentSeconds: Float,
+    ) {
+        val list = _uiState.value.activityTypes as MutableList<ActivityType>
+        list[_uiState.value.page] = ActivityType.BREAK
+        _uiState.value.activityTypes = list
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            error = null,
+            readExerciseNameEvent = postReadExerciseNameEvent(
+                currentActivity.activityId,
+                currentActivity.name
+            ),
+            breakEndsEvent = postBreakFinishesEvent(
+                currentActivity.activityId,
+                currentSeconds
+            ),
+        )
     }
 
     private fun saveStartingTimeStamp() {
@@ -256,15 +425,31 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         startingTimestampSaved = true
     }
 
-    fun nextExercise() {
-        isExerciseSkipped = true
+    private fun initializeDisplayableList() {
+        _uiState.value =
+            _uiState.value.copy(
+                displayableActivityItemListWithBreakMerged = trainingWithActivities.activities.toActivityItemsExercisesWithBreaksMerged(),
+                activityTypes = trainingWithActivities.activities.toActivityItemsExercisesWithBreaksMerged()
+                    .initializeActivityTypes()
+            )
     }
 
-    fun previousExercise() {
-        backToExercise = true
+    private fun List<ActivityItemExerciseAndBreakMerged>.initializeActivityTypes(): List<ActivityType> {
+        val activityTypes = mutableListOf<ActivityType>()
+        this.forEach {
+            when (it.exercise) {
+                is DisplayableActivityItem.Break -> {}
+                is DisplayableActivityItem.Exercise -> activityTypes.add(ActivityType.EXERCISE)
+                is DisplayableActivityItem.TimelessExercise -> activityTypes.add(ActivityType.TIMELESS_EXERCISE)
+            }
+        }
+        return activityTypes
     }
 
     companion object {
         private const val TIMER_LOG_TAG = "TIMER"
     }
 }
+
+
+
