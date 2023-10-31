@@ -36,6 +36,10 @@
     <string name="meta_training">Meta training</string>
     <string name="training">Training</string>
     <string name="exercise">Exercise</string>
+    <string name="you_finished_training">You finished your training!</string>
+    <string name="total_exercises">Total Exercises: %1$d</string>
+    <string name="time_spent">Time spent: %1$s</string>
+    <string name="finish">Finish</string>
 
     //content description
     <string name="desc_delete_icon">Delete icon</string>

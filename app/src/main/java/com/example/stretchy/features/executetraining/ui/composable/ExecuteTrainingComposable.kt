@@ -1,6 +1,5 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -92,7 +91,6 @@ fun ExecuteTrainingComposable(
                 consumeReadExerciseEvent(state.readExerciseNameEvent, coroutineScope, speaker)
                 consumeActivityFinishedState(state.activityFinishesEvent, coroutineScope, player)
                 consumeBreakEndsState(state.breakEndsEvent, coroutineScope, player)
-                Log.e("asd",state.toString())
                 if (state.isLoading) {
                     Text(
                         text = stringResource(id = R.string.loading),
@@ -127,7 +125,7 @@ fun ExecuteTrainingComposable(
                     }
                     TrainingSummaryComposable(
                         numberOfExercises = state.trainingCompleted.numberOfExercises,
-                        currentTrainingTime = state.trainingCompleted.currentTrainingTime,
+                        timeSpent = state.trainingCompleted.currentTrainingTime,
                         navController = navController
                     )
                 }

@@ -172,7 +172,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                         it
                     )
                 }
-            _uiState.value.activityTypes = list
+            _uiState.value = _uiState.value.copy(activityTypes = list)
         }
     }
 
