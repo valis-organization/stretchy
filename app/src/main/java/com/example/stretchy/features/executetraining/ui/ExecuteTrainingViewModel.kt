@@ -87,8 +87,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             viewModelScope.launch {
                 restorePreviousExerciseOnPreviousPage(page = currentPage)
             }
-            _uiState.value.trainingProgressPercent = getPercentageForPage(destinationPage)
-            Log.e("Asd",_uiState.value.trainingProgressPercent.toString())
             if (isSkippedByUser) {
                 isExerciseSkipped = true
                 val nextIndex = getNextActivityIndexByDestinationPage(currentPage, destinationPage)
@@ -97,8 +95,11 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 }
                 val currentActivity = trainingWithActivities.activities[index]
                 handleSwipeWhenTimerIsPausedEdgeCase(currentActivity)
+                _uiState.value = _uiState.value.copy(
+                    trainingProgressPercent = getPercentageForPage(destinationPage),
+                    page = destinationPage
+                )
             }
-            _uiState.value.page = destinationPage
         }
     }
 
@@ -403,10 +404,10 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     ) {
         val list = _uiState.value.activityTypes as MutableList<ActivityType>
         list[_uiState.value.page] = ActivityType.BREAK
-        _uiState.value.activityTypes = list
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             error = null,
+            activityTypes = list,
             readExerciseNameEvent = postReadExerciseNameEvent(
                 currentActivity.activityId,
                 currentActivity.name
