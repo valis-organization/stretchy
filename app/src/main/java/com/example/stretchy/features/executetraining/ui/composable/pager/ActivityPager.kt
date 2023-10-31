@@ -23,7 +23,7 @@ fun ActivityPager(
     onTimelessExercise: () -> Unit
 ) {
     val pagerState = rememberPagerState()
-    val updatedInitialPage by rememberUpdatedState(uiState.page)
+    val updatedInitialPage by rememberUpdatedState(uiState.currentDisplayPage)
     LaunchedEffect(updatedInitialPage) {
         pagerState.animateScrollToPage(
             updatedInitialPage,
@@ -46,7 +46,7 @@ fun ActivityPager(
         pageCount = uiState.displayableActivityItemListWithBreakMerged!!.size
     ) { page ->
         val item = uiState.displayableActivityItemListWithBreakMerged!![page]
-        if (page == uiState.page) {
+        if (page == uiState.currentDisplayPage) {
             FocusedPage(
                 item = item,
                 page = page,

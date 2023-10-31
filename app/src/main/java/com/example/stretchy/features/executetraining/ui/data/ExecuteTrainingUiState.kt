@@ -14,7 +14,7 @@ data class ExecuteTrainingUiState(
     var currentSeconds: Float,
     var trainingProgressPercent: Float,
     var activityTypes: List<ActivityType>?,
-    var page: Int,
+    var currentDisplayPage: Int,
     //events
     val readExerciseNameEvent: ReadExerciseNameEvent?,
     val trainingCompletedEvent: TrainingCompletedEvent?,
@@ -30,19 +30,16 @@ data class ActivityItemExerciseAndBreakMerged(
 )
 
 sealed class DisplayableActivityItem(
-    open val uniqueId: Int,
     open val nextExercise: String?,
     open var currentTime: Float,
     open val totalExerciseTime: Int
 ) {
     data class Exercise(
         val name: String,
-        override val uniqueId: Int,
         override val nextExercise: String?,
         override var currentTime: Float,
         override val totalExerciseTime: Int
     ) : DisplayableActivityItem(
-        uniqueId,
         nextExercise,
         currentTime,
         totalExerciseTime,
@@ -50,17 +47,14 @@ sealed class DisplayableActivityItem(
 
     data class TimelessExercise(
         val name: String,
-        override val uniqueId: Int,
         override val nextExercise: String?,
-    ) : DisplayableActivityItem(uniqueId, nextExercise, 0F, 0)
+    ) : DisplayableActivityItem(nextExercise, 0F, 0)
 
     data class Break(
-        override val uniqueId: Int,
         override val nextExercise: String,
         override var currentTime: Float,
         override val totalExerciseTime: Int
     ) : DisplayableActivityItem(
-        uniqueId,
         nextExercise,
         currentTime,
         totalExerciseTime
