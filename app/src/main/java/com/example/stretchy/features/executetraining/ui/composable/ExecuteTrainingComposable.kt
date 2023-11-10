@@ -101,6 +101,7 @@ fun ExecuteTrainingComposable(
                     ActivityPager(
                         state,
                         viewModel,
+                        player,
                         onTimedActivity = { isTogglingTimerEnabled = true },
                         onTimelessExercise = { isTogglingTimerEnabled = false })
                     Box(

@@ -16,7 +16,18 @@ class Player(private val context: Context) {
             }
         }
         players.add(mp)
-        mp.start()
+        players[players.lastIndex].start()
+    }
+
+    fun stopSound() {
+        for (player in players) {
+            if (player.isPlaying) {
+                player.stop()
+                player.reset()
+                player.release()
+            }
+        }
+        players.clear()
     }
 
     private fun SoundTrack.toRawWav(): Int {
