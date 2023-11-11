@@ -31,6 +31,7 @@ class SoundManagerImpl : SoundManager {
 
     private var lastActivityBreakSoundPosted: Long? = null
     private var activityFinishedEventPosted: Long? = null
+    private var lastActivityNamePosted: String? = null
 
     override suspend fun notifyActivityUpdated(
         currentActivity: Activity,
@@ -40,7 +41,8 @@ class SoundManagerImpl : SoundManager {
         if (this.currentActivity != currentActivity) {
             if (isFirstExercise) {
                 readExerciseNameEvent.emit(ReadExerciseNameEvent(currentActivity.name))
-            } else if (currentActivity.activityType == ActivityType.BREAK && nextExerciseName != null) {
+            } else if (currentActivity.activityType == ActivityType.BREAK && nextExerciseName != null && lastActivityNamePosted != nextExerciseName) {
+                lastActivityNamePosted = nextExerciseName
                 readExerciseNameEvent.emit(ReadExerciseNameEvent(nextExerciseName))
             }
             this.currentActivity = currentActivity
@@ -65,7 +67,10 @@ class SoundManagerImpl : SoundManager {
     }
 
     override suspend fun notifyActivitySwiped() {
-        readExerciseNameEvent.emit(ReadExerciseNameEvent(currentActivity?.name))
+        if (lastActivityNamePosted != currentActivity?.name) {
+            lastActivityNamePosted = currentActivity?.name
+            readExerciseNameEvent.emit(ReadExerciseNameEvent(currentActivity?.name))
+        }
     }
 
 }
