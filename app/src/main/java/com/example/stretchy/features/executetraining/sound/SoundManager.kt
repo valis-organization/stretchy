@@ -9,15 +9,17 @@ interface SoundManager {
 
     val soundState: StateFlow<SoundState>
 
-    fun getDebouncedReadExerciseNameFlow(): Flow<ReadExerciseNameEvent?>
+    fun getReadExerciseNameFlow(): Flow<ReadExerciseNameEvent?>
 
-    fun notifyActivityEnds()
+    fun notifyEvent(event: NotifyEvent)
+}
 
-    suspend fun notifyActivitySwiped()
-
-    suspend fun notifyActivityUpdated(
-        currentActivity: Activity,
-        isFirstExercise: Boolean,
-        nextExerciseName: String?
-    )
+sealed class NotifyEvent {
+    object ActivityEnds : NotifyEvent()
+    object ActivitySwiped : NotifyEvent()
+    data class ActivityUpdate(
+        val currentActivity: Activity,
+        val isFirstExercise: Boolean,
+        val nextExerciseName: String?
+    ) : NotifyEvent()
 }
