@@ -10,7 +10,6 @@ import com.example.stretchy.features.executetraining.sound.NotifyEvent
 import com.example.stretchy.features.executetraining.sound.SoundManager
 import com.example.stretchy.features.executetraining.sound.SoundManagerImpl
 import com.example.stretchy.features.executetraining.ui.data.*
-import com.example.stretchy.features.executetraining.ui.data.event.TrainingCompletedEvent
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
@@ -46,6 +45,9 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
             initializeDisplayableList()
             soundManager = SoundManagerImpl()
+            launch {
+                collectSoundsFlow()
+            }
             soundManager.notifyEvent(
                 NotifyEvent.ActivityUpdate(
                     trainingWithActivities.activities[0],
@@ -53,12 +55,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                     ""
                 )
             )
-            launch {
-                collectReadExerciseFlow()
-            }
-            launch {
-                collectSoundsFlow()
-            }
             trainingWithActivities.activities.let { activitiesWithBreaks ->
                 while (!trainingFinished()) {
                     activitiesWithBreaks[index].let {
@@ -66,7 +62,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                         startExerciseTrainingFlow(it)
                         changePageAfterActivityEnds(it)
                     }
-
                 }
             }
         }
@@ -78,7 +73,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             viewModelScope.launch {
                 restorePreviousExerciseOnPreviousPage(page = currentPage)
             }
-
             if (isSkippedByUser) {
                 handleUserSkip(currentPage, destinationPage)
                 viewModelScope.launch {
@@ -128,19 +122,9 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             }
     }
 
-    private suspend fun collectReadExerciseFlow() {
-        soundManager.getReadExerciseNameFlow().collect {
-            _uiState.value = _uiState.value.copy(readExerciseNameEvent = it)
-        }
-    }
-
     private suspend fun collectSoundsFlow() {
-        soundManager.soundState.collect {
-            _uiState.value = _uiState.value.copy(
-                activityFinishesEvent = it.activityFinishesEvent,
-                breakEndsEvent = it.breakEndsEvent,
-                trainingCompletedEvent = it.trainingCompletedEvent
-            )
+        soundManager.soundFlow.collect {
+            _uiState.value = _uiState.value.copy(soundState = it)
         }
     }
 
@@ -163,9 +147,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             currentPage++
             changePage(destinationPage = currentPage, false)
         }
-        viewModelScope.launch {
             notifySoundHandlerActivityUpdated()
-        }
     }
 
     private fun handleUserSkip(currentPage: Int, destinationPage: Int) {
@@ -177,6 +159,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         }
         val currentActivity = trainingWithActivities.activities[index]
         handleSwipeWhenTimerIsPausedEdgeCase(currentActivity)
+        notifySoundHandlerActivityUpdated()
     }
 
     private fun trainingFinished(): Boolean {
@@ -234,9 +217,9 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
 
     private fun activityEnds(currentSeconds: Float): Boolean {
         val currentActivity = trainingWithActivities.activities[index]
-        return (currentActivity.activityType == ActivityType.BREAK && currentSeconds <= 100) ||
-                currentActivity.activityType == ActivityType.STRETCH && currentSeconds <= 3000 ||
-                currentActivity.activityType == ActivityType.EXERCISE && currentSeconds <= 3000
+        return (currentActivity.activityType == ActivityType.BREAK && currentSeconds == 100F) ||
+                currentActivity.activityType == ActivityType.STRETCH && currentSeconds == 3000F ||
+                currentActivity.activityType == ActivityType.EXERCISE && currentSeconds == 3000F
     }
 
     private fun presetCurrentExercise(currentActivity: Activity) {
@@ -257,37 +240,40 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private fun setTrainingFinishedState(allExercisesCount: Int) {
         val currentTime = Calendar.getInstance()
         val seconds = (currentTime.timeInMillis - startingTimestamp) / 1000
+        viewModelScope.launch {
+            soundManager.notifyEvent(NotifyEvent.TrainingEnds)
+        }
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             error = null,
             displayableActivityItemListWithBreakMerged = null,
-            readExerciseNameEvent = null,
             trainingCompleted = TrainingCompleted(
                 currentTrainingTime = convertSecondsToMinutes(
                     seconds
                 ),
                 numberOfExercises = allExercisesCount
             ),
-            trainingCompletedEvent = TrainingCompletedEvent()
         )
     }
 
     private fun notifySoundHandlerActivityUpdated() {
         trainingWithActivities.activities.getOrNull(index)?.let {
-            soundManager.notifyEvent(
-                NotifyEvent.ActivityUpdate(
-                    it,
-                    false,
-                    nextExerciseName = trainingWithActivities.activities.getOrNull(
-                        if (trainingWithActivities.activities.getOrNull(
-                                index + 1
-                            )?.activityType != ActivityType.BREAK
-                        ) index + 1 else {
-                            index + 2
-                        }
-                    )?.name
+            viewModelScope.launch {
+                soundManager.notifyEvent(
+                    NotifyEvent.ActivityUpdate(
+                        it,
+                        false,
+                        nextExerciseName = trainingWithActivities.activities.getOrNull(
+                            if (trainingWithActivities.activities.getOrNull(
+                                    index + 1
+                                )?.activityType != ActivityType.BREAK
+                            ) index + 1 else {
+                                index + 2
+                            }
+                        )?.name
+                    )
                 )
-            )
+            }
         }
     }
 
@@ -352,9 +338,6 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             0F,
             null,
             0,
-            null,
-            null,
-            null,
             null
         )
     )

@@ -15,7 +15,7 @@ class Speaker(
     val context: Context,
     locale: Locale = Locale.ENGLISH,
     pitch: Float = 1f,
-    speechSpeed: Float = 0.9f,
+    speechSpeed: Float = 1.1f,
 ) {
     lateinit var textToSpeech: TextToSpeech
     private var isInitializedFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
