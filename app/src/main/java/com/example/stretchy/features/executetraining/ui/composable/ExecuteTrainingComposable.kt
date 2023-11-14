@@ -1,6 +1,5 @@
 package com.example.stretchy.features.executetraining.ui.composable
 
-import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,15 +23,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.sound.Player
-import com.example.stretchy.features.executetraining.sound.SoundTrack
-import com.example.stretchy.features.executetraining.sound.SoundType
+import com.example.stretchy.features.executetraining.sound.managers.SoundEventConsumer
 import com.example.stretchy.features.executetraining.sound.Speaker
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.composable.components.AnimatedTrainingProgressBar
 import com.example.stretchy.features.executetraining.ui.composable.components.QuittingSnackbar
 import com.example.stretchy.features.executetraining.ui.composable.pager.ActivityPager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
 
 @Composable
 fun ExecuteTrainingComposable(
@@ -55,6 +51,7 @@ fun ExecuteTrainingComposable(
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     var isTogglingTimerEnabled by remember { mutableStateOf(true) }
+    val soundEventConsumer = SoundEventConsumer(coroutineScope, speaker, player, context)
 
     Scaffold(scaffoldState = scaffoldState) { padding ->
         if (showSnackbar) {
@@ -87,7 +84,7 @@ fun ExecuteTrainingComposable(
                 contentAlignment = Alignment.Center
             ) {
                 val state = viewModel.uiState.collectAsState().value
-                consumeSoundEvent(state.soundState, coroutineScope, speaker, player, context)
+                soundEventConsumer.consume(state.soundState)
                 if (state.isLoading) {
                     Text(
                         text = stringResource(id = R.string.loading),
@@ -123,88 +120,6 @@ fun ExecuteTrainingComposable(
                     )
                 }
             }
-        }
-    }
-}
-
-fun consumeSoundEvent(
-    soundType: SoundType?,
-    coroutineScope: CoroutineScope,
-    speaker: Speaker,
-    player: Player,
-    context: Context
-) {
-    when (soundType) {
-        is SoundType.ActivityFinishesEvent -> consumeActivityFinishedState(
-            soundType,
-            coroutineScope,
-            player
-        )
-        is SoundType.BreakEndsEvent -> consumeBreakEndsState(soundType, coroutineScope, player)
-        is SoundType.ReadExerciseNameEvent -> consumeReadExerciseEvent(
-            soundType,
-            coroutineScope,
-            speaker
-        )
-        is SoundType.TrainingCompletedEvent -> consumeTrainingEndsSoundEvent(
-            soundType,
-            coroutineScope,
-            speaker,
-            context
-        )
-        null -> {}
-    }
-}
-
-private fun consumeTrainingEndsSoundEvent(
-    trainingCompletedEvent: SoundType.TrainingCompletedEvent,
-    coroutineScope: CoroutineScope,
-    speaker: Speaker,
-    context: Context
-) {
-    trainingCompletedEvent.consume()?.let {
-        coroutineScope.launch {
-            speaker.say(context.resources.getString(R.string.training_finished))
-        }
-    }
-}
-
-private fun consumeReadExerciseEvent(
-    readExerciseNameEvent: SoundType.ReadExerciseNameEvent,
-    coroutineScope: CoroutineScope,
-    speaker: Speaker
-) {
-    val name = readExerciseNameEvent.name
-    if (!readExerciseNameEvent.isConsumed) {
-        readExerciseNameEvent.consume().let {
-
-            coroutineScope.launch {
-                speaker.say(name)
-            }
-        }
-    }
-}
-
-private fun consumeActivityFinishedState(
-    activityFinishesEvent: SoundType?,
-    coroutineScope: CoroutineScope,
-    player: Player
-) {
-    activityFinishesEvent?.consume()?.let {
-        coroutineScope.launch {
-            player.playSound(SoundTrack.EXERCISE_ENDING)
-        }
-    }
-}
-
-private fun consumeBreakEndsState(
-    breakEndsEvent: SoundType?,
-    coroutineScope: CoroutineScope,
-    player: Player
-) {
-    breakEndsEvent?.consume()?.let {
-        coroutineScope.launch {
-            player.playSound(SoundTrack.BREAK_ENDED)
         }
     }
 }
