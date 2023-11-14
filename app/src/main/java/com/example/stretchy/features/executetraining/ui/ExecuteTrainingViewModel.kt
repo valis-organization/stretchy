@@ -44,17 +44,8 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         viewModelScope.launch {
             trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
             initializeDisplayableList()
-            soundManager = SoundManagerImpl()
-            launch {
-                collectSoundsFlow()
-            }
-            soundManager.notifyEvent(
-                NotifyEvent.ActivityUpdate(
-                    trainingWithActivities.activities[0],
-                    true,
-                    ""
-                )
-            )
+            initializeSoundManager()
+
             trainingWithActivities.activities.let { activitiesWithBreaks ->
                 while (!trainingFinished()) {
                     activitiesWithBreaks[index].let {
@@ -123,7 +114,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     }
 
     private suspend fun collectSoundsFlow() {
-        soundManager.soundFlow.collect {
+        soundManager.soundEventFlow.collect {
             _uiState.value = _uiState.value.copy(soundState = it)
         }
     }
@@ -147,7 +138,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             currentPage++
             changePage(destinationPage = currentPage, false)
         }
-            notifySoundHandlerActivityUpdated()
+        notifySoundHandlerActivityUpdated()
     }
 
     private fun handleUserSkip(currentPage: Int, destinationPage: Int) {
@@ -326,6 +317,20 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 activityTypes = trainingWithActivities.activities.toActivityItemsExercisesWithBreaksMerged()
                     .initializeActivityTypes()
             )
+    }
+
+    private suspend fun initializeSoundManager() {
+        soundManager = SoundManagerImpl()
+        viewModelScope.launch {
+            collectSoundsFlow()
+        }
+        soundManager.notifyEvent(
+            NotifyEvent.ActivityUpdate(
+                trainingWithActivities.activities[0],
+                true,
+                ""
+            )
+        )
     }
 
     private fun initUiState(): MutableStateFlow<ExecuteTrainingUiState> = MutableStateFlow(

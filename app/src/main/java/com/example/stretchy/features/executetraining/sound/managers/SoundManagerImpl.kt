@@ -11,8 +11,7 @@ class SoundManagerImpl : SoundManager {
     private val soundsEventFlow: MutableSharedFlow<SoundType> = MutableSharedFlow(replay = 0)
     private val readExerciseNameEvent: MutableSharedFlow<SoundType.ReadExerciseNameEvent> =
         MutableSharedFlow(replay = 0)
-
-    override val soundFlow: Flow<SoundType> = merge(soundsEventFlow, readExerciseNameFlow())
+    override val soundEventFlow: Flow<SoundType> = merge(soundsEventFlow, readExerciseNameFlow())
 
     private var currentActivity: Activity? = null
     private var lastActivityNamePosted: String? = null
@@ -35,18 +34,18 @@ class SoundManagerImpl : SoundManager {
     }
 
     private suspend fun activityUpdate(
-        currentActivity: Activity,
+        updatedActivity: Activity,
         isFirstExercise: Boolean,
         nextExerciseName: String?
     ) {
-        if (this.currentActivity != currentActivity) {
+        if (this.currentActivity != updatedActivity) {
+            currentActivity = updatedActivity
             if (isFirstExercise) {
-                readExerciseNameEvent.emit(SoundType.ReadExerciseNameEvent(currentActivity.name))
-            } else if (currentActivity.activityType == ActivityType.BREAK && nextExerciseName != null && lastActivityNamePosted != nextExerciseName) {
+                readExerciseNameEvent.emit(SoundType.ReadExerciseNameEvent(updatedActivity.name))
+            } else if (shouldPostReadExerciseNameEvent(nextExerciseName)) {
                 lastActivityNamePosted = nextExerciseName
-                readExerciseNameEvent.emit(SoundType.ReadExerciseNameEvent(nextExerciseName))
+                readExerciseNameEvent.emit(SoundType.ReadExerciseNameEvent(nextExerciseName!!))
             }
-            this.currentActivity = currentActivity
         }
     }
 
@@ -72,4 +71,6 @@ class SoundManagerImpl : SoundManager {
         soundsEventFlow.emit(SoundType.TrainingCompletedEvent())
     }
 
+    private fun shouldPostReadExerciseNameEvent(nextExerciseName: String?): Boolean =
+        currentActivity?.activityType == ActivityType.BREAK && nextExerciseName != null && lastActivityNamePosted != nextExerciseName
 }
