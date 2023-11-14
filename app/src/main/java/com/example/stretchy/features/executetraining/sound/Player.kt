@@ -3,6 +3,7 @@ package com.example.stretchy.features.executetraining.sound
 import android.content.Context
 import android.media.MediaPlayer
 import com.example.stretchy.R
+import com.example.stretchy.features.executetraining.sound.data.SoundTrack
 
 class Player(private val context: Context) {
     private val players: MutableList<MediaPlayer> = mutableListOf()
@@ -16,7 +17,7 @@ class Player(private val context: Context) {
             }
         }
         players.add(mp)
-        players[players.lastIndex].start()
+        mp.start()
     }
 
     fun stopSound() {

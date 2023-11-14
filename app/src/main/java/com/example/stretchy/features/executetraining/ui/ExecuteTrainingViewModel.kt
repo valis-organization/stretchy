@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
-import com.example.stretchy.features.executetraining.sound.NotifyEvent
-import com.example.stretchy.features.executetraining.sound.SoundManager
-import com.example.stretchy.features.executetraining.sound.SoundManagerImpl
+import com.example.stretchy.features.executetraining.sound.managers.SoundManager
+import com.example.stretchy.features.executetraining.sound.managers.SoundManagerImpl
+import com.example.stretchy.features.executetraining.sound.data.NotifyEvent
 import com.example.stretchy.features.executetraining.ui.data.*
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository

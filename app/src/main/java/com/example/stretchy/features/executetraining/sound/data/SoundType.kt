@@ -1,4 +1,4 @@
-package com.example.stretchy.features.executetraining.sound
+package com.example.stretchy.features.executetraining.sound.data
 
 import com.example.stretchy.common.OneTimeEvent
 

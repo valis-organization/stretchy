@@ -1,7 +1,7 @@
 package com.example.stretchy.features.executetraining.ui.data
 
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.features.executetraining.sound.SoundType
+import com.example.stretchy.features.executetraining.sound.data.SoundType
 
 data class ExecuteTrainingUiState(
     var isLoading: Boolean,

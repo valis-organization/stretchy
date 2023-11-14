@@ -1,6 +1,8 @@
-package com.example.stretchy.features.executetraining.sound
+package com.example.stretchy.features.executetraining.sound.managers
 
 import com.example.stretchy.database.data.ActivityType
+import com.example.stretchy.features.executetraining.sound.data.NotifyEvent
+import com.example.stretchy.features.executetraining.sound.data.SoundType
 import com.example.stretchy.repository.Activity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*

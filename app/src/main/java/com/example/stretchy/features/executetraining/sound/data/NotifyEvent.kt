@@ -1,13 +1,7 @@
-package com.example.stretchy.features.executetraining.sound
+package com.example.stretchy.features.executetraining.sound.data
 
 import com.example.stretchy.repository.Activity
-import kotlinx.coroutines.flow.Flow
 
-interface SoundManager {
-    val soundFlow: Flow<SoundType>
-
-    suspend fun notifyEvent(event: NotifyEvent)
-}
 
 sealed class NotifyEvent {
     object ActivityEnds : NotifyEvent()
