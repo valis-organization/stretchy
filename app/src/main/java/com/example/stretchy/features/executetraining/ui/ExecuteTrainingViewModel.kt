@@ -165,10 +165,24 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         currentPage: Int,
         destinationPage: Int
     ): Int? {
+
         val activities = trainingWithActivities.activities
-        var newIndex: Int? = index
+        var newIndex: Int = index
+        fun handleSwipingBackFromBreakEdgeCase() {
+            //If user swipes back from break,
+            // the page changes so it won't be previous exercise,
+            // but the exercise on the previous page
+            newIndex = newIndex.minus(
+                if (activities.getOrNull(index - 2)?.activityType != ActivityType.BREAK) {
+                    2
+                } else {
+                    3
+                }
+            )
+        }
+
         if (destinationPage > currentPage) {
-            newIndex = newIndex?.plus(
+            newIndex = newIndex.plus(
                 if (activities.getOrNull(index + 1)?.activityType != ActivityType.BREAK) {
                     1
                 } else {
@@ -176,15 +190,20 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 }
             )
         } else {
-            newIndex = newIndex?.minus(
-                if (activities.getOrNull(index - 1)?.activityType != ActivityType.BREAK) {
-                    1
-                } else {
-                    2
-                }
-            )
+            if (activities.getOrNull(index)?.activityType == ActivityType.BREAK) {
+                handleSwipingBackFromBreakEdgeCase()
+            } else {
+                newIndex = newIndex.minus(
+                    if (activities.getOrNull(index - 1)?.activityType != ActivityType.BREAK) {
+                        1
+                    } else {
+                        2
+                    }
+                )
+            }
+
         }
-        if (newIndex == null || activities.getOrNull(newIndex) == null) {
+        if (activities.getOrNull(newIndex) == null) {
             return null
         }
         return newIndex
