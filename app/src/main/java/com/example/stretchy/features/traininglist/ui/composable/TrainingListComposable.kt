@@ -1,43 +1,24 @@
 package com.example.stretchy.features.traininglist.ui.composable
 
-import android.Manifest.permission.READ_EXTERNAL_STORAGE
-import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
-import android.database.Cursor
-import android.net.Uri
-import android.os.Build
-import android.os.Environment
-import android.provider.OpenableColumns
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
 import com.example.stretchy.R
+import com.example.stretchy.database.data.TrainingType
+import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
+import com.example.stretchy.features.traininglist.ui.composable.list.TrainingLazyListComposable
 import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
@@ -58,13 +39,16 @@ fun TrainingListComposable(
     navController: NavController,
     onExportClick: @Composable () -> Unit,
     onImportClick: @Composable () -> Unit,
+    trainingType: TrainingType
 ) {
     var showImportDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = { navController.navigate("exerciseCreatorScreen") }) {
+            FloatingActionButton(onClick = {
+                navController.navigate("exerciseCreatorScreen?trainingType=$trainingType")
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = stringResource(id = R.string.desc_plus_icon)
@@ -129,7 +113,7 @@ fun TrainingListComposable(
                         ) {
                             CircularProgressIndicator()
                         }
-                    is TrainingListUiState.Loaded -> TrainingListComposable(
+                    is TrainingListUiState.Loaded -> TrainingLazyListComposable(
                         state.trainings,
                         navController,
                         viewModel
