@@ -7,9 +7,13 @@ import java.io.File
 
 class DataExporterImpl(val repository: Repository) : DataExporter {
     private val gson = GsonBuilder().setPrettyPrinting().create()
+    private val dataTransportFilePath: String =
+        Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
+
+    private val dataTransportFileName: String = "StretchyTrainings$dataTransportFileExt"
     private val dataFile = File(dataTransportFilePath, dataTransportFileName)
 
-    override suspend fun exportData() {
+    override suspend fun export() {
         val data = getSavedData()
         dataFile.writeText(data!!)
     }
@@ -19,9 +23,6 @@ class DataExporterImpl(val repository: Repository) : DataExporter {
     }
 
     companion object {
-        private val dataTransportFilePath: String =
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).absolutePath
         const val dataTransportFileExt: String = ".rafalczamp"
-        private const val dataTransportFileName: String = "StretchyTrainings$dataTransportFileExt"
     }
 }

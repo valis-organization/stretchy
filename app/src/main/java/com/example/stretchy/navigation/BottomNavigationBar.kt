@@ -1,6 +1,5 @@
 package com.example.stretchy.navigation
 
-import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
@@ -14,7 +13,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.stretchy.Navigation
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.activity.di.ActivityComponent
@@ -24,7 +22,8 @@ import com.example.stretchy.database.data.TrainingType
 @Composable
 fun BottomNavigationBar(
     activityComponent: ActivityComponent,
-    grantPermissions: (permission: String) -> Unit
+    onExportClick: @Composable () -> Unit,
+    onImportClick: @Composable () -> Unit
 ) {
     val navController = rememberNavController()
     var showBottomNavBar by remember { (mutableStateOf(true)) }
@@ -80,12 +79,8 @@ fun BottomNavigationBar(
             composable(Screen.StretchingListScreen.route) {
                 Navigation(
                     activityComponent,
-                    {
-                        grantPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    },
-                    {
-                        grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    },
+                    onExportClick = onExportClick,
+                    onImportClick = onImportClick,
                     Screen.StretchingListScreen.route,
                     hideBottomNavBar = { showBottomNavBar = false },
                     showBottomNavBar = { showBottomNavBar = true },
@@ -98,12 +93,8 @@ fun BottomNavigationBar(
             composable(Screen.TrainingListScreen.route) {
                 Navigation(
                     activityComponent,
-                    {
-                        grantPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    },
-                    {
-                        grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    },
+                    onExportClick = onExportClick,
+                    onImportClick = onImportClick,
                     Screen.TrainingListScreen.route,
                     hideBottomNavBar = { showBottomNavBar = false },
                     showBottomNavBar = { showBottomNavBar = true },

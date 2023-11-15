@@ -48,23 +48,18 @@ class TrainingListViewModel(
     }
 
     suspend fun importByAppending(fileData: String) {
-        dataImporterImpl.importDataByAppending(fileData)
+        dataImporterImpl.importByAppending(fileData)
         fetchTrainingList()
     }
 
     suspend fun importByOverriding(fileData: String) {
-        dataImporterImpl.importDataByOverriding(fileData)
-    }
-/*
-    suspend fun import() {
-        dataImporterImpl.importData()
+        dataImporterImpl.importByOverriding(fileData)
         fetchTrainingList()
     }
-*/
 
     fun export() {
         viewModelScope.launch {
-            dataExporterImpl.exportData()
+            dataExporterImpl.export()
         }
     }
 
@@ -82,8 +77,8 @@ class TrainingListViewModel(
         return Training(
             this.id.toString(),
             this.name,
-            this.activities.size,
-            duration,
+            this.activities.getExercisesCount(),
+            calculateTrainingDuration(activities),
             this.trainingType.toTrainingType()
         )
     }

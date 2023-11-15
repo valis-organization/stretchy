@@ -7,13 +7,13 @@ import com.google.gson.reflect.TypeToken
 
 class DataImporterImpl(val repository: Repository) : DataImporter {
     private val gson = Gson()
-    override suspend fun importDataByAppending(data: String) {
+    override suspend fun importByAppending(data: String) {
         getData(data).forEach { training ->
             repository.addTrainingWithActivities(training)
         }
     }
 
-    override suspend fun importDataByOverriding(data: String) {
+    override suspend fun importByOverriding(data: String) {
         repository.deleteAllTrainings()
         getData(data).forEach { training ->
             repository.addTrainingWithActivities(training)
