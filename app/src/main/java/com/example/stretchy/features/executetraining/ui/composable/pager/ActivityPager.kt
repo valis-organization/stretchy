@@ -29,6 +29,10 @@ fun ActivityPager(
     var skipSounds by remember {
         mutableStateOf(false)
     }
+    var isChangingPageEnabled by remember {
+        mutableStateOf(true)
+    }
+
     LaunchedEffect(updatedInitialPage) {
         pagerState.animateScrollToPage(
             updatedInitialPage,
@@ -54,7 +58,8 @@ fun ActivityPager(
 
     HorizontalPager(
         state = pagerState,
-        pageCount = uiState.displayableActivityItemListWithBreakMerged!!.size
+        pageCount = uiState.displayableActivityItemListWithBreakMerged!!.size,
+        userScrollEnabled = isChangingPageEnabled
     ) { page ->
         val item = uiState.displayableActivityItemListWithBreakMerged!![page]
         if (page == uiState.currentDisplayPage) {
@@ -64,8 +69,14 @@ fun ActivityPager(
                 viewModel = viewModel,
                 getMaxSecondsFromList = getMaxSecondsFromList,
                 uiState = uiState,
-                onTimedActivity = onTimedActivity,
-                onTimelessExercise = onTimelessExercise,
+                onTimedActivity = {
+                    onTimedActivity()
+                    isChangingPageEnabled = true
+                },
+                onTimelessExercise = {
+                    onTimelessExercise()
+                    isChangingPageEnabled = false
+                },
                 onSecondsTakenFromList = { getMaxSecondsFromList = false }
             )
         } else {

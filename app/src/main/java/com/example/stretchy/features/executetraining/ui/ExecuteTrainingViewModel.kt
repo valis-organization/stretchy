@@ -242,9 +242,8 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     }
 
     private fun setupTimer(currentActivity: Activity) {
-        if (currentActivity.activityType != ActivityType.TIMELESS_EXERCISE) {
-            timer.setDuration(currentActivity.duration)
-        } else {
+        timer.setDuration(currentActivity.duration)
+        if (currentActivity.activityType == ActivityType.TIMELESS_EXERCISE) {
             pauseTimer()
         }
     }
@@ -442,6 +441,12 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 this.duration
             )
         }
+    }
+
+    fun swipeToBreak() {
+        val list = _uiState.value.activityTypes as MutableList<ActivityType>
+        list[_uiState.value.currentDisplayPage] = ActivityType.BREAK
+        startTimer()
     }
 
     companion object {
