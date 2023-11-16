@@ -6,9 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.Timer
-import com.example.stretchy.features.executetraining.sound.managers.SoundManager
-import com.example.stretchy.features.executetraining.sound.managers.SoundManagerImpl
-import com.example.stretchy.features.executetraining.sound.data.NotifyEvent
+import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifier
+import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifierImpl
+import com.example.stretchy.features.executetraining.sound.data.TrainingEvent
 import com.example.stretchy.features.executetraining.ui.data.*
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
@@ -30,10 +30,12 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private var startingTimestampSaved = false
     private var startingTimestamp = 0L
     private var index = 0
+    private val soundBeforeBreakEndsMs = 100F
+    private val soundBeforeActivityEndsMs = 3000F
 
     private var skippedByUser = false
     private lateinit var trainingWithActivities: TrainingWithActivity
-    private lateinit var soundManager: SoundManager
+    private lateinit var soundEventNotifier: SoundEventNotifier
 
 
     init {
@@ -68,7 +70,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 handleUserSkip(currentPage, destinationPage)
                 viewModelScope.launch {
                     notifySoundHandlerActivityUpdated()
-                    soundManager.notifyEvent(NotifyEvent.ActivitySwiped)
+                    soundEventNotifier.notifyEvent(TrainingEvent.ActivitySwiped)
                 }
             }
 
@@ -108,13 +110,13 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                     }
                 }
                 if (activityEnds(currentSeconds)) {
-                    soundManager.notifyEvent(NotifyEvent.ActivityEnds)
+                    soundEventNotifier.notifyEvent(TrainingEvent.ActivityEnds)
                 }
             }
     }
 
     private suspend fun collectSoundsFlow() {
-        soundManager.soundEventFlow.collect {
+        soundEventNotifier.soundEventFlow.collect {
             _uiState.value = _uiState.value.copy(soundState = it)
         }
     }
@@ -227,9 +229,9 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
 
     private fun activityEnds(currentSeconds: Float): Boolean {
         val currentActivity = trainingWithActivities.activities[index]
-        return (currentActivity.activityType == ActivityType.BREAK && currentSeconds == 100F) ||
-                currentActivity.activityType == ActivityType.STRETCH && currentSeconds == 3000F ||
-                currentActivity.activityType == ActivityType.EXERCISE && currentSeconds == 3000F
+        return (currentActivity.activityType == ActivityType.BREAK && currentSeconds == soundBeforeBreakEndsMs) ||
+                currentActivity.activityType == ActivityType.STRETCH && currentSeconds == soundBeforeActivityEndsMs ||
+                currentActivity.activityType == ActivityType.EXERCISE && currentSeconds == soundBeforeActivityEndsMs
     }
 
     private fun presetCurrentExercise(currentActivity: Activity) {
@@ -251,7 +253,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         val currentTime = Calendar.getInstance()
         val seconds = (currentTime.timeInMillis - startingTimestamp) / 1000
         viewModelScope.launch {
-            soundManager.notifyEvent(NotifyEvent.TrainingEnds)
+            soundEventNotifier.notifyEvent(TrainingEvent.TrainingEnds)
         }
         _uiState.value = _uiState.value.copy(
             isLoading = false,
@@ -269,8 +271,8 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private fun notifySoundHandlerActivityUpdated() {
         trainingWithActivities.activities.getOrNull(index)?.let {
             viewModelScope.launch {
-                soundManager.notifyEvent(
-                    NotifyEvent.ActivityUpdate(
+                soundEventNotifier.notifyEvent(
+                    TrainingEvent.ActivityUpdate(
                         it,
                         false,
                         nextExerciseName = trainingWithActivities.activities.getOrNull(
@@ -339,12 +341,12 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     }
 
     private suspend fun initializeSoundManager() {
-        soundManager = SoundManagerImpl()
+        soundEventNotifier = SoundEventNotifierImpl()
         viewModelScope.launch {
             collectSoundsFlow()
         }
-        soundManager.notifyEvent(
-            NotifyEvent.ActivityUpdate(
+        soundEventNotifier.notifyEvent(
+            TrainingEvent.ActivityUpdate(
                 trainingWithActivities.activities[0],
                 true,
                 ""

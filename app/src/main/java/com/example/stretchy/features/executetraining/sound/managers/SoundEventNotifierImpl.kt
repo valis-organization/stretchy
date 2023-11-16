@@ -1,13 +1,13 @@
 package com.example.stretchy.features.executetraining.sound.managers
 
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.features.executetraining.sound.data.NotifyEvent
+import com.example.stretchy.features.executetraining.sound.data.TrainingEvent
 import com.example.stretchy.features.executetraining.sound.data.SoundType
 import com.example.stretchy.repository.Activity
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
-class SoundManagerImpl : SoundManager {
+class SoundEventNotifierImpl : SoundEventNotifier {
     private val soundsEventFlow: MutableSharedFlow<SoundType> = MutableSharedFlow(replay = 0)
     private val readExerciseNameEvent: MutableSharedFlow<SoundType.ReadExerciseNameEvent> =
         MutableSharedFlow(replay = 0)
@@ -20,20 +20,20 @@ class SoundManagerImpl : SoundManager {
     fun readExerciseNameFlow(): Flow<SoundType> = readExerciseNameEvent
         .debounce(600)
 
-    override suspend fun notifyEvent(event: NotifyEvent) {
+    override suspend fun notifyEvent(event: TrainingEvent) {
         when (event) {
-            NotifyEvent.ActivityEnds -> activityEnds()
-            NotifyEvent.ActivitySwiped -> activitySwiped()
-            is NotifyEvent.ActivityUpdate -> activityUpdate(
+            TrainingEvent.ActivityEnds -> onActivityEnd()
+            TrainingEvent.ActivitySwiped -> onActivitySwiped()
+            is TrainingEvent.ActivityUpdate -> onActivityUpdate(
                 event.currentActivity,
                 event.isFirstExercise,
                 event.nextExerciseName
             )
-            NotifyEvent.TrainingEnds -> trainingEnds()
+            TrainingEvent.TrainingEnds -> onTrainingEnd()
         }
     }
 
-    private suspend fun activityUpdate(
+    private suspend fun onActivityUpdate(
         updatedActivity: Activity,
         isFirstExercise: Boolean,
         nextExerciseName: String?
@@ -49,16 +49,16 @@ class SoundManagerImpl : SoundManager {
         }
     }
 
-    private suspend fun activityEnds() {
+    private suspend fun onActivityEnd() {
         val activityType = currentActivity?.activityType
         if (activityType == ActivityType.BREAK) {
-            soundsEventFlow.emit(SoundType.BreakEndsEvent())
+            soundsEventFlow.emit(SoundType.BreakEndedEvent())
         } else if (activityType == ActivityType.EXERCISE || activityType == ActivityType.STRETCH) {
-            soundsEventFlow.emit(SoundType.ActivityFinishesEvent())
+            soundsEventFlow.emit(SoundType.ActivityEndedEvent())
         }
     }
 
-    private suspend fun activitySwiped() {
+    private suspend fun onActivitySwiped() {
         if (lastActivityNamePosted != currentActivity?.name) {
             lastActivityNamePosted = currentActivity?.name
             readExerciseNameEvent.emit(
@@ -67,7 +67,7 @@ class SoundManagerImpl : SoundManager {
         }
     }
 
-    private suspend fun trainingEnds() {
+    private suspend fun onTrainingEnd() {
         soundsEventFlow.emit(SoundType.TrainingCompletedEvent())
     }
 

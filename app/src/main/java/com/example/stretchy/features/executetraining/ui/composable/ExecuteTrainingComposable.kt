@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.sound.Player
-import com.example.stretchy.features.executetraining.sound.managers.SoundEventConsumer
 import com.example.stretchy.features.executetraining.sound.Speaker
+import com.example.stretchy.features.executetraining.sound.managers.consumeSoundEvents
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.composable.components.AnimatedTrainingProgressBar
 import com.example.stretchy.features.executetraining.ui.composable.components.QuittingSnackbar
@@ -51,7 +51,6 @@ fun ExecuteTrainingComposable(
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     var isTogglingTimerEnabled by remember { mutableStateOf(true) }
-    val soundEventConsumer = SoundEventConsumer(coroutineScope, speaker, player, context)
 
     Scaffold(scaffoldState = scaffoldState) { padding ->
         if (showSnackbar) {
@@ -84,7 +83,7 @@ fun ExecuteTrainingComposable(
                 contentAlignment = Alignment.Center
             ) {
                 val state = viewModel.uiState.collectAsState().value
-                soundEventConsumer.consume(state.soundState)
+                consumeSoundEvents(state.soundState, coroutineScope, speaker, player, context)
                 if (state.isLoading) {
                     Text(
                         text = stringResource(id = R.string.loading),
