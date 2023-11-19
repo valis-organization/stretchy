@@ -1,5 +1,6 @@
 package com.example.stretchy.features.executetraining.ui.composable.pager
 
+import android.util.Log
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.pager.HorizontalPager
@@ -29,9 +30,6 @@ fun ActivityPager(
     var skipSounds by remember {
         mutableStateOf(false)
     }
-    var isChangingPageEnabled by remember {
-        mutableStateOf(true)
-    }
 
     LaunchedEffect(updatedInitialPage) {
         pagerState.animateScrollToPage(
@@ -42,6 +40,7 @@ fun ActivityPager(
     var getMaxSecondsFromList by remember {
         mutableStateOf(false)
     }
+
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
             .collect { currentPage ->
@@ -59,7 +58,6 @@ fun ActivityPager(
     HorizontalPager(
         state = pagerState,
         pageCount = uiState.displayableActivityItemListWithBreakMerged!!.size,
-        userScrollEnabled = isChangingPageEnabled
     ) { page ->
         val item = uiState.displayableActivityItemListWithBreakMerged!![page]
         if (page == uiState.currentDisplayPage) {
@@ -71,11 +69,9 @@ fun ActivityPager(
                 uiState = uiState,
                 onTimedActivity = {
                     onTimedActivity()
-                    isChangingPageEnabled = true
                 },
                 onTimelessExercise = {
                     onTimelessExercise()
-                    isChangingPageEnabled = false
                 },
                 onSecondsTakenFromList = { getMaxSecondsFromList = false }
             )
@@ -125,7 +121,9 @@ fun FocusedPage(
                 exerciseName = exercise.name,
                 nextExerciseName = exercise.nextExercise,
                 viewModel = viewModel
-            )
+            ){
+                viewModel.changePage(page-1, true)
+            }
             onTimelessExercise()
         }
         ActivityType.BREAK -> {
@@ -174,7 +172,9 @@ fun PagesNotFocused(
                     exerciseName = name,
                     nextExerciseName = nextExercise,
                     viewModel = viewModel
-                )
+                ){
+                    viewModel.changePage(page-1, true)
+                }
             }
         ActivityType.BREAK -> {
             BreakComposable(

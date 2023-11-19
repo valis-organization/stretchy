@@ -1,5 +1,6 @@
 package com.example.stretchy.features.traininglist.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.ActivityType
@@ -74,14 +75,15 @@ class TrainingListViewModel(
             this.id.toString(),
             this.name,
             this.activities.getExercisesCount(),
-            calculateTrainingDuration(activities),
+            calculateEstimatedTrainingDuration(activities),
             this.trainingType.toTrainingType()
         )
     }
 
-    private fun calculateTrainingDuration(activities: List<Activity>): Int {
+    private fun calculateEstimatedTrainingDuration(activities: List<Activity>): Int {
         var duration = 0
         activities.forEach { activity ->
+            Log.e("aasd",activity.toString())
             duration += if (activity.duration == 0 || activity.activityType == ActivityType.TIMELESS_EXERCISE) {
                 TIMELESS_EXERCISE_ESTIMATED_DURATION_SECS
             } else {
@@ -122,7 +124,7 @@ class TrainingListViewModel(
                     repository.addTrainingWithActivities(
                         TrainingWithActivity(
                             name + COPY,
-                            TrainingType.STRETCH,
+                            trainingType,
                             true,
                             it
                         )

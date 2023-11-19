@@ -56,14 +56,10 @@ class ExerciseListAdapter(
     inner class ViewHolder(val composeView: ComposeView) : RecyclerView.ViewHolder(composeView)
 
     fun moveItem(from: Int, to: Int) {
-        Log.e("asdlistbefore",exercisesWithBreaks.toString())
-     //   exercisesWithBreaks[from].listId = to
-     //   exercisesWithBreaks[to].listId = from
         Collections.swap(exercisesWithBreaks, from, to)
         notifyItemMoved(from, to)
         notifyItemChanged(from)
         notifyItemChanged(to)
-        Log.e("asdlistafter",exercisesWithBreaks.toString())
     }
 
     fun submitList(newList: List<ExercisesWithBreaks>) {
