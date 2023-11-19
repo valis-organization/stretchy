@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 
-class Speaker(
+class SoundPlayer(
     val context: Context,
     locale: Locale = Locale.ENGLISH,
     pitch: Float = 1f,

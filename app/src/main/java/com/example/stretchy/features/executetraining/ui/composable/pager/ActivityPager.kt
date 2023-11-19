@@ -6,7 +6,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.*
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.features.executetraining.sound.Player
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.composable.pager.pages.ExerciseComposable
 import com.example.stretchy.features.executetraining.ui.composable.pager.pages.TimelessExerciseComposable
@@ -20,15 +19,11 @@ import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiSt
 fun ActivityPager(
     uiState: ExecuteTrainingUiState,
     viewModel: ExecuteTrainingViewModel,
-    player: Player,
     onTimedActivity: () -> Unit,
     onTimelessExercise: () -> Unit
 ) {
     val pagerState = rememberPagerState()
     val updatedInitialPage by rememberUpdatedState(uiState.currentDisplayPage)
-    var skipSounds by remember {
-        mutableStateOf(false)
-    }
     LaunchedEffect(updatedInitialPage) {
         pagerState.animateScrollToPage(
             updatedInitialPage,
@@ -43,13 +38,7 @@ fun ActivityPager(
             .collect { currentPage ->
                 getMaxSecondsFromList = true
                 viewModel.changePage(currentPage, true)
-                skipSounds = true
             }
-    }
-
-    if (skipSounds) {
-        player.stopSound()
-        skipSounds = false
     }
 
     HorizontalPager(

@@ -22,8 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
-import com.example.stretchy.features.executetraining.sound.Player
-import com.example.stretchy.features.executetraining.sound.Speaker
+import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.features.executetraining.sound.managers.consumeSoundEvents
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.composable.components.AnimatedTrainingProgressBar
@@ -33,8 +32,7 @@ import com.example.stretchy.features.executetraining.ui.composable.pager.Activit
 @Composable
 fun ExecuteTrainingComposable(
     viewModel: ExecuteTrainingViewModel,
-    speaker: Speaker,
-    player: Player,
+    soundPlayer: SoundPlayer,
     navController: NavController
 ) {
     var showSnackbar by remember { mutableStateOf(false) }
@@ -52,7 +50,7 @@ fun ExecuteTrainingComposable(
     var isTogglingTimerEnabled by remember { mutableStateOf(true) }
 
     val state = viewModel.uiState.collectAsState().value
-    consumeSoundEvents(state.soundEvent, coroutineScope, speaker, context)
+    consumeSoundEvents(state.soundEvent, coroutineScope, soundPlayer, context)
 
     Scaffold(scaffoldState = scaffoldState) { padding ->
         if (showSnackbar) {
@@ -94,7 +92,6 @@ fun ExecuteTrainingComposable(
                     ActivityPager(
                         state,
                         viewModel,
-                        player,
                         onTimedActivity = { isTogglingTimerEnabled = true },
                         onTimelessExercise = { isTogglingTimerEnabled = false })
                     Box(
