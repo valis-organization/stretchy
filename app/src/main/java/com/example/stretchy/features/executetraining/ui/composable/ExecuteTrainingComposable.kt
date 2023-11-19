@@ -37,7 +37,6 @@ fun ExecuteTrainingComposable(
     player: Player,
     navController: NavController
 ) {
-
     var showSnackbar by remember { mutableStateOf(false) }
     var numberOfBackButtonClick = 0
     BackHandler {
@@ -51,6 +50,9 @@ fun ExecuteTrainingComposable(
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     var isTogglingTimerEnabled by remember { mutableStateOf(true) }
+
+    val state = viewModel.uiState.collectAsState().value
+    consumeSoundEvents(state.soundEvent, coroutineScope, speaker, context)
 
     Scaffold(scaffoldState = scaffoldState) { padding ->
         if (showSnackbar) {
@@ -82,8 +84,6 @@ fun ExecuteTrainingComposable(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                val state = viewModel.uiState.collectAsState().value
-                consumeSoundEvents(state.soundState, coroutineScope, speaker, player, context)
                 if (state.isLoading) {
                     Text(
                         text = stringResource(id = R.string.loading),

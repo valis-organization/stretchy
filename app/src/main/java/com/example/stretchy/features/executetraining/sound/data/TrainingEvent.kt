@@ -4,12 +4,13 @@ import com.example.stretchy.repository.Activity
 
 
 sealed class TrainingEvent {
-    object ActivityEnds : TrainingEvent()
-    object ActivitySwiped : TrainingEvent()
-    object TrainingEnds : TrainingEvent()
-    data class ActivityUpdate(
-        val currentActivity: Activity,
-        val isFirstExercise: Boolean,
-        val nextExerciseName: String?
+    object ActivityEndsIn3Sec : TrainingEvent()
+    object BreakEnds : TrainingEvent()
+    object TrainingEnded : TrainingEvent()
+    data class NewActivityStarts(
+        val newActivity: Activity,
+        val isFirstExercise: Boolean = false,
+        val nextExerciseName: String? = null,
+        val isSwipedByUser: Boolean,
     ) : TrainingEvent()
 }

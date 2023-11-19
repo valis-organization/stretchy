@@ -1,7 +1,7 @@
 package com.example.stretchy.features.executetraining.ui.data
 
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.features.executetraining.sound.data.SoundType
+import com.example.stretchy.features.executetraining.sound.data.SoundEvent
 
 data class ExecuteTrainingUiState(
     var isLoading: Boolean,
@@ -13,7 +13,7 @@ data class ExecuteTrainingUiState(
     var activityTypes: List<ActivityType>?,
     var currentDisplayPage: Int,
     //events
-    val soundState: SoundType?
+    val soundEvent: SoundEvent?
 )
 
 class TrainingCompleted(val currentTrainingTime: String, val numberOfExercises: Int)
