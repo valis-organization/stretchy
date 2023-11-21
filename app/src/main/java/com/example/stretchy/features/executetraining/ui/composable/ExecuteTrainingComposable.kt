@@ -36,7 +36,9 @@ fun ExecuteTrainingComposable(
     navController: NavController
 ) {
     var showSnackbar by remember { mutableStateOf(false) }
-    var numberOfBackButtonClick = 0
+    var numberOfBackButtonClick by remember {
+        mutableStateOf(0)
+    }
     BackHandler {
         numberOfBackButtonClick++
         showSnackbar = true

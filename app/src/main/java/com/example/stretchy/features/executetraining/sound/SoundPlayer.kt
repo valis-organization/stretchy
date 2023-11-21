@@ -53,7 +53,10 @@ class SoundPlayer(
                     }
                     CoroutineScope(Dispatchers.IO).launch {
                         soundFlow.collect {
-                            Log.e("soundflow",it.toString())
+                            if(it is SoundFlow.Done){
+                                soundList.removeAt(0)
+                                playNextQueuedSound()
+                            }
                         }
                     }
                 }
@@ -121,8 +124,6 @@ class SoundPlayer(
             override fun onDone(utteranceId: String) {
                 CoroutineScope(Dispatchers.IO).launch {
                     soundFlow.emit(SoundFlow.Done(SoundType.Speech(text)))
-                    soundList.remove(SoundType.Speech(text))
-                    playNextQueuedSound()
                 }
             }
 
@@ -143,9 +144,7 @@ class SoundPlayer(
                 CoroutineScope(Dispatchers.IO).launch {
                     soundFlow.emit(SoundFlow.Done(SoundType.Sound(soundTrack)))
                 }
-                soundList.remove(SoundType.Sound(soundTrack))
                 players.remove(mp)
-                playNextQueuedSound()
             }
             setOnErrorListener { _, _, _ ->
                 CoroutineScope(Dispatchers.IO).launch {
@@ -169,7 +168,7 @@ class SoundPlayer(
         }
     }
 
-    fun playNextQueuedSound() {
+    private fun playNextQueuedSound() {
         when (val sound = soundList.getOrNull(0)) {
             is SoundType.Sound -> {
                 playSound(sound.soundTrack)
