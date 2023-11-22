@@ -22,8 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
-import com.example.stretchy.features.executetraining.sound.Player
-import com.example.stretchy.features.executetraining.sound.Speaker
+import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.features.executetraining.sound.managers.consumeSoundEvents
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.composable.components.AnimatedTrainingProgressBar
@@ -33,11 +32,9 @@ import com.example.stretchy.features.executetraining.ui.composable.pager.Activit
 @Composable
 fun ExecuteTrainingComposable(
     viewModel: ExecuteTrainingViewModel,
-    speaker: Speaker,
-    player: Player,
+    soundPlayer: SoundPlayer,
     navController: NavController
 ) {
-
     var showSnackbar by remember { mutableStateOf(false) }
     var numberOfBackButtonClick = 0
     BackHandler {
@@ -51,6 +48,9 @@ fun ExecuteTrainingComposable(
     val coroutineScope = rememberCoroutineScope()
     val scaffoldState: ScaffoldState = rememberScaffoldState()
     var isTogglingTimerEnabled by remember { mutableStateOf(true) }
+
+    val state = viewModel.uiState.collectAsState().value
+    consumeSoundEvents(state.soundEvent, coroutineScope, soundPlayer, context)
 
     Scaffold(scaffoldState = scaffoldState) { padding ->
         if (showSnackbar) {
@@ -82,8 +82,6 @@ fun ExecuteTrainingComposable(
                     },
                 contentAlignment = Alignment.Center
             ) {
-                val state = viewModel.uiState.collectAsState().value
-                consumeSoundEvents(state.soundState, coroutineScope, speaker, player, context)
                 if (state.isLoading) {
                     Text(
                         text = stringResource(id = R.string.loading),
@@ -94,7 +92,6 @@ fun ExecuteTrainingComposable(
                     ActivityPager(
                         state,
                         viewModel,
-                        player,
                         onTimedActivity = { isTogglingTimerEnabled = true },
                         onTimelessExercise = { isTogglingTimerEnabled = false })
                     Box(

@@ -2,91 +2,100 @@ package com.example.stretchy.features.executetraining.sound.managers
 
 import android.content.Context
 import com.example.stretchy.R
-import com.example.stretchy.features.executetraining.sound.Player
-import com.example.stretchy.features.executetraining.sound.Speaker
+import com.example.stretchy.features.executetraining.sound.SoundType
+import com.example.stretchy.features.executetraining.sound.SoundPlayer
+import com.example.stretchy.features.executetraining.sound.data.SoundEvent
 import com.example.stretchy.features.executetraining.sound.data.SoundTrack
-import com.example.stretchy.features.executetraining.sound.data.SoundType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 fun consumeSoundEvents(
-    soundType: SoundType?,
+    soundEvent: SoundEvent?,
     coroutineScope: CoroutineScope,
-    speaker: Speaker,
-    player: Player,
+    soundPlayer: SoundPlayer,
     context: Context
 ) {
-    when (soundType) {
-        is SoundType.ActivityEndedEvent -> consumeActivityFinishes(
-            soundType,
+    when (soundEvent) {
+        is SoundEvent.ActivityEndedEvent -> consumeActivityFinishes(
+            soundEvent,
             coroutineScope,
-            player
+            soundPlayer
         )
-        is SoundType.BreakEndedEvent -> consumeBreakEnds(soundType, coroutineScope, player)
-        is SoundType.ReadExerciseNameEvent -> consumeReadExerciseName(
-            soundType,
+        is SoundEvent.BreakEndedEvent -> consumeBreakEnds(
+            soundEvent,
             coroutineScope,
-            speaker
+            soundPlayer
         )
-        is SoundType.TrainingCompletedEvent -> consumeTrainingEnds(
-            soundType,
+        is SoundEvent.ReadExerciseNameEvent -> consumeReadExerciseName(
+            soundEvent,
             coroutineScope,
-            speaker,
+            soundPlayer
+        )
+        is SoundEvent.TrainingCompletedEvent -> consumeTrainingEnds(
+            soundEvent,
+            coroutineScope,
+            soundPlayer,
             context
         )
+        is SoundEvent.SkipSounds -> {
+            consumeSkipSounds(soundPlayer)
+        }
         null -> {}
     }
 }
 
 private fun consumeTrainingEnds(
-    trainingCompletedEvent: SoundType.TrainingCompletedEvent,
+    trainingCompletedEvent: SoundEvent.TrainingCompletedEvent,
     coroutineScope: CoroutineScope,
-    speaker: Speaker,
+    soundPlayer: SoundPlayer,
     context: Context
 ) {
     trainingCompletedEvent.consume()?.let {
         coroutineScope.launch {
-            speaker.say(context.resources.getString(R.string.training_finished))
+            soundPlayer.queueSound(SoundType.Speech(context.resources.getString(R.string.training_finished)))
         }
     }
 }
 
+private fun consumeSkipSounds(soundPlayer: SoundPlayer) {
+    soundPlayer.stopSound()
+}
+
 private fun consumeReadExerciseName(
-    readExerciseNameEvent: SoundType.ReadExerciseNameEvent,
+    readExerciseNameEvent: SoundEvent.ReadExerciseNameEvent,
     coroutineScope: CoroutineScope,
-    speaker: Speaker
+    soundPlayer: SoundPlayer
 ) {
     val name = readExerciseNameEvent.name
     if (!readExerciseNameEvent.isConsumed) {
         readExerciseNameEvent.consume().let {
-
             coroutineScope.launch {
-                speaker.say(name)
+                soundPlayer.queueSound(SoundType.Speech(name))
             }
         }
     }
 }
 
 private fun consumeActivityFinishes(
-    activityFinishesEvent: SoundType?,
+    activityFinishesEvent: SoundEvent?,
     coroutineScope: CoroutineScope,
-    player: Player
+    soundPlayer: SoundPlayer
 ) {
     activityFinishesEvent?.consume()?.let {
         coroutineScope.launch {
-            player.playSound(SoundTrack.EXERCISE_ENDING)
+            soundPlayer.queueSound(SoundType.Sound(SoundTrack.EXERCISE_ENDING))
         }
     }
 }
 
 private fun consumeBreakEnds(
-    breakEndsEvent: SoundType?,
+    breakEndsEvent: SoundEvent?,
     coroutineScope: CoroutineScope,
-    player: Player
+    soundPlayer: SoundPlayer
 ) {
     breakEndsEvent?.consume()?.let {
         coroutineScope.launch {
-            player.playSound(SoundTrack.BREAK_ENDED)
+            soundPlayer.queueSound(SoundType.Sound(SoundTrack.BREAK_ENDED))
         }
     }
 }
