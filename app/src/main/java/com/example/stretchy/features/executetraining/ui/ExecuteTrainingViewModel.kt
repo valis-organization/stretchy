@@ -32,7 +32,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private var startingTimestamp = 0L
     private var index = 0
     private val soundBeforeBreakEndsMs = 100F
-    private val `3_SECOUNDS` = 3000F
+    private val `3_SECONDS` = 3000F
 
     private var skippedByUser = false
     private lateinit var trainingWithActivities: TrainingWithActivity
@@ -233,8 +233,8 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
 
     private fun activityEndsIn3sec(currentSeconds: Float): Boolean {
         val currentActivity = trainingWithActivities.activities[index]
-        return (currentActivity.activityType == ActivityType.STRETCH && currentSeconds == `3_SECOUNDS` ||
-                currentActivity.activityType == ActivityType.EXERCISE && currentSeconds == `3_SECOUNDS`)
+        return (currentActivity.activityType == ActivityType.STRETCH && currentSeconds == `3_SECONDS` ||
+                currentActivity.activityType == ActivityType.EXERCISE && currentSeconds == `3_SECONDS`)
     }
 
     private fun activityEnds(currentSeconds: Float): Boolean {

@@ -21,12 +21,13 @@ class SoundPlayer(
     locale: Locale = Locale.ENGLISH,
     pitch: Float = 1f,
     speechSpeed: Float = 1.1f,
-) : SoundFlowEvent {
+) : SoundPlaybackStateEvent {
     private lateinit var textToSpeech: TextToSpeech
     private var isInitializedFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
     private val players: MutableList<MediaPlayer> = mutableListOf()
-    override val soundFlow: MutableSharedFlow<SoundFlow> = MutableSharedFlow(replay = 0)
-    val soundList = mutableListOf<SoundType>()
+    override val soundPlaybackState: MutableSharedFlow<SoundPlaybackState> =
+        MutableSharedFlow(replay = 0)
+    private val soundTypeList = mutableListOf<SoundType>()
 
     init {
         textToSpeech = TextToSpeech(context) { status ->
@@ -46,15 +47,35 @@ class SoundPlayer(
                     textToSpeech.voice = voice
                     textToSpeech.setPitch(pitch)
                     textToSpeech.setSpeechRate(speechSpeed)
+                    textToSpeech.setOnUtteranceProgressListener(object :
+                        UtteranceProgressListener() {
+                        override fun onStart(utteranceId: String) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                soundPlaybackState.emit(SoundPlaybackState.Playing(SoundType.Speech("")))
+                            }
+                        }
 
+                        override fun onDone(utteranceId: String) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                soundPlaybackState.emit(SoundPlaybackState.Done(SoundType.Speech("")))
+                            }
+                        }
+
+                        override fun onError(utteranceId: String?) {
+                            CoroutineScope(Dispatchers.IO).launch {
+                                soundPlaybackState.emit(SoundPlaybackState.Error(SoundType.Speech("")))
+                            }
+                        }
+                    })
 
                     GlobalScope.launch {
                         isInitializedFlow.emit(true)
                     }
                     CoroutineScope(Dispatchers.IO).launch {
-                        soundFlow.collect {
-                            if(it is SoundFlow.Done){
-                                soundList.removeAt(0)
+                        soundPlaybackState.collect {
+                            Log.e("asd",it.toString())
+                            if (it is SoundPlaybackState.Done) {
+                                soundTypeList.removeAt(0)
                                 playNextQueuedSound()
                             }
                         }
@@ -68,21 +89,21 @@ class SoundPlayer(
     fun queueSound(sound: SoundType) {
         when (sound) {
             is SoundType.Sound -> {
-                soundList.add(SoundType.Sound(sound.soundTrack))
-                if (soundList.size == 1) {
+                soundTypeList.add(SoundType.Sound(sound.soundTrack))
+                if (soundTypeList.size == 1) {
                     playSound(sound.soundTrack)
                 }
             }
             is SoundType.Speech -> {
-                if(soundList.getOrNull(0) is SoundType.Speech){
-                    soundList.removeAt(0)
+                if (soundTypeList.getOrNull(0) is SoundType.Speech) {
+                    soundTypeList.removeAt(0)
                     textToSpeech.stop()
-                }else if(soundList.getOrNull(0) == SoundType.Sound(SoundTrack.EXERCISE_ENDING)){
-                    soundList.removeAt(0)
+                } else if (soundTypeList.getOrNull(0) == SoundType.Sound(SoundTrack.EXERCISE_ENDING)) {
+                    soundTypeList.removeAt(0)
                     stopSound()
                 }
-                soundList.add(SoundType.Speech(sound.text))
-                if (soundList.size == 1) {
+                soundTypeList.add(SoundType.Speech(sound.text))
+                if (soundTypeList.size == 1) {
                     CoroutineScope(Dispatchers.IO).launch {
                         sound.text?.let { say(it) }
                     }
@@ -113,27 +134,6 @@ class SoundPlayer(
             text,
             TextToSpeech.QUEUE_FLUSH, null, "UniqueID"
         )
-        textToSpeech.setOnUtteranceProgressListener(object :
-            UtteranceProgressListener() {
-            override fun onStart(utteranceId: String) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    soundFlow.emit(SoundFlow.Playing(SoundType.Speech(text)))
-                }
-            }
-
-            override fun onDone(utteranceId: String) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    soundFlow.emit(SoundFlow.Done(SoundType.Speech(text)))
-                }
-            }
-
-            override fun onError(utteranceId: String?) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    soundFlow.emit(SoundFlow.Error(SoundType.Speech(text)))
-                }
-            }
-
-        })
     }
 
     private fun playSound(soundTrack: SoundTrack) {
@@ -142,13 +142,13 @@ class SoundPlayer(
                 mp.reset()
                 mp.release()
                 CoroutineScope(Dispatchers.IO).launch {
-                    soundFlow.emit(SoundFlow.Done(SoundType.Sound(soundTrack)))
+                    soundPlaybackState.emit(SoundPlaybackState.Done(SoundType.Sound(soundTrack)))
                 }
                 players.remove(mp)
             }
             setOnErrorListener { _, _, _ ->
                 CoroutineScope(Dispatchers.IO).launch {
-                    soundFlow.emit(SoundFlow.Error(SoundType.Sound(soundTrack)))
+                    soundPlaybackState.emit(SoundPlaybackState.Error(SoundType.Sound(soundTrack)))
                 }
                 true
             }
@@ -157,7 +157,7 @@ class SoundPlayer(
         players.add(mp)
         mp.start()
         CoroutineScope(Dispatchers.IO).launch {
-            soundFlow.emit(SoundFlow.Playing(SoundType.Sound(soundTrack)))
+            soundPlaybackState.emit(SoundPlaybackState.Playing(SoundType.Sound(soundTrack)))
         }
     }
 
@@ -169,7 +169,7 @@ class SoundPlayer(
     }
 
     private fun playNextQueuedSound() {
-        when (val sound = soundList.getOrNull(0)) {
+        when (val sound = soundTypeList.getOrNull(0)) {
             is SoundType.Sound -> {
                 playSound(sound.soundTrack)
             }
