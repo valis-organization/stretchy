@@ -180,9 +180,9 @@ private fun DismissBackgroundLayout(dismissState: DismissState) {
         Alignment.CenterStart
     ) {
         Icon(
-            icon,
+            imageVector = icon,
             contentDescription = stringResource(id = R.string.desc_delete_icon),
-            Modifier.size(44.dp)
+            modifier = Modifier.size(44.dp)
         )
     }
 }
