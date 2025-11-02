@@ -22,17 +22,20 @@ fun ActivityPager(
     onTimedActivity: () -> Unit,
     onTimelessExercise: () -> Unit
 ) {
-    val pagerState = rememberPagerState()
+    val pagerState = rememberPagerState(
+        pageCount = { uiState.displayableActivityItemListWithBreakMerged?.size ?: 0 },
+        initialPage = uiState.currentDisplayPage
+    )
     val updatedInitialPage by rememberUpdatedState(uiState.currentDisplayPage)
     LaunchedEffect(updatedInitialPage) {
-        pagerState.animateScrollToPage(
-            updatedInitialPage,
-            animationSpec = (tween(250))
-        )
+        if (updatedInitialPage < pagerState.pageCount) {
+            pagerState.animateScrollToPage(
+                updatedInitialPage,
+                animationSpec = (tween(250))
+            )
+        }
     }
-    var getMaxSecondsFromList by remember {
-        mutableStateOf(false)
-    }
+    var getMaxSecondsFromList by remember { mutableStateOf(false) }
     LaunchedEffect(pagerState) {
         snapshotFlow { pagerState.currentPage }
             .collect { currentPage ->
@@ -42,8 +45,7 @@ fun ActivityPager(
     }
 
     HorizontalPager(
-        state = pagerState,
-        pageCount = uiState.displayableActivityItemListWithBreakMerged!!.size
+        state = pagerState
     ) { page ->
         val item = uiState.displayableActivityItemListWithBreakMerged!![page]
         if (page == uiState.currentDisplayPage) {
