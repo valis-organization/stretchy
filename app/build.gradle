@@ -52,6 +52,8 @@ android {
 
 dependencies {
     implementation coreLibraries
+    // Opt into Compose BOM to manage Compose library versions
+    implementation platform(composeBom)
     implementation jetpackCompose
     implementation coroutines
     implementation dagger
@@ -67,4 +69,3 @@ dependencies {
     debugImplementation  composeDebugImplementation
 
 }
-
