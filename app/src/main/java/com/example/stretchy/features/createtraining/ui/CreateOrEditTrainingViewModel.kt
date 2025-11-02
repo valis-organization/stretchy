@@ -2,18 +2,18 @@ package com.example.stretchy.features.createtraining.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.extensions.toActivityType
+import com.example.stretchy.features.createtraining.domain.toActivityList
+import com.example.stretchy.features.createtraining.domain.toExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
-import com.example.stretchy.features.createtraining.ui.data.Exercise
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class CreateOrEditTrainingViewModel(
@@ -25,7 +25,7 @@ class CreateOrEditTrainingViewModel(
     ViewModel() {
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
         MutableStateFlow(CreateTrainingUiState.Init)
-    val uiState: StateFlow<CreateTrainingUiState> = _uiState
+    val uiState: StateFlow<CreateTrainingUiState> = _uiState.asStateFlow()
 
     init {
         if (trainingId != -1L) {
@@ -33,7 +33,7 @@ class CreateOrEditTrainingViewModel(
                 val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
 
                 with(trainingWithActivities) {
-                    val exerciseList = activities.toExerciseWithBreaks()
+                    val exerciseList = activities.toExercisesWithBreaks()
                     _uiState.emit(
                         CreateTrainingUiState.Success(
                             trainingId,
@@ -68,7 +68,7 @@ class CreateOrEditTrainingViewModel(
 
     fun editTraining(trainingId: Long, exerciseList: List<ExercisesWithBreaks>) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        val activitiesList = exerciseList.mapToActivityList()
+        val activitiesList = exerciseList.toActivityList(trainingType)
         viewModelScope.launch {
             val success = (_uiState.value as? CreateTrainingUiState.Success)
             if (success != null) {
@@ -128,7 +128,7 @@ class CreateOrEditTrainingViewModel(
 
     fun createTraining(exerciseList: List<ExercisesWithBreaks>) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        val activitiesList = exerciseList.mapToActivityList()
+        val activitiesList = exerciseList.toActivityList(trainingType)
         viewModelScope.launch {
             if (stateSuccess.currentName == "") {
                 _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName))
@@ -194,70 +194,11 @@ class CreateOrEditTrainingViewModel(
         if (trainingId != null && trainingId >= 0) {
             val trainingFromDb = repository.getTrainingWithActivitiesById(trainingId)
             if (trainingFromDb.name == trainingName) {
-                if (trainingFromDb.activities.toExerciseWithBreaks() == exerciseList) {
+                if (trainingFromDb.activities.toExercisesWithBreaks() == exerciseList) {
                     return false
                 }
             }
         }
         return true
     }
-
-    private fun List<ExercisesWithBreaks>.mapToActivityList(): List<Activity> {
-        val activityList = mutableListOf<Activity>()
-        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-
-        var activityOrder = 0
-
-        this.forEach {
-            with(it.exercise) {
-                activityList.add(
-                    Activity(
-                        name,
-                        activityOrder,
-                        duration,
-                        stateSuccess.trainingType.toActivityType(duration == 0)
-                    )
-                )
-            }
-            activityOrder++
-            if (it.nextBreakDuration != 0 && it.nextBreakDuration != null) {
-                activityList.add(
-                    Activity(
-                        "",
-                        activityOrder,
-                        it.nextBreakDuration!!,
-                        ActivityType.BREAK
-                    )
-                )
-                activityOrder++
-            }
-        }
-        return activityList
-    }
-
-    private fun List<Activity>.toExerciseWithBreaks(): List<ExercisesWithBreaks> {
-        val list = mutableListOf<ExercisesWithBreaks>()
-        this.forEachIndexed() { index, item ->
-            if (item.activityType != ActivityType.BREAK) {
-                list.add(
-                    ExercisesWithBreaks(
-                        list.lastIndex + 1,
-                        Exercise(
-                            item.activityId.toInt(),
-                            item.name,
-                            item.activityOrder,
-                            item.duration
-                        ),
-                        if (this.getOrNull(index + 1)?.activityType == ActivityType.BREAK) this.getOrNull(
-                            index + 1
-                        )?.duration
-                        else null, false
-                    )
-                )
-            }
-        }
-        return list
-    }
 }
-
-

@@ -2,13 +2,12 @@ package com.example.stretchy.features.traininglist.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
+import com.example.stretchy.features.traininglist.domain.toTraining
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
-import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
@@ -67,45 +66,6 @@ class TrainingListViewModel(
             }
         }
         return list
-    }
-
-    private fun TrainingWithActivity.toTraining(): Training {
-        return Training(
-            this.id.toString(),
-            this.name,
-            this.activities.getExercisesCount(),
-            calculateTrainingDuration(activities),
-            this.trainingType.toTrainingType()
-        )
-    }
-
-    private fun calculateTrainingDuration(activities: List<Activity>): Int {
-        var duration = 0
-        activities.forEach { activity ->
-            duration += if (activity.duration == 0 || activity.activityType == ActivityType.TIMELESS_EXERCISE) {
-                TIMELESS_EXERCISE_ESTIMATED_DURATION_SECS
-            } else {
-                activity.duration
-            }
-        }
-        return duration
-    }
-
-    private fun List<Activity>.getExercisesCount(): Int {
-        var size = 0
-        this.forEach {
-            if (it.activityType != ActivityType.BREAK) {
-                size++
-            }
-        }
-        return size
-    }
-
-    private fun TrainingType.toTrainingType(): Training.Type {
-        return when (this) {
-            TrainingType.STRETCH -> Training.Type.STRETCH
-            TrainingType.BODYWEIGHT -> Training.Type.BODY_WEIGHT
-        }
     }
 
     fun deleteTraining(training: Training) {
