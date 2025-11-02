@@ -1,6 +1,5 @@
 package com.example.stretchy.ui.navigation
 
-import android.Manifest
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
@@ -18,6 +17,7 @@ import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.activity.di.ActivityComponent
 import com.example.stretchy.navigation.BottomNavScreen
+import com.example.stretchy.permission.StoragePermissionState
 import com.example.stretchy.ui.screen.MetaTrainingScreen
 import com.example.stretchy.ui.screen.StretchingScreen
 import com.example.stretchy.ui.screen.TrainingScreen
@@ -25,7 +25,7 @@ import com.example.stretchy.ui.screen.TrainingScreen
 @Composable
 fun BottomNavBar(
     activityComponent: ActivityComponent,
-    grantPermissions: (permission: String) -> Unit
+    storagePermissionState: StoragePermissionState
 ) {
     val navController = rememberNavController()
     var showBottomNavBar by remember { mutableStateOf(true) }
@@ -85,8 +85,8 @@ fun BottomNavBar(
             composable(Screen.StretchingListScreen.route) {
                 StretchingScreen(
                     activityComponent = activityComponent,
-                    grantWritePermission = { grantPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) },
-                    grantReadPermission = { grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE) },
+                    grantWritePermission = { storagePermissionState.requestWrite() },
+                    grantReadPermission = { storagePermissionState.requestRead() },
                     hideBottomNavBar = { showBottomNavBar = false },
                     showBottomNavBar = { showBottomNavBar = true }
                 )
@@ -97,8 +97,8 @@ fun BottomNavBar(
             composable(Screen.TrainingListScreen.route) {
                 TrainingScreen(
                     activityComponent = activityComponent,
-                    grantWritePermission = { grantPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) },
-                    grantReadPermission = { grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE) },
+                    grantWritePermission = { storagePermissionState.requestWrite() },
+                    grantReadPermission = { storagePermissionState.requestRead() },
                     hideBottomNavBar = { showBottomNavBar = false },
                     showBottomNavBar = { showBottomNavBar = true }
                 )

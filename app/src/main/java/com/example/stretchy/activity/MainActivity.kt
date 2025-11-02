@@ -1,14 +1,11 @@
 package com.example.stretchy.activity
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.app.ActivityCompat
+import androidx.compose.runtime.remember
 import com.example.stretchy.activity.di.ActivityComponent
+import com.example.stretchy.permission.PermissionManager
+import com.example.stretchy.permission.rememberStoragePermissionState
 import com.example.stretchy.ui.navigation.BottomNavBar
 class MainActivity : ComponentActivity() {
     private lateinit var activityComponent: ActivityComponent
@@ -16,20 +13,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         activityComponent = ActivityComponent.create(this)
         setContent {
-            BottomNavBar(activityComponent, grantPermissions = { grantPermissions(it) })
-        }
-    }
-    private fun grantPermissions(permission: String) {
-        if (SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-            intent.data = Uri.parse("package:" + applicationContext.packageName)
-            startActivity(intent)
-        } else {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(permission),
-                100
-            )
+            // Remember permission manager & compose state
+            val permissionManager = remember { PermissionManager(this) }
+            val storagePermissionState = rememberStoragePermissionState(permissionManager)
+            BottomNavBar(activityComponent = activityComponent, storagePermissionState = storagePermissionState)
         }
     }
 }
