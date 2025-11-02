@@ -16,6 +16,7 @@ class CreateTrainingModule {
         automaticBreakPreferences: AutomaticBreakPreferences,
         trainingType: TrainingType
     ) =
+        // Use existing (backward-compatible) constructor so DI stays minimal here
         CreateOrEditTrainingViewModel(
             repository,
             trainingId,

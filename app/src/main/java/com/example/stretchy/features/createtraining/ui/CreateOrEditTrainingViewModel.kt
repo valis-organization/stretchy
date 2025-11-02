@@ -7,6 +7,9 @@ import com.example.stretchy.features.createtraining.domain.toActivityList
 import com.example.stretchy.features.createtraining.domain.toExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
+import com.example.stretchy.features.domain.usecases.CreateTrainingUseCase
+import com.example.stretchy.features.domain.usecases.EditTrainingUseCase
+import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
@@ -17,12 +20,29 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class CreateOrEditTrainingViewModel(
-    val repository: Repository,
+    private val fetchTrainingByIdUseCase: FetchTrainingByIdUseCase,
+    private val createTrainingUseCase: CreateTrainingUseCase,
+    private val editTrainingUseCase: EditTrainingUseCase,
     val trainingId: Long,
     private val automaticBreakPreferences: AutomaticBreakPreferences,
     val trainingType: TrainingType
-) :
-    ViewModel() {
+) : ViewModel() {
+
+    // Secondary constructor retained for backward compatibility with existing DI modules
+    constructor(
+        repository: Repository,
+        trainingId: Long,
+        automaticBreakPreferences: AutomaticBreakPreferences,
+        trainingType: TrainingType
+    ) : this(
+        FetchTrainingByIdUseCase(repository),
+        CreateTrainingUseCase(repository),
+        EditTrainingUseCase(repository),
+        trainingId,
+        automaticBreakPreferences,
+        trainingType
+    )
+
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
         MutableStateFlow(CreateTrainingUiState.Init)
     val uiState: StateFlow<CreateTrainingUiState> = _uiState.asStateFlow()
@@ -30,7 +50,7 @@ class CreateOrEditTrainingViewModel(
     init {
         if (trainingId != -1L) {
             viewModelScope.launch(Dispatchers.IO) {
-                val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+                val trainingWithActivities = fetchTrainingByIdUseCase(trainingId)
 
                 with(trainingWithActivities) {
                     val exerciseList = activities.toExercisesWithBreaks()
@@ -72,15 +92,12 @@ class CreateOrEditTrainingViewModel(
         viewModelScope.launch {
             val success = (_uiState.value as? CreateTrainingUiState.Success)
             if (success != null) {
-                repository.editTrainingWithActivities(
-                    trainingId,
-                    TrainingWithActivity(
-                        stateSuccess.currentName,
-                        trainingType,
-                        true,
-                        activitiesList
-                    )
-                )
+                editTrainingUseCase(trainingId, TrainingWithActivity(
+                    stateSuccess.currentName,
+                    trainingType,
+                    true,
+                    activitiesList
+                ))
                 _uiState.emit(CreateTrainingUiState.Done)
             }
         }
@@ -134,7 +151,13 @@ class CreateOrEditTrainingViewModel(
                 _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName))
             } else {
                 try {
-                    saveTraining(activitiesList)
+                    createTrainingUseCase(TrainingWithActivity(
+                        stateSuccess.currentName,
+                        trainingType,
+                        true,
+                        activitiesList
+                    ))
+                    _uiState.emit(CreateTrainingUiState.Done)
                 } catch (ex: Exception) {
                     _uiState.emit(
                         CreateTrainingUiState.Error(
@@ -163,23 +186,6 @@ class CreateOrEditTrainingViewModel(
 
     fun getAutoBreakDuration(): Int = automaticBreakPreferences.getCurrentAutoBreakDuration()
 
-    private fun saveTraining(activitiesList: List<Activity>) {
-        viewModelScope.launch {
-            val success = (_uiState.value as? CreateTrainingUiState.Success)
-            if (success != null) {
-                repository.addTrainingWithActivities(
-                    TrainingWithActivity(
-                        success.currentName,
-                        trainingType,
-                        true,
-                        activitiesList
-                    )
-                )
-                _uiState.emit(CreateTrainingUiState.Done)
-            }
-        }
-    }
-
     private fun isCreateTrainingButtonVisible(
         currentName: String,
         exerciseList: List<ExercisesWithBreaks>
@@ -192,7 +198,7 @@ class CreateOrEditTrainingViewModel(
         exerciseList: List<ExercisesWithBreaks>
     ): Boolean {
         if (trainingId != null && trainingId >= 0) {
-            val trainingFromDb = repository.getTrainingWithActivitiesById(trainingId)
+            val trainingFromDb = fetchTrainingByIdUseCase(trainingId)
             if (trainingFromDb.name == trainingName) {
                 if (trainingFromDb.activities.toExercisesWithBreaks() == exerciseList) {
                     return false

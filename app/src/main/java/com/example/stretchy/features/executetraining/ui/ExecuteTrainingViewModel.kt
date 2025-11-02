@@ -11,8 +11,8 @@ import com.example.stretchy.features.executetraining.sound.managers.SoundEventNo
 import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifierImpl
 import com.example.stretchy.features.executetraining.sound.data.TrainingEvent
 import com.example.stretchy.features.executetraining.ui.data.*
+import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
 import com.example.stretchy.repository.Activity
-import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
 import java.lang.Thread.sleep
 import java.util.*
 
-class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
+class ExecuteTrainingViewModel(private val fetchTrainingByIdUseCase: FetchTrainingByIdUseCase, val trainingId: Long) : ViewModel() {
     private val _uiState = initUiState()
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
 
@@ -45,7 +45,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         }
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+            trainingWithActivities = fetchTrainingByIdUseCase(trainingId)
             initializeDisplayableList()
             initializeSoundManager()
 
@@ -460,6 +460,3 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         private const val TIMER_LOG_TAG = "TIMER"
     }
 }
-
-
-

@@ -5,24 +5,29 @@ import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
+import com.example.stretchy.features.domain.usecases.CopyTrainingUseCase
+import com.example.stretchy.features.domain.usecases.DeleteTrainingUseCase
+import com.example.stretchy.features.domain.usecases.FetchTrainingListUseCase
 import com.example.stretchy.features.traininglist.domain.toTraining
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
-import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class TrainingListViewModel(
-    val repository: Repository,
+    private val fetchTrainingListUseCase: FetchTrainingListUseCase,
+    private val deleteTrainingUseCase: DeleteTrainingUseCase,
+    private val copyTrainingUseCase: CopyTrainingUseCase,
     private val dataImporterImpl: DataImporterImpl,
     private val dataExporterImpl: DataExporterImpl,
     private val trainingType: TrainingType
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
-    val uiState: StateFlow<TrainingListUiState> = _uiState
+    val uiState: StateFlow<TrainingListUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -32,7 +37,7 @@ class TrainingListViewModel(
 
     private suspend fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
-        val trainingWithActivityList = repository.getTrainingsWithActivities()
+        val trainingWithActivityList = fetchTrainingListUseCase()
         if (trainingWithActivityList.isEmpty()) {
             _uiState.value = TrainingListUiState.Empty
         } else {
@@ -70,31 +75,19 @@ class TrainingListViewModel(
 
     fun deleteTraining(training: Training) {
         viewModelScope.launch {
-            repository.deleteTrainingById(training.id.toLong())
+            deleteTrainingUseCase(training.id.toLong())
             fetchTrainingList()
         }
     }
 
     fun copyTraining(training: Training) {
         viewModelScope.launch {
-            with(training) {
-                repository.getTrainingWithActivitiesById(id.toLong()).activities.let {
-                    repository.addTrainingWithActivities(
-                        TrainingWithActivity(
-                            name + COPY,
-                            TrainingType.STRETCH,
-                            true,
-                            it
-                        )
-                    )
-                }
-            }
+            copyTrainingUseCase(training.id.toLong())
             fetchTrainingList()
         }
     }
 
     companion object {
         const val COPY = " copy"
-        const val TIMELESS_EXERCISE_ESTIMATED_DURATION_SECS = 90
     }
 }

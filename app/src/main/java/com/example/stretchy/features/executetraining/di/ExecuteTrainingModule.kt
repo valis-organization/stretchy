@@ -1,5 +1,6 @@
 package com.example.stretchy.features.executetraining.di
 
+import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.repository.Repository
 import dagger.Module
@@ -9,5 +10,5 @@ import dagger.Provides
 class ExecuteTrainingModule {
     @Provides
     fun provideExecuteTrainingViewModel(repository: Repository, trainingId: Long) =
-        ExecuteTrainingViewModel(repository, trainingId)
+        ExecuteTrainingViewModel(FetchTrainingByIdUseCase(repository), trainingId)
 }
