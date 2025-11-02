@@ -5,76 +5,65 @@ plugins {
 }
 
 android {
-    // Updated to 36 because some Compose/AndroidX artifacts require compileSdk >= 35
-    compileSdk 36
+    // compileSdk/targetSdk as assignments (modern DSL)
+    compileSdk = 36
 
     defaultConfig {
-        applicationId "com.example.stretchy"
-        minSdk 24
-        // Keep targetSdk aligned with compileSdk
-        targetSdk 36
-        versionCode 1
-        versionName "1.0"
+        applicationId = "com.example.stretchy"
+        minSdk = 24
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        vectorDrawables {
-            useSupportLibrary true
-        }
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        vectorDrawables { useSupportLibrary = true }
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled = false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
-    kotlinOptions {
-        jvmTarget = '17'
-        freeCompilerArgs = ['-Xjvm-default=all']
-    }
+
+    compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
+    kotlinOptions { jvmTarget = '17'; freeCompilerArgs = ['-Xjvm-default=all'] }
+
     buildFeatures {
-        viewBinding true
-        compose true
-        buildConfig true
+        // Keep only what the project uses
+        compose = true
+        buildConfig = true
     }
+
     composeOptions {
+        // Use a compiler extension version known to exist in google() and compatible with current libs
         kotlinCompilerExtensionVersion = "1.5.4"
     }
-    packagingOptions {
-        resources {
-            excludes += '/META-INF/{AL2.0,LGPL2.1}'
-        }
-    }
-    namespace 'com.example.stretchy'
+
+    packagingOptions { resources { excludes += '/META-INF/{AL2.0,LGPL2.1}' } }
+
+    namespace = 'com.example.stretchy'
 }
 
+apply from: '../buildsystem/dependencies.gradle'
+
 dependencies {
-    // core libraries
-    rootProject.ext.coreLibraries.each { implementation it }
+    add('implementation', platform(rootProject.ext.composeBom))
+    rootProject.ext.jetpackCompose.each { add('implementation', it) }
 
-    // Compose BOM and artifacts
-    implementation platform(rootProject.ext.composeBom)
-    rootProject.ext.jetpackCompose.each { implementation it }
+    rootProject.ext.coreLibraries.each { add('implementation', it) }
 
-    // Coroutines, Dagger, Room, Gson
-    rootProject.ext.coroutines.each { implementation it }
-    rootProject.ext.dagger.each { implementation it }
-    rootProject.ext.room.each { implementation it }
-    rootProject.ext.gson.each { implementation it }
+    rootProject.ext.coroutines.each { add('implementation', it) }
+    rootProject.ext.dagger.each { add('implementation', it) }
+    rootProject.ext.room.each { add('implementation', it) }
+    rootProject.ext.gson.each { add('implementation', it) }
 
-    // Kapt / annotation processors
-    rootProject.ext.roomKapt.each { kapt it }
-    rootProject.ext.daggerAnnotationProcessor.each { kapt it }
+    rootProject.ext.roomKapt.each { add('kapt', it) }
+    rootProject.ext.daggerAnnotationProcessor.each { add('kapt', it) }
 
-    // runtimeOnly
-    rootProject.ext.coroutinesRunTime.each { runtimeOnly it }
+    rootProject.ext.coroutinesRunTime.each { add('runtimeOnly', it) }
 
-    // Tests
-    rootProject.ext.test.each { testImplementation it }
-    rootProject.ext.androidTest.each { androidTestImplementation it }
-    rootProject.ext.composeDebugImplementation.each { debugImplementation it }
+    rootProject.ext.test.each { add('testImplementation', it) }
+    rootProject.ext.androidTest.each { add('androidTestImplementation', it) }
+    rootProject.ext.composeDebugImplementation.each { add('debugImplementation', it) }
 }
