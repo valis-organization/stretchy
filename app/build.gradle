@@ -5,12 +5,14 @@ plugins {
 }
 
 android {
-    compileSdk 34
+    // Updated to 36 because some Compose/AndroidX artifacts require compileSdk >= 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "com.example.stretchy"
         minSdk 24
-        targetSdk 34
+        // Keep targetSdk aligned with compileSdk
+        targetSdk 36
         versionCode 1
         versionName "1.0"
 
@@ -51,21 +53,28 @@ android {
 }
 
 dependencies {
-    implementation coreLibraries
-    // Opt into Compose BOM to manage Compose library versions
-    implementation platform(composeBom)
-    implementation jetpackCompose
-    implementation coroutines
-    implementation dagger
-    implementation room
-    implementation gson
+    // core libraries
+    rootProject.ext.coreLibraries.each { implementation it }
 
-    kapt roomKapt
-    kapt daggerAnnotationProcessor
-    runtimeOnly coroutinesRunTime
+    // Compose BOM and artifacts
+    implementation platform(rootProject.ext.composeBom)
+    rootProject.ext.jetpackCompose.each { implementation it }
 
-    testImplementation test
-    androidTestImplementation androidTest
-    debugImplementation  composeDebugImplementation
+    // Coroutines, Dagger, Room, Gson
+    rootProject.ext.coroutines.each { implementation it }
+    rootProject.ext.dagger.each { implementation it }
+    rootProject.ext.room.each { implementation it }
+    rootProject.ext.gson.each { implementation it }
 
+    // Kapt / annotation processors
+    rootProject.ext.roomKapt.each { kapt it }
+    rootProject.ext.daggerAnnotationProcessor.each { kapt it }
+
+    // runtimeOnly
+    rootProject.ext.coroutinesRunTime.each { runtimeOnly it }
+
+    // Tests
+    rootProject.ext.test.each { testImplementation it }
+    rootProject.ext.androidTest.each { androidTestImplementation it }
+    rootProject.ext.composeDebugImplementation.each { debugImplementation it }
 }
