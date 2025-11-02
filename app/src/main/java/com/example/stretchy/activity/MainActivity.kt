@@ -1,5 +1,4 @@
 package com.example.stretchy.activity
-
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -10,20 +9,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.app.ActivityCompat
 import com.example.stretchy.activity.di.ActivityComponent
-import com.example.stretchy.navigation.BottomNavigationBar
-
-
+import com.example.stretchy.ui.navigation.BottomNavBar
 class MainActivity : ComponentActivity() {
     private lateinit var activityComponent: ActivityComponent
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activityComponent = ActivityComponent.create(this)
         setContent {
-            BottomNavigationBar(activityComponent, grantPermissions = { grantPermissions(it) })
+            BottomNavBar(activityComponent, grantPermissions = { grantPermissions(it) })
         }
     }
-
     private fun grantPermissions(permission: String) {
         if (SDK_INT >= Build.VERSION_CODES.R) {
             val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
@@ -32,14 +27,9 @@ class MainActivity : ComponentActivity() {
         } else {
             ActivityCompat.requestPermissions(
                 this,
-                arrayOf(
-                    permission
-                ),
+                arrayOf(permission),
                 100
             )
         }
     }
 }
-
-
-
