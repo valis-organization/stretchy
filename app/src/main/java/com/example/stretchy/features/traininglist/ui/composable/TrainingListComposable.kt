@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.stretchy.R
+import com.example.stretchy.Screen
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.features.traininglist.ui.composable.list.TrainingLazyListComposable
@@ -33,7 +34,7 @@ fun TrainingListComposable(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                navController.navigate("exerciseCreatorScreen?trainingType=$trainingType")
+                navController.navigate(Screen.ExerciseCreatorScreen.createRoute(trainingType = trainingType.name))
             }) {
                 Icon(
                     imageVector = Icons.Filled.Add,

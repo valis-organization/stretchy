@@ -94,7 +94,8 @@ private fun EditIconButton(
 ) {
     IconButton(
         onClick = {
-            navController.navigate("exerciseCreatorScreen?id=$trainingId&trainingType=$trainingType")
+            val routeTrainingType = if (trainingType == Training.Type.BODY_WEIGHT) "BODYWEIGHT" else "STRETCH"
+            navController.navigate(com.example.stretchy.Screen.ExerciseCreatorScreen.createRoute(id = trainingId, trainingType = routeTrainingType))
         },
         Modifier
             .size(20.dp)

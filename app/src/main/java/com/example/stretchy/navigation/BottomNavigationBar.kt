@@ -31,17 +31,17 @@ fun BottomNavigationBar(
 
     val screens = listOf(
         BottomNavScreen(
-            stringResource(id = R.string.stretching),
+            R.string.stretching,
             painterResource(id = R.drawable.ic_stretching),
             Screen.StretchingListScreen.route
         ),
         BottomNavScreen(
-            stringResource(id = R.string.meta_training),
+            R.string.meta_training,
             painterResource(id = R.drawable.ic_meta_training),
             Screen.MetaTrainingScreen.route
         ),
         BottomNavScreen(
-            stringResource(id = R.string.training),
+            R.string.training,
             painterResource(id = R.drawable.ic_training),
             Screen.TrainingListScreen.route
         ),
@@ -53,23 +53,21 @@ fun BottomNavigationBar(
                 visible = showBottomNavBar,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = shrinkVertically(),
-                content = {
-                    BottomNavigation {
-                        val navBackStackEntry by navController.currentBackStackEntryAsState()
-                        val currentRoute = navBackStackEntry?.destination?.route
+            ) {
+                BottomNavigation {
+                    val navBackStackEntry by navController.currentBackStackEntryAsState()
+                    val currentRoute = navBackStackEntry?.destination?.route
 
-                        screens.forEach { screen ->
-                            BottomNavigationItem(
-                                icon = { Icon(screen.icon, contentDescription = "") },
-                                label = { Text(text = screen.label) },
-                                selected = currentRoute == screen.route,
-                                onClick = {
-                                    navController.navigate(screen.route)
-                                }
-                            )
-                        }
+                    screens.forEach { screen ->
+                        BottomNavigationItem(
+                            icon = { Icon(screen.icon, contentDescription = null) },
+                            label = { Text(text = stringResource(id = screen.labelRes)) },
+                            selected = currentRoute == screen.route,
+                            onClick = { navController.navigate(screen.route) }
+                        )
                     }
-                })
+                }
+            }
         }
     ) { innerPadding ->
         NavHost(
@@ -80,12 +78,8 @@ fun BottomNavigationBar(
             composable(Screen.StretchingListScreen.route) {
                 Navigation(
                     activityComponent,
-                    {
-                        grantPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    },
-                    {
-                        grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    },
+                    { grantPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) },
+                    { grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE) },
                     Screen.StretchingListScreen.route,
                     hideBottomNavBar = { showBottomNavBar = false },
                     showBottomNavBar = { showBottomNavBar = true },
@@ -93,17 +87,13 @@ fun BottomNavigationBar(
                 )
             }
             composable(Screen.MetaTrainingScreen.route) {
-
+                // TODO: Meta training screen content
             }
             composable(Screen.TrainingListScreen.route) {
                 Navigation(
                     activityComponent,
-                    {
-                        grantPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    },
-                    {
-                        grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE)
-                    },
+                    { grantPermissions(Manifest.permission.WRITE_EXTERNAL_STORAGE) },
+                    { grantPermissions(Manifest.permission.READ_EXTERNAL_STORAGE) },
                     Screen.TrainingListScreen.route,
                     hideBottomNavBar = { showBottomNavBar = false },
                     showBottomNavBar = { showBottomNavBar = true },

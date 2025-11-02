@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.stretchy.Screen
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.features.traininglist.ui.data.Training
 
@@ -23,7 +24,7 @@ fun TrainingLazyListComposable(
         items(trainingList) { training ->
             Box(
                 modifier = Modifier.clickable {
-                    navController.navigate("executeTraining?id=${training.id}")
+                    navController.navigate(Screen.ExecuteTrainingScreen.createRoute(training.id))
                 },
             ) {
                 TrainingListItemComposable(training = training, navController, viewModel)
