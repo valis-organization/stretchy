@@ -56,7 +56,7 @@ ext {
 
     ]
 
-    daggerVersion = "2.44"
+    daggerVersion = "2.50"
     dagger = [
             "com.google.dagger:dagger:$daggerVersion",
             "com.google.dagger:dagger-android-support:$daggerVersion"

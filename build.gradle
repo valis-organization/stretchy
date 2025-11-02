@@ -9,4 +9,3 @@ task clean(type: Delete) {
 }
 
 apply from: 'buildsystem/dependencies.gradle'
-apply from: 'buildsystem/dependencies_override.gradle'
