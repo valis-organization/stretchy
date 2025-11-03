@@ -28,6 +28,7 @@ ext {
             "androidx.compose.ui:ui",
             "androidx.compose.material:material",
             "androidx.compose.material:material-icons-extended",
+            "androidx.compose.material3:material3",
             "androidx.compose.ui:ui-tooling-preview",
             "androidx.compose.foundation:foundation",
             "androidx.activity:activity-compose:$activityComposeVersion",
@@ -84,3 +85,4 @@ ext {
             "com.google.code.gson:gson:$gsonVersion"
     ]
 }
+
