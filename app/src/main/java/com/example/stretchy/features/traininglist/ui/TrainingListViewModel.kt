@@ -37,24 +37,36 @@ open class TrainingListViewModel(
 
     private suspend fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
-        val trainingWithActivityList = fetchTrainingListUseCase()
-        if (trainingWithActivityList.isEmpty()) {
-            _uiState.value = TrainingListUiState.Empty
-        } else {
-            val list: List<Training> = trainingWithActivityList.mapToTraining()
-            if (list.isEmpty()) {
+        try {
+            val trainingWithActivityList = fetchTrainingListUseCase()
+            if (trainingWithActivityList.isEmpty()) {
                 _uiState.value = TrainingListUiState.Empty
             } else {
-                _uiState.value =
-                    TrainingListUiState.Loaded(list)
+                val list: List<Training> = trainingWithActivityList.mapToTraining()
+                if (list.isEmpty()) {
+                    _uiState.value = TrainingListUiState.Empty
+                } else {
+                    _uiState.value = TrainingListUiState.Loaded(list)
+                }
             }
-
+        } catch (throwable: Throwable) {
+            _uiState.value = TrainingListUiState.Error(
+                message = throwable.localizedMessage ?: "Failed to load trainings",
+                throwable = throwable
+            )
         }
     }
 
     suspend fun import() {
-        dataImporterImpl.importData()
-        fetchTrainingList()
+        try {
+            dataImporterImpl.importData()
+            fetchTrainingList()
+        } catch (throwable: Throwable) {
+            _uiState.value = TrainingListUiState.Error(
+                message = throwable.localizedMessage ?: "Failed to import data",
+                throwable = throwable
+            )
+        }
     }
 
     fun export() {
@@ -75,15 +87,29 @@ open class TrainingListViewModel(
 
     fun deleteTraining(training: Training) {
         viewModelScope.launch {
-            deleteTrainingUseCase(training.id.toLong())
-            fetchTrainingList()
+            try {
+                deleteTrainingUseCase(training.id.toLong())
+                fetchTrainingList()
+            } catch (throwable: Throwable) {
+                _uiState.value = TrainingListUiState.Error(
+                    message = throwable.localizedMessage ?: "Failed to delete training",
+                    throwable = throwable
+                )
+            }
         }
     }
 
     fun copyTraining(training: Training) {
         viewModelScope.launch {
-            copyTrainingUseCase(training.id.toLong())
-            fetchTrainingList()
+            try {
+                copyTrainingUseCase(training.id.toLong())
+                fetchTrainingList()
+            } catch (throwable: Throwable) {
+                _uiState.value = TrainingListUiState.Error(
+                    message = throwable.localizedMessage ?: "Failed to copy training",
+                    throwable = throwable
+                )
+            }
         }
     }
 

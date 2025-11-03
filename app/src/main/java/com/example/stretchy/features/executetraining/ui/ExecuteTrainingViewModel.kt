@@ -23,7 +23,7 @@ import java.util.*
 
 class ExecuteTrainingViewModel(private val fetchTrainingByIdUseCase: FetchTrainingByIdUseCase, val trainingId: Long) : ViewModel() {
     private val _uiState = initUiState()
-    val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
+    val uiState: StateFlow<ExecuteTrainingUiState> = _uiState.asStateFlow()
 
     private var timer: Timer = Timer()
     private var isPaused = true
