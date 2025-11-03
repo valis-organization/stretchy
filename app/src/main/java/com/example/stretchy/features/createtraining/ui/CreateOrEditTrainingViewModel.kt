@@ -12,6 +12,9 @@ import com.example.stretchy.features.domain.usecases.EditTrainingUseCase
 import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
+import androidx.lifecycle.SavedStateHandle
+import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,29 +24,21 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class CreateOrEditTrainingViewModel(
-    private val fetchTrainingByIdUseCase: FetchTrainingByIdUseCase,
-    private val createTrainingUseCase: CreateTrainingUseCase,
-    private val editTrainingUseCase: EditTrainingUseCase,
-    val trainingId: Long,
+@HiltViewModel
+class CreateOrEditTrainingViewModel @Inject constructor(
+    repository: Repository,
     private val automaticBreakPreferences: AutomaticBreakPreferences,
-    val trainingType: TrainingType
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    // Secondary constructor retained for backward compatibility with existing DI modules
-    constructor(
-        repository: Repository,
-        trainingId: Long,
-        automaticBreakPreferences: AutomaticBreakPreferences,
-        trainingType: TrainingType
-    ) : this(
-        FetchTrainingByIdUseCase(repository),
-        CreateTrainingUseCase(repository),
-        EditTrainingUseCase(repository),
-        trainingId,
-        automaticBreakPreferences,
-        trainingType
-    )
+    // Get parameters from savedStateHandle
+    val trainingId: Long = savedStateHandle.get<String>("id")?.toLongOrNull() ?: -1L
+    val trainingType: TrainingType = savedStateHandle.get<TrainingType>("trainingType") ?: TrainingType.STRETCH
+
+    private val fetchTrainingByIdUseCase = FetchTrainingByIdUseCase(repository)
+    private val createTrainingUseCase = CreateTrainingUseCase(repository)
+    private val editTrainingUseCase = EditTrainingUseCase(repository)
+
 
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
         MutableStateFlow(CreateTrainingUiState.Init)

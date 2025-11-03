@@ -97,8 +97,13 @@ private fun createMockExecuteTrainingViewModel(): ExecuteTrainingViewModel {
         override suspend fun deleteTrainingById(trainingId: Long) {}
     }
 
-    val mockFetchUseCase = com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase(mockRepository)
-    return ExecuteTrainingViewModel(mockFetchUseCase, 1L)
+    // Mock SavedStateHandle with trainingId
+    val mockSavedStateHandle = androidx.lifecycle.SavedStateHandle().apply {
+        set("id", "1")
+    }
+
+    // Use the new Hilt-based constructor that takes Repository and SavedStateHandle
+    return ExecuteTrainingViewModel(mockRepository, mockSavedStateHandle)
 }
 
 @Preview(name = "Timeless Exercise - With next exercise", showBackground = true)

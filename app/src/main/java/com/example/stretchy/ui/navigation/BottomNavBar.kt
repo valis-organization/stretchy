@@ -9,23 +9,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.padding
+
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
-import com.example.stretchy.activity.di.ActivityComponent
+import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.navigation.BottomNavScreen
 import com.example.stretchy.permission.StoragePermissionState
 import com.example.stretchy.ui.screen.MetaTrainingScreen
 import com.example.stretchy.ui.screen.StretchingScreen
 import com.example.stretchy.ui.screen.TrainingScreen
 
+
 @Composable
 fun BottomNavBar(
-    activityComponent: ActivityComponent,
-    storagePermissionState: StoragePermissionState
+    storagePermissionState: StoragePermissionState,
+    soundPlayer: SoundPlayer
 ) {
     val navController = rememberNavController()
     var showBottomNavBar by remember { mutableStateOf(true) }
@@ -84,7 +86,7 @@ fun BottomNavBar(
         ) {
             composable(Screen.StretchingListScreen.route) {
                 StretchingScreen(
-                    activityComponent = activityComponent,
+                    soundPlayer = soundPlayer,
                     grantWritePermission = { storagePermissionState.requestWrite() },
                     grantReadPermission = { storagePermissionState.requestRead() },
                     hideBottomNavBar = { showBottomNavBar = false },
@@ -96,7 +98,7 @@ fun BottomNavBar(
             }
             composable(Screen.TrainingListScreen.route) {
                 TrainingScreen(
-                    activityComponent = activityComponent,
+                    soundPlayer = soundPlayer,
                     grantWritePermission = { storagePermissionState.requestWrite() },
                     grantReadPermission = { storagePermissionState.requestRead() },
                     hideBottomNavBar = { showBottomNavBar = false },

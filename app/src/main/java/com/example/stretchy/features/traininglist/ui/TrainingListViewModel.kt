@@ -11,7 +11,11 @@ import com.example.stretchy.features.domain.usecases.FetchTrainingListUseCase
 import com.example.stretchy.features.traininglist.domain.toTraining
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
+import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
+import androidx.lifecycle.SavedStateHandle
+import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,14 +25,31 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-open class TrainingListViewModel(
-    private val fetchTrainingListUseCase: FetchTrainingListUseCase,
-    private val deleteTrainingUseCase: DeleteTrainingUseCase,
-    private val copyTrainingUseCase: CopyTrainingUseCase,
+@HiltViewModel
+class TrainingListViewModel @Inject constructor(
+    repository: Repository,
     private val dataImporterImpl: DataImporterImpl,
     private val dataExporterImpl: DataExporterImpl,
-    private val trainingType: TrainingType
+    private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val fetchTrainingListUseCase = FetchTrainingListUseCase(repository)
+    private val deleteTrainingUseCase = DeleteTrainingUseCase(repository)
+    private val copyTrainingUseCase = CopyTrainingUseCase(repository)
+
+    // Get trainingType from savedStateHandle or default
+    private var trainingType: TrainingType = savedStateHandle.get<TrainingType>("trainingType") ?: TrainingType.STRETCH
+
+    // Method to set trainingType if needed
+    fun setTrainingType(type: TrainingType) {
+        if (trainingType != type) {
+            trainingType = type
+            savedStateHandle["trainingType"] = type
+            // Reload data with new training type
+            //todo fetch training missing?
+           // fetchTrainings()
+        }
+    }
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState.asStateFlow()
 

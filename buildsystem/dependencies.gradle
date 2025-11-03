@@ -59,14 +59,16 @@ ext {
             "androidx.lifecycle:lifecycle-livedata-ktx:$coroutinesRunTimeVersion"
     ]
 
-    daggerVersion = "2.50"
-    dagger = [
-            "com.google.dagger:dagger:$daggerVersion",
-            "com.google.dagger:dagger-android-support:$daggerVersion"
+    daggerVersion = "2.57.2"
+    hiltVersion = "2.57.2"
+    hilt = [
+            "com.google.dagger:hilt-android:$hiltVersion"
     ]
-    daggerAnnotationProcessor = [
-            "com.google.dagger:dagger-android-processor:$daggerVersion",
-            "com.google.dagger:dagger-compiler:$daggerVersion"
+    hiltCompiler = [
+            "com.google.dagger:hilt-compiler:$hiltVersion"
+    ]
+    hiltNavigation = [
+            "androidx.hilt:hilt-navigation-compose:1.1.0"
     ]
 
     roomVersion = "2.4.3"

@@ -1,7 +1,9 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
     id 'kotlin-kapt'
+    id 'dagger.hilt.android.plugin'
 }
 
 android {
@@ -37,7 +39,7 @@ android {
 
     composeOptions {
         // Use a compiler extension version known to exist in google() and compatible with current libs
-        kotlinCompilerExtensionVersion = "1.5.4"
+        kotlinCompilerExtensionVersion = "1.5.15"
     }
 
     packagingOptions { resources { excludes += '/META-INF/{AL2.0,LGPL2.1}' } }
@@ -54,12 +56,13 @@ dependencies {
     rootProject.ext.coreLibraries.each { add('implementation', it) }
 
     rootProject.ext.coroutines.each { add('implementation', it) }
-    rootProject.ext.dagger.each { add('implementation', it) }
+    rootProject.ext.hilt.each { add('implementation', it) }
+    rootProject.ext.hiltNavigation.each { add('implementation', it) }
     rootProject.ext.room.each { add('implementation', it) }
     rootProject.ext.gson.each { add('implementation', it) }
 
     rootProject.ext.roomKapt.each { add('kapt', it) }
-    rootProject.ext.daggerAnnotationProcessor.each { add('kapt', it) }
+    rootProject.ext.hiltCompiler.each { add('kapt', it) }
 
     rootProject.ext.coroutinesRunTime.each { add('runtimeOnly', it) }
 
