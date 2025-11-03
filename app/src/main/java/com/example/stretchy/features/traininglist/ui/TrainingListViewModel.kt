@@ -13,8 +13,11 @@ import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -28,6 +31,14 @@ open class TrainingListViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
     val uiState: StateFlow<TrainingListUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<UiEvent>()
+    val events: SharedFlow<UiEvent> = _events.asSharedFlow()
+
+    sealed class UiEvent {
+        data class ShowToast(val message: String) : UiEvent()
+        data class ShowErrorDialog(val message: String) : UiEvent()
+    }
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -71,9 +82,16 @@ open class TrainingListViewModel(
 
     fun export() {
         viewModelScope.launch {
-            dataExporterImpl.exportData()
+            try {
+                dataExporterImpl.exportData()
+                _events.emit(UiEvent.ShowToast("Data exported successfully"))
+            } catch (throwable: Throwable) {
+                _events.emit(UiEvent.ShowErrorDialog(throwable.localizedMessage ?: "Failed to export data"))
+            }
         }
     }
+
+
 
     private fun List<TrainingWithActivity>.mapToTraining(): List<Training> {
         val list = mutableListOf<Training>()
@@ -90,6 +108,7 @@ open class TrainingListViewModel(
             try {
                 deleteTrainingUseCase(training.id.toLong())
                 fetchTrainingList()
+                _events.emit(UiEvent.ShowToast("Training '${training.name}' deleted"))
             } catch (throwable: Throwable) {
                 _uiState.value = TrainingListUiState.Error(
                     message = throwable.localizedMessage ?: "Failed to delete training",
@@ -104,6 +123,7 @@ open class TrainingListViewModel(
             try {
                 copyTrainingUseCase(training.id.toLong())
                 fetchTrainingList()
+                _events.emit(UiEvent.ShowToast("Training '${training.name}' copied"))
             } catch (throwable: Throwable) {
                 _uiState.value = TrainingListUiState.Error(
                     message = throwable.localizedMessage ?: "Failed to copy training",

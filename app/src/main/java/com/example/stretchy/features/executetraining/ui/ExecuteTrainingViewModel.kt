@@ -21,9 +21,20 @@ import kotlinx.coroutines.withContext
 import java.lang.Thread.sleep
 import java.util.*
 
-class ExecuteTrainingViewModel(private val fetchTrainingByIdUseCase: FetchTrainingByIdUseCase, val trainingId: Long) : ViewModel() {
+class ExecuteTrainingViewModel(
+    private val fetchTrainingByIdUseCase: FetchTrainingByIdUseCase,
+    val trainingId: Long
+) : ViewModel() {
     private val _uiState = initUiState()
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<UiEvent>()
+    val events: SharedFlow<UiEvent> = _events.asSharedFlow()
+
+    sealed class UiEvent {
+        data class ShowToast(val message: String) : UiEvent()
+        data class PlaySound(val soundEvent: SoundEvent) : UiEvent()
+    }
 
     private var timer: Timer = Timer()
     private var isPaused = true
@@ -275,6 +286,9 @@ class ExecuteTrainingViewModel(private val fetchTrainingByIdUseCase: FetchTraini
                 numberOfExercises = allExercisesCount
             ),
         )
+        viewModelScope.launch {
+            _events.emit(UiEvent.ShowToast("Training completed!"))
+        }
     }
 
     private fun notifySoundHandlerActivityUpdated() {
@@ -456,7 +470,12 @@ class ExecuteTrainingViewModel(private val fetchTrainingByIdUseCase: FetchTraini
         }
     }
 
+    fun quitTraining() {
+        // Navigation will be handled externally via NavigationViewModel
+    }
+
     companion object {
-        private const val TIMER_LOG_TAG = "TIMER"
+        const val TAG = "ExecuteTrainingViewModel}"
+        const val TIMER_LOG_TAG = "ExecuteTrainingTimer"
     }
 }

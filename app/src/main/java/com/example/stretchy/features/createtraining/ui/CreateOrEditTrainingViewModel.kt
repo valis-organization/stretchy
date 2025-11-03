@@ -10,12 +10,14 @@ import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPrefer
 import com.example.stretchy.features.domain.usecases.CreateTrainingUseCase
 import com.example.stretchy.features.domain.usecases.EditTrainingUseCase
 import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
-import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -46,6 +48,14 @@ class CreateOrEditTrainingViewModel(
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
         MutableStateFlow(CreateTrainingUiState.Init)
     val uiState: StateFlow<CreateTrainingUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<UiEvent>()
+    val events: SharedFlow<UiEvent> = _events.asSharedFlow()
+
+    sealed class UiEvent {
+        data class ShowToast(val message: String) : UiEvent()
+        data class ShowErrorDialog(val message: String) : UiEvent()
+    }
 
     init {
         if (trainingId != -1L) {
@@ -156,8 +166,8 @@ class CreateOrEditTrainingViewModel(
                         trainingType,
                         true,
                         activitiesList
-                    ))
-                    _uiState.emit(CreateTrainingUiState.Done)
+                ))
+                _uiState.emit(CreateTrainingUiState.Done)
                 } catch (ex: Exception) {
                     _uiState.emit(
                         CreateTrainingUiState.Error(

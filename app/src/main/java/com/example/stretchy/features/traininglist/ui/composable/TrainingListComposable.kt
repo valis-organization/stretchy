@@ -102,6 +102,8 @@ private fun TrainingListVieww(
                         onDeleteTraining = onDeleteTraining,
                         onCopyTraining = onCopyTraining
                     )
+
+                    is TrainingListUiState.Error -> TODO()
                 }
             }
         }
