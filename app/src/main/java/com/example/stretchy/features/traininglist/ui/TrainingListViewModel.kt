@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class TrainingListViewModel(
+open class TrainingListViewModel(
     private val fetchTrainingListUseCase: FetchTrainingListUseCase,
     private val deleteTrainingUseCase: DeleteTrainingUseCase,
     private val copyTrainingUseCase: CopyTrainingUseCase,

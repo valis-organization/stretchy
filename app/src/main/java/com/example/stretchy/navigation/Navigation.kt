@@ -15,14 +15,14 @@ import com.example.stretchy.activity.di.ActivityComponent
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.extensions.daggerViewModel
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
-import com.example.stretchy.features.createtraining.ui.composable.CreateTrainingComposable
+import com.example.stretchy.features.createtraining.ui.composable.CreateTrainingScreenn
 import com.example.stretchy.features.createtraining.ui.di.CreateTrainingComponent
 import com.example.stretchy.features.executetraining.di.ExecuteTrainingComponent
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
-import com.example.stretchy.features.executetraining.ui.composable.ExecuteTrainingComposable
+import com.example.stretchy.features.executetraining.ui.composable.ExecuteTrainingScreenn
 import com.example.stretchy.features.traininglist.di.TrainingListComponent
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
-import com.example.stretchy.features.traininglist.ui.composable.TrainingListComposable
+import com.example.stretchy.features.traininglist.ui.composable.TrainingListScreenn
 
 @Composable
 fun Navigation(
@@ -48,7 +48,7 @@ fun Navigation(
                 activityComponent.activity(),
                 LocalViewModelStoreOwner.current!!
             )
-            TrainingListComposable(
+            TrainingListScreenn(
                 navController = navController,
                 viewModel = vm,
                 onExportClick = onExportClick,
@@ -66,7 +66,7 @@ fun Navigation(
                 activityComponent.activity(),
                 LocalViewModelStoreOwner.current!!
             )
-            TrainingListComposable(
+            TrainingListScreenn(
                 navController = navController,
                 viewModel = vm,
                 onExportClick = onExportClick,
@@ -88,7 +88,7 @@ fun Navigation(
                 activityComponent.activity(),
                 LocalViewModelStoreOwner.current!!
             )
-            CreateTrainingComposable(
+            CreateTrainingScreenn(
                 navController = navController,
                 viewModel = vm
             )
@@ -104,7 +104,7 @@ fun Navigation(
                 activityComponent.activity(),
                 LocalViewModelStoreOwner.current!!,
             )
-            ExecuteTrainingComposable(
+            ExecuteTrainingScreenn(
                 vm,
                 activityComponent.speaker(),
                 navController

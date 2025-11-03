@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stretchy.R
@@ -21,7 +22,7 @@ import com.example.stretchy.features.executetraining.ui.composable.TextSpacer
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun TimelessExerciseComposable(
+fun TimelessExerciseScreenn(
     exerciseName: String,
     nextExerciseName: String?,
     viewModel: ExecuteTrainingViewModel
@@ -80,3 +81,53 @@ fun TimelessExerciseComposable(
         }
     }
 }
+
+// Mock ViewModel for previews
+private fun createMockExecuteTrainingViewModel(): ExecuteTrainingViewModel {
+    val mockRepository = object : com.example.stretchy.repository.Repository {
+        override suspend fun getTrainingsWithActivities() = emptyList<com.example.stretchy.repository.TrainingWithActivity>()
+        override suspend fun getTrainingWithActivitiesById(id: Long) = com.example.stretchy.repository.TrainingWithActivity(
+            name = "Preview Training",
+            trainingType = com.example.stretchy.database.data.TrainingType.STRETCH,
+            finished = false,
+            activities = emptyList()
+        ).apply { this.id = 1L }
+        override suspend fun addTrainingWithActivities(training: com.example.stretchy.repository.TrainingWithActivity) {}
+        override suspend fun editTrainingWithActivities(trainingId: Long, editedTraining: com.example.stretchy.repository.TrainingWithActivity) {}
+        override suspend fun deleteTrainingById(trainingId: Long) {}
+    }
+
+    val mockFetchUseCase = com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase(mockRepository)
+    return ExecuteTrainingViewModel(mockFetchUseCase, 1L)
+}
+
+@Preview(name = "Timeless Exercise - With next exercise", showBackground = true)
+@Composable
+private fun TimelessExerciseWithNextPreview() {
+    TimelessExerciseScreenn(
+        exerciseName = "Plank Hold",
+        nextExerciseName = "Mountain Climbers",
+        viewModel = createMockExecuteTrainingViewModel()
+    )
+}
+
+@Preview(name = "Timeless Exercise - Final exercise", showBackground = true)
+@Composable
+private fun TimelessExerciseFinalPreview() {
+    TimelessExerciseScreenn(
+        exerciseName = "Final Relaxation",
+        nextExerciseName = null,
+        viewModel = createMockExecuteTrainingViewModel()
+    )
+}
+
+@Preview(name = "Timeless Exercise - Long name", showBackground = true)
+@Composable
+private fun TimelessExerciseLongNamePreview() {
+    TimelessExerciseScreenn(
+        exerciseName = "Advanced Deep Core Stabilization with Breath Control",
+        nextExerciseName = "Cool Down Stretch",
+        viewModel = createMockExecuteTrainingViewModel()
+    )
+}
+

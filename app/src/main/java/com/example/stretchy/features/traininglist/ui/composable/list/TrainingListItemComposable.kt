@@ -15,26 +15,29 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.stretchy.R
 import com.example.stretchy.common.convertSecondsToMinutes
-import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
+
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.theme.WhiteSmoke
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun TrainingListItemComposable(
+fun TrainingListItemVieww(
     training: Training,
     navController: NavController,
-    vm: TrainingListViewModel
+    onDeleteTraining: (Training) -> Unit,
+    onCopyTraining: (Training) -> Unit
 ) {
 
     DismissState(initialValue = DismissValue.Default, confirmStateChange = {
         if (it == DismissValue.DismissedToEnd) {
-            vm.deleteTraining(training)
+            onDeleteTraining(training)
         }
         true
     }).also {
@@ -72,7 +75,7 @@ fun TrainingListItemComposable(
                                     trainingType = training.type
                                 )
                                 Spacer(Modifier.width(16.dp))
-                                CopyIconButton(vm = vm, training = training)
+                                CopyIconButton(onCopyTraining = onCopyTraining, training = training)
                             }
                         }
                         Spacer(modifier = Modifier.height(16.dp))
@@ -108,10 +111,10 @@ private fun EditIconButton(
 }
 
 @Composable
-private fun CopyIconButton(vm: TrainingListViewModel, training: Training) {
+private fun CopyIconButton(onCopyTraining: (Training) -> Unit, training: Training) {
     IconButton(
         onClick = {
-            vm.copyTraining(training)
+            onCopyTraining(training)
         },
         Modifier
             .size(20.dp)
@@ -186,3 +189,55 @@ private fun DismissBackgroundLayout(dismissState: DismissState) {
         )
     }
 }
+
+@Preview(name = "Training Item - Stretch workout", showBackground = true)
+@Composable
+private fun TrainingItemStretchPreview() {
+    TrainingListItemVieww(
+        training = Training(
+            id = "1",
+            name = "Morning Stretch Routine",
+            numberOfExercises = 8,
+            timeInSeconds = 600,
+            type = Training.Type.STRETCH
+        ),
+        navController = rememberNavController(),
+        onDeleteTraining = {},
+        onCopyTraining = {}
+    )
+}
+
+@Preview(name = "Training Item - Body weight workout", showBackground = true)
+@Composable
+private fun TrainingItemBodyWeightPreview() {
+    TrainingListItemVieww(
+        training = Training(
+            id = "2",
+            name = "HIIT Circuit Training",
+            numberOfExercises = 12,
+            timeInSeconds = 1800,
+            type = Training.Type.BODY_WEIGHT
+        ),
+        navController = rememberNavController(),
+        onDeleteTraining = {},
+        onCopyTraining = {}
+    )
+}
+
+@Preview(name = "Training Item - Long name", showBackground = true)
+@Composable
+private fun TrainingItemLongNamePreview() {
+    TrainingListItemVieww(
+        training = Training(
+            id = "3",
+            name = "Advanced Full Body Strength and Flexibility Training Session",
+            numberOfExercises = 15,
+            timeInSeconds = 2700,
+            type = Training.Type.BODY_WEIGHT
+        ),
+        navController = rememberNavController(),
+        onDeleteTraining = {},
+        onCopyTraining = {}
+    )
+}
+

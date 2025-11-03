@@ -17,15 +17,17 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.theme.BananaMania
 
 @Composable
-fun TrainingSummaryComposable(
+fun TrainingSummaryVieww(
     numberOfExercises: Int,
     timeSpent: String,
     navController: NavController
@@ -88,3 +90,24 @@ fun TrainingSummaryComposable(
         }
     }
 }
+
+@Preview(name = "Training Summary - Few exercises", showBackground = true)
+@Composable
+private fun TrainingSummaryFewExercisesPreview() {
+    TrainingSummaryVieww(
+        numberOfExercises = 3,
+        timeSpent = "5 min 30 sec",
+        navController = rememberNavController()
+    )
+}
+
+@Preview(name = "Training Summary - Many exercises", showBackground = true)
+@Composable
+private fun TrainingSummaryManyExercisesPreview() {
+    TrainingSummaryVieww(
+        numberOfExercises = 12,
+        timeSpent = "15 min 45 sec",
+        navController = rememberNavController()
+    )
+}
+

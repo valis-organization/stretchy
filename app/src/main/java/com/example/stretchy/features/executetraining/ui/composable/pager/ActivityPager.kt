@@ -7,9 +7,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.*
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
-import com.example.stretchy.features.executetraining.ui.composable.pager.pages.ExerciseComposable
-import com.example.stretchy.features.executetraining.ui.composable.pager.pages.TimelessExerciseComposable
-import com.example.stretchy.features.executetraining.ui.composable.pager.pages.BreakComposable
+import com.example.stretchy.features.executetraining.ui.composable.pager.pages.ExerciseVieww
+import com.example.stretchy.features.executetraining.ui.composable.pager.pages.TimelessExerciseScreenn
+import com.example.stretchy.features.executetraining.ui.composable.pager.pages.BreakVieww
 import com.example.stretchy.features.executetraining.ui.data.ActivityItemExerciseAndBreakMerged
 import com.example.stretchy.features.executetraining.ui.data.DisplayableActivityItem
 import com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
@@ -85,7 +85,7 @@ fun FocusedPage(
         ActivityType.STRETCH, ActivityType.EXERCISE -> {
             val activity =
                 item.exercise as DisplayableActivityItem.Exercise
-            ExerciseComposable(
+            ExerciseVieww(
                 exerciseName = activity.name,
                 nextExerciseName = activity.nextExercise,
                 currentTime = if (!getMaxSecondsFromList) {
@@ -101,7 +101,7 @@ fun FocusedPage(
         ActivityType.TIMELESS_EXERCISE -> {
             val exercise =
                 item.exercise as DisplayableActivityItem.TimelessExercise
-            TimelessExerciseComposable(
+            TimelessExerciseScreenn(
                 exerciseName = exercise.name,
                 nextExerciseName = exercise.nextExercise,
                 viewModel = viewModel
@@ -109,7 +109,7 @@ fun FocusedPage(
             onTimelessExercise()
         }
         ActivityType.BREAK -> {
-            BreakComposable(
+            BreakVieww(
                 nextExerciseName = item.exercise.nextExercise ?: "",
                 currentTime = uiState.currentSeconds,
                 totalTime = item.exercise.totalExerciseTime
@@ -130,7 +130,7 @@ fun PagesNotFocused(
     when (activityTypes[page]) {
         ActivityType.STRETCH -> {
             with(item.exercise as DisplayableActivityItem.Exercise) {
-                ExerciseComposable(
+                ExerciseVieww(
                     exerciseName = name,
                     nextExerciseName = nextExercise,
                     currentTime = currentTime,
@@ -140,7 +140,7 @@ fun PagesNotFocused(
         }
         ActivityType.EXERCISE -> {
             with(item.exercise as DisplayableActivityItem.Exercise) {
-                ExerciseComposable(
+                ExerciseVieww(
                     exerciseName = name,
                     nextExerciseName = nextExercise,
                     currentTime = currentTime,
@@ -150,14 +150,14 @@ fun PagesNotFocused(
         }
         ActivityType.TIMELESS_EXERCISE ->
             with(item.exercise as DisplayableActivityItem.TimelessExercise) {
-                TimelessExerciseComposable(
+                TimelessExerciseScreenn(
                     exerciseName = name,
                     nextExerciseName = nextExercise,
                     viewModel = viewModel
                 )
             }
         ActivityType.BREAK -> {
-            BreakComposable(
+            BreakVieww(
                 nextExerciseName = item.exercise.nextExercise ?: "",
                 currentTime = item.breakItem?.currentTime ?: 0F,
                 totalTime = item.exercise.totalExerciseTime

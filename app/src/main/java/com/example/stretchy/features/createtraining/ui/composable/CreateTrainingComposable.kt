@@ -30,7 +30,7 @@ import com.example.stretchy.features.createtraining.ui.composable.widget.AddExer
 import com.example.stretchy.features.createtraining.ui.data.Exercise
 
 @Composable
-fun CreateTrainingComposable(
+fun CreateTrainingScreenn(
     navController: NavController,
     viewModel: CreateOrEditTrainingViewModel
 ) {
@@ -132,7 +132,7 @@ fun CreateTrainingComposable(
 }
 
 @Composable
-private fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
+fun HandleError(state: CreateTrainingUiState.Error, context: Context) {
     when (state.reason) {
         CreateTrainingUiState.Error.Reason.MissingTrainingName -> {
             Toast.makeText(

@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,7 +31,7 @@ import com.example.stretchy.features.executetraining.ui.composable.components.Qu
 import com.example.stretchy.features.executetraining.ui.composable.pager.ActivityPager
 
 @Composable
-fun ExecuteTrainingComposable(
+fun ExecuteTrainingScreenn(
     viewModel: ExecuteTrainingViewModel,
     soundPlayer: SoundPlayer,
     navController: NavController
@@ -111,7 +112,7 @@ fun ExecuteTrainingComposable(
                         fontWeight = FontWeight.Bold
                     )
                 } else if (state.trainingCompleted != null) {
-                    TrainingSummaryComposable(
+                    TrainingSummaryVieww(
                         numberOfExercises = state.trainingCompleted.numberOfExercises,
                         timeSpent = state.trainingCompleted.currentTrainingTime,
                         navController = navController
@@ -126,3 +127,24 @@ fun ExecuteTrainingComposable(
 fun TextSpacer(fontSize: TextUnit) {
     Text("", fontSize = fontSize)
 }
+
+@Preview(name = "Text Spacer - Small", showBackground = true)
+@Composable
+private fun TextSpacerSmallPreview() {
+    Column {
+        Text("Before Spacer", fontSize = 16.sp)
+        TextSpacer(fontSize = 16.sp)
+        Text("After Spacer", fontSize = 16.sp)
+    }
+}
+
+@Preview(name = "Text Spacer - Large", showBackground = true)
+@Composable
+private fun TextSpacerLargePreview() {
+    Column {
+        Text("Before Spacer", fontSize = 16.sp)
+        TextSpacer(fontSize = 40.sp)
+        Text("After Spacer", fontSize = 16.sp)
+    }
+}
+

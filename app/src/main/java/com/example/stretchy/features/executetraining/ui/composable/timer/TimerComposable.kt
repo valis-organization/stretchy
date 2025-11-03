@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,7 +25,7 @@ import kotlin.math.ceil
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun TimerComposable(
+fun TimerVieww(
     modifier: Modifier = Modifier,
     isBreak: Boolean = false,
     totalSeconds: Float,
@@ -83,3 +85,48 @@ fun TimerComposable(
         }
     }
 }
+
+@Preview(name = "Timer - Exercise mode at start", showBackground = true)
+@Composable
+private fun TimerExerciseStartPreview() {
+    TimerVieww(
+        modifier = Modifier.size(200.dp),
+        isBreak = false,
+        totalSeconds = 30000f,
+        currentSeconds = 30000f
+    )
+}
+
+@Preview(name = "Timer - Exercise mode mid-way", showBackground = true)
+@Composable
+private fun TimerExerciseMidPreview() {
+    TimerVieww(
+        modifier = Modifier.size(200.dp),
+        isBreak = false,
+        totalSeconds = 30000f,
+        currentSeconds = 15000f
+    )
+}
+
+@Preview(name = "Timer - Break mode", showBackground = true)
+@Composable
+private fun TimerBreakPreview() {
+    TimerVieww(
+        modifier = Modifier.size(200.dp),
+        isBreak = true,
+        totalSeconds = 10000f,
+        currentSeconds = 7000f
+    )
+}
+
+@Preview(name = "Timer - Almost finished", showBackground = true)
+@Composable
+private fun TimerAlmostFinishedPreview() {
+    TimerVieww(
+        modifier = Modifier.size(200.dp),
+        isBreak = false,
+        totalSeconds = 30000f,
+        currentSeconds = 3000f
+    )
+}
+

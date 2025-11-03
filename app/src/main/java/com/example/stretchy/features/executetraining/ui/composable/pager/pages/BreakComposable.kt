@@ -10,16 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.ui.composable.TextSpacer
-import com.example.stretchy.features.executetraining.ui.composable.timer.TimerComposable
+import com.example.stretchy.features.executetraining.ui.composable.timer.TimerVieww
 
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun BreakComposable(
+fun BreakVieww(
     nextExerciseName: String,
     currentTime: Float,
     totalTime: Int
@@ -46,7 +47,7 @@ fun BreakComposable(
             }
         }
         Spacer(modifier = Modifier.height(100.dp))
-        TimerComposable(
+        TimerVieww(
             isBreak = true,
             totalSeconds = totalTime.toFloat() * 1000,
             modifier = Modifier.size(300.dp),
@@ -56,3 +57,34 @@ fun BreakComposable(
         TextSpacer(fontSize = 40.sp)
     }
 }
+
+@Preview(name = "Break - Short exercise name", showBackground = true)
+@Composable
+private fun BreakShortNamePreview() {
+    BreakVieww(
+        nextExerciseName = "Push Ups",
+        currentTime = 5000f,
+        totalTime = 10
+    )
+}
+
+@Preview(name = "Break - Long exercise name", showBackground = true)
+@Composable
+private fun BreakLongNamePreview() {
+    BreakVieww(
+        nextExerciseName = "Advanced Mountain Climbers with Rotation",
+        currentTime = 3000f,
+        totalTime = 15
+    )
+}
+
+@Preview(name = "Break - Almost finished", showBackground = true)
+@Composable
+private fun BreakAlmostFinishedPreview() {
+    BreakVieww(
+        nextExerciseName = "Plank Hold",
+        currentTime = 1000f,
+        totalTime = 10
+    )
+}
+

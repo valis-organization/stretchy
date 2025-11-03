@@ -10,16 +10,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.ui.composable.TextSpacer
-import com.example.stretchy.features.executetraining.ui.composable.timer.TimerComposable
+import com.example.stretchy.features.executetraining.ui.composable.timer.TimerVieww
 
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun ExerciseComposable(
+fun ExerciseVieww(
     exerciseName: String,
     nextExerciseName: String?,
     currentTime: Float,
@@ -42,7 +43,7 @@ fun ExerciseComposable(
             }
         }
         Spacer(modifier = Modifier.height(100.dp))
-        TimerComposable(
+        TimerVieww(
             totalSeconds = totalTime.toFloat() * 1000,
             modifier = Modifier.size(300.dp),
             currentSeconds = currentTime
@@ -72,3 +73,37 @@ fun ExerciseComposable(
         }
     }
 }
+
+@Preview(name = "Exercise - With next exercise", showBackground = true)
+@Composable
+private fun ExerciseWithNextPreview() {
+    ExerciseVieww(
+        exerciseName = "Push Ups",
+        nextExerciseName = "Mountain Climbers",
+        currentTime = 15000f,
+        totalTime = 30
+    )
+}
+
+@Preview(name = "Exercise - Without next exercise", showBackground = true)
+@Composable
+private fun ExerciseWithoutNextPreview() {
+    ExerciseVieww(
+        exerciseName = "Final Plank Hold",
+        nextExerciseName = null,
+        currentTime = 45000f,
+        totalTime = 60
+    )
+}
+
+@Preview(name = "Exercise - Long name", showBackground = true)
+@Composable
+private fun ExerciseLongNamePreview() {
+    ExerciseVieww(
+        exerciseName = "Advanced Mountain Climbers with Side Rotation",
+        nextExerciseName = "Cool Down Stretch",
+        currentTime = 10000f,
+        totalTime = 45
+    )
+}
+
