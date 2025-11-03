@@ -1,4 +1,4 @@
-package com.example.stretchy
+package com.example.stretchy.navigation
 
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.stretchy.Screen
 import com.example.stretchy.activity.di.ActivityComponent
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.extensions.daggerViewModel
@@ -23,6 +24,8 @@ import com.example.stretchy.features.executetraining.ui.composable.ExecuteTraini
 import com.example.stretchy.features.traininglist.di.TrainingListComponent
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.features.traininglist.ui.composable.TrainingListScreenn
+
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun Navigation(
@@ -38,6 +41,13 @@ fun Navigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     handleBottomNavBarVisibility(navBackStackEntry, hideBottomNavBar, showBottomNavBar)
 
+    // Centralized navigation handler
+    val navigationViewModel: NavigationViewModel = viewModel()
+    HandleNavigationEvents(
+        navEvents = navigationViewModel.navEvents,
+        navController = navController
+    )
+
     NavHost(navController = navController, startDestination = startDestination) {
         composable(
             route = Screen.TrainingListScreen.route,
@@ -49,8 +59,8 @@ fun Navigation(
                 LocalViewModelStoreOwner.current!!
             )
             TrainingListScreenn(
-                navController = navController,
                 viewModel = vm,
+                navigationViewModel = navigationViewModel,
                 onExportClick = onExportClick,
                 onImportClick = onImportClick,
                 trainingType = trainingType
@@ -67,8 +77,8 @@ fun Navigation(
                 LocalViewModelStoreOwner.current!!
             )
             TrainingListScreenn(
-                navController = navController,
                 viewModel = vm,
+                navigationViewModel = navigationViewModel,
                 onExportClick = onExportClick,
                 onImportClick = onImportClick,
                 trainingType = trainingType

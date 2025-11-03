@@ -10,16 +10,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.stretchy.Screen
+
 
 import com.example.stretchy.features.traininglist.ui.data.Training
 
 @Composable
 fun TrainingLazyListVieww(
     trainingList: List<Training>,
-    navController: NavController,
+    onExecuteTraining: (String) -> Unit,
+    onEditTraining: (String, String) -> Unit,
     onDeleteTraining: (Training) -> Unit,
     onCopyTraining: (Training) -> Unit
 ) {
@@ -27,12 +26,12 @@ fun TrainingLazyListVieww(
         items(trainingList) { training ->
             Box(
                 modifier = Modifier.clickable {
-                    navController.navigate(Screen.ExecuteTrainingScreen.createRoute(training.id))
+                    onExecuteTraining(training.id)
                 },
             ) {
                 TrainingListItemVieww(
                     training = training,
-                    navController = navController,
+                    onEditTraining = onEditTraining,
                     onDeleteTraining = onDeleteTraining,
                     onCopyTraining = onCopyTraining
                 )
@@ -64,7 +63,8 @@ private fun TrainingListFewItemsPreview() {
 
     TrainingLazyListVieww(
         trainingList = sampleTrainings,
-        navController = rememberNavController(),
+        onExecuteTraining = {},
+        onEditTraining = { _, _ -> },
         onDeleteTraining = {},
         onCopyTraining = {}
     )
@@ -83,7 +83,8 @@ private fun TrainingListManyItemsPreview() {
 
     TrainingLazyListVieww(
         trainingList = sampleTrainings,
-        navController = rememberNavController(),
+        onExecuteTraining = {},
+        onEditTraining = { _, _ -> },
         onDeleteTraining = {},
         onCopyTraining = {}
     )

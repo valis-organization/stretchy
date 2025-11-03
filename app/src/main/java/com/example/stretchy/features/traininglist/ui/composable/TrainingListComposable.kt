@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+
 import com.example.stretchy.R
 import com.example.stretchy.Screen
 import com.example.stretchy.database.data.TrainingType
@@ -22,12 +22,13 @@ import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.features.traininglist.ui.composable.list.TrainingLazyListVieww
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.features.traininglist.ui.data.Training
+import com.example.stretchy.navigation.NavigationViewModel
 import com.example.stretchy.theme.White80
 
 @Composable
 fun TrainingListScreenn(
     viewModel: TrainingListViewModel,
-    navController: NavController,
+    navigationViewModel: NavigationViewModel,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
     trainingType: TrainingType
@@ -35,8 +36,16 @@ fun TrainingListScreenn(
     val state = viewModel.uiState.collectAsState().value
     TrainingListVieww(
         state = state,
-        navController = navController,
         trainingType = trainingType,
+        onCreateTraining = { trainingType ->
+            navigationViewModel.navigateToCreateTraining(trainingType)
+        },
+        onExecuteTraining = { trainingId ->
+            navigationViewModel.navigateToExecuteTraining(trainingId)
+        },
+        onEditTraining = { trainingId, trainingType ->
+            navigationViewModel.navigateToEditTraining(trainingId, trainingType)
+        },
         onExportClick = onExportClick,
         onImportClick = onImportClick,
         onPerformExport = { viewModel.export() },
@@ -47,10 +56,12 @@ fun TrainingListScreenn(
 }
 
 @Composable
-private fun TrainingListVieww(
+fun TrainingListVieww(
     state: TrainingListUiState,
-    navController: NavController,
     trainingType: TrainingType,
+    onCreateTraining: (String) -> Unit,
+    onExecuteTraining: (String) -> Unit,
+    onEditTraining: (String, String) -> Unit,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
     onPerformExport: () -> Unit,
@@ -61,7 +72,7 @@ private fun TrainingListVieww(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = {
-                navController.navigate(Screen.ExerciseCreatorScreen.createRoute(trainingType = trainingType.name))
+                onCreateTraining(trainingType.name)
             }) { Icon(Icons.Filled.Add, contentDescription = stringResource(id = R.string.desc_plus_icon)) }
         },
         topBar = {
@@ -98,7 +109,8 @@ private fun TrainingListVieww(
                     ) { CircularProgressIndicator() }
                     is TrainingListUiState.Loaded -> TrainingLazyListVieww(
                         trainingList = state.trainings,
-                        navController = navController,
+                        onExecuteTraining = onExecuteTraining,
+                        onEditTraining = onEditTraining,
                         onDeleteTraining = onDeleteTraining,
                         onCopyTraining = onCopyTraining
                     )
@@ -139,8 +151,10 @@ private fun TrainingListFullIntegrationPreview() {
 
     TrainingListVieww(
         state = TrainingListUiState.Loaded(sampleTrainings),
-        navController = androidx.navigation.compose.rememberNavController(),
         trainingType = TrainingType.STRETCH,
+        onCreateTraining = {},
+        onExecuteTraining = {},
+        onEditTraining = { _, _ -> },
         onExportClick = {},
         onImportClick = {},
         onPerformExport = {},
@@ -155,8 +169,10 @@ private fun TrainingListFullIntegrationPreview() {
 private fun TrainingListEmptyPreview() {
     TrainingListVieww(
         state = TrainingListUiState.Empty,
-        navController = androidx.navigation.compose.rememberNavController(),
         trainingType = TrainingType.STRETCH,
+        onCreateTraining = {},
+        onExecuteTraining = {},
+        onEditTraining = { _, _ -> },
         onExportClick = {},
         onImportClick = {},
         onPerformExport = {},
@@ -188,8 +204,10 @@ private fun TrainingListLoadedPreview() {
 
     TrainingListVieww(
         state = TrainingListUiState.Loaded(sampleTrainings),
-        navController = androidx.navigation.compose.rememberNavController(),
         trainingType = TrainingType.STRETCH,
+        onCreateTraining = {},
+        onExecuteTraining = {},
+        onEditTraining = { _, _ -> },
         onExportClick = {},
         onImportClick = {},
         onPerformExport = {},
@@ -204,8 +222,10 @@ private fun TrainingListLoadedPreview() {
 private fun TrainingListLoadingPreview() {
     TrainingListVieww(
         state = TrainingListUiState.Loading,
-        navController = androidx.navigation.compose.rememberNavController(),
         trainingType = TrainingType.STRETCH,
+        onCreateTraining = {},
+        onExecuteTraining = {},
+        onEditTraining = { _, _ -> },
         onExportClick = {},
         onImportClick = {},
         onPerformExport = {},

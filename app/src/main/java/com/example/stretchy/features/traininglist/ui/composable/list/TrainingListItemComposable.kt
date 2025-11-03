@@ -18,8 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+
 import com.example.stretchy.R
 import com.example.stretchy.common.convertSecondsToMinutes
 
@@ -30,7 +29,7 @@ import com.example.stretchy.theme.WhiteSmoke
 @Composable
 fun TrainingListItemVieww(
     training: Training,
-    navController: NavController,
+    onEditTraining: (String, String) -> Unit,
     onDeleteTraining: (Training) -> Unit,
     onCopyTraining: (Training) -> Unit
 ) {
@@ -70,7 +69,7 @@ fun TrainingListItemVieww(
                             )
                             Row {
                                 EditIconButton(
-                                    navController = navController,
+                                    onEditTraining = onEditTraining,
                                     trainingId = training.id,
                                     trainingType = training.type
                                 )
@@ -91,14 +90,14 @@ fun TrainingListItemVieww(
 
 @Composable
 private fun EditIconButton(
-    navController: NavController,
+    onEditTraining: (String, String) -> Unit,
     trainingId: String,
     trainingType: Training.Type
 ) {
     IconButton(
         onClick = {
             val routeTrainingType = if (trainingType == Training.Type.BODY_WEIGHT) "BODYWEIGHT" else "STRETCH"
-            navController.navigate(com.example.stretchy.Screen.ExerciseCreatorScreen.createRoute(id = trainingId, trainingType = routeTrainingType))
+            onEditTraining(trainingId, routeTrainingType)
         },
         Modifier
             .size(20.dp)
@@ -201,7 +200,7 @@ private fun TrainingItemStretchPreview() {
             timeInSeconds = 600,
             type = Training.Type.STRETCH
         ),
-        navController = rememberNavController(),
+        onEditTraining = { _, _ -> },
         onDeleteTraining = {},
         onCopyTraining = {}
     )
@@ -218,7 +217,7 @@ private fun TrainingItemBodyWeightPreview() {
             timeInSeconds = 1800,
             type = Training.Type.BODY_WEIGHT
         ),
-        navController = rememberNavController(),
+        onEditTraining = { _, _ -> },
         onDeleteTraining = {},
         onCopyTraining = {}
     )
@@ -235,7 +234,7 @@ private fun TrainingItemLongNamePreview() {
             timeInSeconds = 2700,
             type = Training.Type.BODY_WEIGHT
         ),
-        navController = rememberNavController(),
+        onEditTraining = { _, _ -> },
         onDeleteTraining = {},
         onCopyTraining = {}
     )

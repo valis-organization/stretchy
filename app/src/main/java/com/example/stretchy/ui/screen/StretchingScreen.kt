@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import com.example.stretchy.Screen
 import com.example.stretchy.activity.di.ActivityComponent
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.Navigation
+import com.example.stretchy.navigation.Navigation
 
 @Composable
 fun StretchingScreen(
