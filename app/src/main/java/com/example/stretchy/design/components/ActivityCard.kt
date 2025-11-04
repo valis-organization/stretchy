@@ -1,5 +1,6 @@
 package com.example.stretchy.design.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,6 +44,7 @@ fun ActivityCard(
     lastExercised: String,
     modifier: Modifier = Modifier,
     state: ActivityCardState = ActivityCardState.Normal,
+    colorIndex: Int = 0, // New parameter to alternate colors
     onClick: () -> Unit = {}
 ) {
     Box(modifier = modifier) {
@@ -65,7 +67,7 @@ fun ActivityCard(
             }
         }
 
-        // Main card content
+        // Main card content with accent line
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -73,39 +75,56 @@ fun ActivityCard(
             shape = RoundedCornerShape(12.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(10.dp)
-                    .fillMaxHeight(), // Fill available height from row
-                verticalArrangement = Arrangement.SpaceBetween // Title to top, metrics to bottom
-            ) {
-                // Top: Title
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.fillMaxWidth()
+            Row {
+                // Left accent line with alternating colors
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .fillMaxHeight()
+                        .background(
+                            color = when {
+                                state == ActivityCardState.Draft -> MaterialTheme.colorScheme.error
+                                colorIndex % 2 == 0 -> MaterialTheme.colorScheme.primary // Orange
+                                else -> MaterialTheme.colorScheme.secondary // Blue
+                            }
+                        )
                 )
 
-                // Bottom: Metrics (always at bottom) with margin from title
+                // Card content
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier
+                        .padding(10.dp)
+                        .fillMaxHeight(), // Fill available height from row
+                    verticalArrangement = Arrangement.SpaceBetween // Title to top, metrics to bottom
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
-                        Text(text = setsCount.toString(), style = MaterialTheme.typography.bodySmall)
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(imageVector = Icons.Filled.AccessTime, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
-                        Text(text = "${durationMinutes}m", style = MaterialTheme.typography.bodySmall)
-                    }
+                    // Top: Title
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Icon(imageVector = Icons.Filled.Whatshot, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
-                        Text(text = streakCount.toString(), style = MaterialTheme.typography.bodySmall)
-                        Text(text = " • ")
-                        Text(text = lastExercised, style = MaterialTheme.typography.bodySmall)
+                    // Bottom: Metrics (always at bottom) with margin from title
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier.padding(top = 8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+                            Text(text = setsCount.toString(), style = MaterialTheme.typography.bodySmall)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(imageVector = Icons.Filled.AccessTime, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+                            Text(text = "${durationMinutes}m", style = MaterialTheme.typography.bodySmall)
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Icon(imageVector = Icons.Filled.Whatshot, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+                            Text(text = streakCount.toString(), style = MaterialTheme.typography.bodySmall)
+                            Text(text = " • ")
+                            Text(text = lastExercised, style = MaterialTheme.typography.bodySmall)
+                        }
                     }
                 }
             }
@@ -116,8 +135,10 @@ fun ActivityCard(
 @Preview(showBackground = true)
 @Composable
 private fun ActivityCardSimplePreview() {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ActivityCard(title = "Short Title", setsCount = 5, durationMinutes = 10, streakCount = 3, lastExercised = "2d ago")
-        ActivityCard(title = "Very Long Title That Takes Two Lines", setsCount = 8, durationMinutes = 15, streakCount = 7, lastExercised = "today", state = ActivityCardState.Draft)
+    DesignTheme {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            ActivityCard(title = "Deep Hip Openers", setsCount = 7, durationMinutes = 12, streakCount = 15, lastExercised = "2 days ago", colorIndex = 0)
+            ActivityCard(title = "Quick Energy Boost", setsCount = 5, durationMinutes = 5, streakCount = 31, lastExercised = "today", colorIndex = 1)
+        }
     }
 }

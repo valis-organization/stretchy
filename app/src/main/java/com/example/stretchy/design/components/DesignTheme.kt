@@ -7,10 +7,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.ui.graphics.Color
-import com.example.stretchy.theme.Caramel
-import com.example.stretchy.theme.GoBananas
-import com.example.stretchy.theme.BananaMania
-
+a
 class DesignColors(
     val accentStart: Color,
     val accentEnd: Color,
@@ -23,19 +20,19 @@ class DesignColors(
 
     companion object {
         fun light() = DesignColors(
-            accentStart = Caramel.copy(alpha = 0.95f),
-            accentEnd = GoBananas,
+            accentStart = Color(0xFFFF8A65), // Orange similar to the image
+            accentEnd = Color(0xFF42A5F5), // Blue similar to the image
             cardSurface = Color.White,
-            metricIcon = Caramel.copy(alpha = 0.9f),
+            metricIcon = Color(0xFF9E9E9E),
             metricTextPrimary = Color(0xFF222222),
             metricTextSecondary = Color(0xFF666666)
         )
 
         fun dark() = DesignColors(
-            accentStart = Caramel,
-            accentEnd = GoBananas.copy(alpha = 0.85f),
+            accentStart = Color(0xFFFF8A65),
+            accentEnd = Color(0xFF42A5F5),
             cardSurface = Color(0xFF1F1F1F),
-            metricIcon = GoBananas,
+            metricIcon = Color(0xFF9E9E9E),
             metricTextPrimary = Color(0xFFEAEAEA),
             metricTextSecondary = Color(0xFFB5B5B5)
         )
@@ -47,7 +44,13 @@ val LocalDesignColors = staticCompositionLocalOf { DesignColors.light() }
 @Composable
 fun DesignTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {
     val colors = if (darkTheme) DesignColors.dark() else DesignColors.light()
-    val scheme = if (darkTheme) darkColorScheme() else lightColorScheme()
+    val scheme = if (darkTheme) darkColorScheme(
+        primary = colors.accentStart,
+        secondary = colors.accentEnd
+    ) else lightColorScheme(
+        primary = colors.accentStart,
+        secondary = colors.accentEnd
+    )
 
     CompositionLocalProvider(LocalDesignColors provides colors) {
         MaterialTheme(colorScheme = scheme, typography = MaterialTheme.typography) {
@@ -55,4 +58,3 @@ fun DesignTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {
         }
     }
 }
-
