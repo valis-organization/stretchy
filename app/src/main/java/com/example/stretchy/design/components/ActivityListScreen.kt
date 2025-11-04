@@ -117,7 +117,9 @@ fun ActivityListView(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAdd,
-                shape = CircleShape // Fix: Make FAB circular instead of square
+                containerColor = LocalDesignColors.current.floatingButtonBackground,
+                contentColor = Color.White,
+                shape = CircleShape
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
             }

@@ -6,8 +6,15 @@ Stretchy - stretching and training planning app
 
 This project now includes a theme system that supports two separate visual themes:
 
-- Stretching (green) — used for stretching screens
-- Training (orange) — used for training screens
+- **Stretching (green)** — used for stretching screens
+- **Training (orange)** — used for training screens
+
+### Key features:
+- **Transparent status bar** that shows theme colors
+- **White bottom bar** with colored icons matching the active theme
+- **Themed floating action buttons**
+- **Consistent card design** (white for normal cards, light pink for drafts)
+- **Automatic theme switching** based on navigation
 
 See `THEME_SYSTEM_DOCUMENTATION.md` for full details (colors, usage, previews).
 

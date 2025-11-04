@@ -76,6 +76,9 @@ fun ActivityCard(
                 .clickable(onClick = onClick),
             shape = RoundedCornerShape(12.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = if (state == ActivityCardState.Draft) Color(0xFFFFEBEE) else Color.White
+            )
         ) {
             Row {
                 // Left accent line with colors based on training type

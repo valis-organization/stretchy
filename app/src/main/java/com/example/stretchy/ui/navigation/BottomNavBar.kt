@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -68,8 +69,8 @@ fun BottomNavBar(
                 exit = shrinkVertically(),
             ) {
                 BottomNavigation(
-                    backgroundColor = LocalDesignColors.current.bottomBarBackground,
-                    contentColor = Color.White
+                    backgroundColor = Color.White,
+                    contentColor = Color.Gray
                 ) {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentRoute = navBackStackEntry?.destination?.route
@@ -79,6 +80,12 @@ fun BottomNavBar(
                             icon = { Icon(screen.icon, contentDescription = null) },
                             label = { Text(text = stringResource(id = screen.labelRes)) },
                             selected = currentRoute == screen.route,
+                            selectedContentColor = when (screen.route) {
+                                Screen.StretchingListScreen.route -> Color(0xFF4CAF50) // Green for stretching
+                                Screen.TrainingListScreen.route -> Color(0xFFFF9800) // Orange for training
+                                else -> Color(0xFF4CAF50) // Default green
+                            },
+                            unselectedContentColor = Color.Gray,
                             onClick = {
                                 navController.navigate(screen.route) {
                                     popUpTo(navController.graph.startDestinationId) { saveState = true }
@@ -95,7 +102,9 @@ fun BottomNavBar(
         NavHost(
             navController = navController,
             startDestination = Screen.StretchingListScreen.route,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .padding(innerPadding)
+                .statusBarsPadding()
         ) {
             composable(Screen.StretchingListScreen.route) {
                 StretchingScreen(

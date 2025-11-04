@@ -81,4 +81,15 @@ Te kolory są dostępne poprzez `colors.backgroundGradient` jako lista kolorów 
 
 ## Bottom Bar i Floating Action Button
 
-Kolory bottom bar i floating action button są teraz synchronizowane z aktywnym motywem poprzez `colors.bottomBarBackground` i `colors.floatingButtonBackground`.
+- **Bottom Bar**: Ma teraz białe tło z kolorowymi ikonami zgodnie z motywem (zielone dla stretching, pomarańczowe dla training)
+- **Floating Action Button**: Używa kolorów motywu poprzez `colors.floatingButtonBackground`
+
+## Status Bar (Pasek statusu)
+
+Status bar jest teraz przezroczysty i pokazuje kolor tła aktywnego motywu, tworząc spójny wygląd z resztą aplikacji.
+
+## Karty (Cards)
+
+- **Normalne karty**: Mają białe tło dla lepszej czytelności
+- **Draft karty**: Mają jasnoróżowe tło (`#FFEBEE`) aby wyróżnić się jako nieukończone
+- **Kolorowa linia**: Lewa strona karty ma kolorową linię zgodną z motywem lub czerwoną dla drafts
