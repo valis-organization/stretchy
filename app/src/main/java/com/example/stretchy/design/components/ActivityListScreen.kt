@@ -18,17 +18,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.stretchy.R
+import com.example.stretchy.features.traininglist.ui.composable.Menu
 import com.example.stretchy.features.traininglist.ui.data.Training
 
 data class ActivityItem(
@@ -59,7 +66,11 @@ fun ActivityListScreen(
     onAdd: () -> Unit = {},
     onFilter: () -> Unit = {},
     onSearch: () -> Unit = {},
-    onActivityClick: (ActivityItem) -> Unit = {}
+    onActivityClick: (ActivityItem) -> Unit = {},
+    onExportClick: () -> Unit = {},
+    onImportClick: () -> Unit = {},
+    onPerformExport: () -> Unit = {},
+    onPerformImport: suspend () -> Unit = {}
 ) {
     ActivityListView(
         activities = activities,
@@ -67,10 +78,15 @@ fun ActivityListScreen(
         onAdd = onAdd,
         onFilter = onFilter,
         onSearch = onSearch,
-        onActivityClick = onActivityClick
+        onActivityClick = onActivityClick,
+        onExportClick = onExportClick,
+        onImportClick = onImportClick,
+        onPerformExport = onPerformExport,
+        onPerformImport = onPerformImport
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityListView(
     activities: List<ActivityItem>,
@@ -78,53 +94,100 @@ fun ActivityListView(
     onAdd: () -> Unit = {},
     onFilter: () -> Unit = {},
     onSearch: () -> Unit = {},
-    onActivityClick: (ActivityItem) -> Unit = {}
+    onActivityClick: (ActivityItem) -> Unit = {},
+    onExportClick: () -> Unit = {},
+    onImportClick: () -> Unit = {},
+    onPerformExport: () -> Unit = {},
+    onPerformImport: suspend () -> Unit = {}
 ) {
     val colors = MaterialTheme.colorScheme
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(colors.primary.copy(alpha = 0.08f), colors.secondary.copy(alpha = 0.02f))
-                )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(id = R.string.app_name)) },
+                actions = {
+                    Menu(
+                        onRequestExportPermission = onExportClick,
+                        onRequestImportPermission = onImportClick,
+                        onPerformExport = onPerformExport,
+                        onPerformImport = onPerformImport
+                    )
+                }
             )
-    ) {
-        LazyColumn(
-            modifier = Modifier
+        },
+        floatingActionButton = {
+            FloatingActionButton(onClick = onAdd) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+            }
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(paddingValues)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(colors.primary.copy(alpha = 0.08f), colors.secondary.copy(alpha = 0.02f))
+                    )
+                )
         ) {
-            val rows = activities.chunked(2)
-            itemsIndexed(rows) { _, rowItems ->
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min) // Row height equals tallest child
-                ) {
-                    for (item in rowItems) {
-                        ActivityCard(
-                            title = item.title,
-                            setsCount = item.sets,
-                            durationMinutes = item.minutes,
-                            streakCount = item.streakCount,
-                            lastExercised = item.lastExercised,
-                            state = if (item.isDraft) ActivityCardState.Draft else ActivityCardState.Normal,
-                            onClick = { onActivityClick(item) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxHeight() // Fill the row height
-                        )
-                    }
-                    if (rowItems.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                val rows = activities.chunked(2)
+                itemsIndexed(rows) { _, rowItems ->
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Min) // Row height equals tallest child
+                    ) {
+                        for (item in rowItems) {
+                            ActivityCard(
+                                title = item.title,
+                                setsCount = item.sets,
+                                durationMinutes = item.minutes,
+                                streakCount = item.streakCount,
+                                lastExercised = item.lastExercised,
+                                state = if (item.isDraft) ActivityCardState.Draft else ActivityCardState.Normal,
+                                onClick = { onActivityClick(item) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight() // Fill the row height
+                            )
+                        }
+                        if (rowItems.size == 1) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
                     }
                 }
+                item { Spacer(modifier = Modifier.padding(bottom = 16.dp)) }
             }
-            item { Spacer(modifier = Modifier.padding(bottom = 72.dp)) }
+
+            // Bottom floating search/filter bar
+            Surface(
+                tonalElevation = 8.dp,
+                shape = RoundedCornerShape(32.dp),
+                color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .fillMaxWidth(0.7f),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onFilter) { Icon(imageVector = Icons.Default.FilterList, contentDescription = "Filter") }
+                    IconButton(onClick = onSearch) { Icon(imageVector = Icons.Default.Search, contentDescription = "Search") }
+                }
+            }
         }
     }
 }

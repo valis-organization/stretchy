@@ -28,7 +28,11 @@ fun TrainingListScreenn(
                 ActivityListScreen(
                     activities = emptyList(),
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
-                    onActivityClick = { /* No items to click */ }
+                    onActivityClick = { /* No items to click */ },
+                    onExportClick = onExportClick,
+                    onImportClick = onImportClick,
+                    onPerformExport = { viewModel.export() },
+                    onPerformImport = { viewModel.import() }
                 )
             }
             is TrainingListUiState.Loading -> {
@@ -36,7 +40,11 @@ fun TrainingListScreenn(
                 ActivityListScreen(
                     activities = emptyList(),
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
-                    onActivityClick = { /* Loading state */ }
+                    onActivityClick = { /* Loading state */ },
+                    onExportClick = onExportClick,
+                    onImportClick = onImportClick,
+                    onPerformExport = { viewModel.export() },
+                    onPerformImport = { viewModel.import() }
                 )
             }
             is TrainingListUiState.Loaded -> {
@@ -62,7 +70,11 @@ fun TrainingListScreenn(
                         // Find the original training by name and navigate to execute it
                         val training = state.trainings.find { it.name == activityItem.title }
                         training?.let { navigationViewModel.navigateToExecuteTraining(it.id) }
-                    }
+                    },
+                    onExportClick = onExportClick,
+                    onImportClick = onImportClick,
+                    onPerformExport = { viewModel.export() },
+                    onPerformImport = { viewModel.import() }
                 )
             }
             is TrainingListUiState.Error -> {
@@ -70,7 +82,11 @@ fun TrainingListScreenn(
                 ActivityListScreen(
                     activities = emptyList(),
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
-                    onActivityClick = { /* Error state */ }
+                    onActivityClick = { /* Error state */ },
+                    onExportClick = onExportClick,
+                    onImportClick = onImportClick,
+                    onPerformExport = { viewModel.export() },
+                    onPerformImport = { viewModel.import() }
                 )
             }
         }
