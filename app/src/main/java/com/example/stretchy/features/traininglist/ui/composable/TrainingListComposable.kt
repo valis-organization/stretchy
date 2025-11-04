@@ -4,7 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.design.components.ActivityListScreen
-import com.example.stretchy.design.components.DesignTheme
+import com.example.stretchy.design.components.StretchingTheme
+import com.example.stretchy.design.components.TrainingTheme
 import com.example.stretchy.design.components.toActivityItem
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
@@ -21,7 +22,8 @@ fun TrainingListScreenn(
 ) {
     val state = viewModel.uiState.collectAsState().value
 
-    DesignTheme {
+    // Use appropriate theme based on training type
+    val content: @Composable () -> Unit = {
         when (state) {
             is TrainingListUiState.Empty -> {
                 // Show empty ActivityListScreen
@@ -94,5 +96,11 @@ fun TrainingListScreenn(
                 )
             }
         }
+    }
+
+    // Apply appropriate theme based on training type
+    when (trainingType) {
+        TrainingType.STRETCH -> StretchingTheme { content() }
+        TrainingType.BODYWEIGHT -> TrainingTheme { content() }
     }
 }

@@ -14,8 +14,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.graphics.Color
 import com.example.stretchy.R
 import com.example.stretchy.Screen
+import com.example.stretchy.design.components.LocalDesignColors
+import com.example.stretchy.design.components.StretchingTheme
+import com.example.stretchy.design.components.TrainingTheme
+import com.example.stretchy.design.components.StretchingTheme
+import com.example.stretchy.design.components.TrainingTheme
 import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.navigation.BottomNavScreen
 import com.example.stretchy.permission.StoragePermissionState
@@ -31,6 +37,8 @@ fun BottomNavBar(
 ) {
     val navController = rememberNavController()
     var showBottomNavBar by remember { mutableStateOf(true) }
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     val screens = listOf(
         BottomNavScreen(
@@ -50,14 +58,19 @@ fun BottomNavBar(
         ),
     )
 
-    Scaffold(
+    // Determine theme based on current route and wrap content
+    val content: @Composable () -> Unit = {
+        Scaffold(
         bottomBar = {
             AnimatedVisibility(
                 visible = showBottomNavBar,
                 enter = slideInVertically(initialOffsetY = { it }),
                 exit = shrinkVertically(),
             ) {
-                BottomNavigation {
+                BottomNavigation(
+                    backgroundColor = LocalDesignColors.current.bottomBarBackground,
+                    contentColor = Color.White
+                ) {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -107,4 +120,14 @@ fun BottomNavBar(
             }
         }
     }
+    }
+
+    // Apply appropriate theme based on current route
+    when (currentRoute) {
+        Screen.StretchingListScreen.route -> StretchingTheme { content() }
+        Screen.TrainingListScreen.route -> TrainingTheme { content() }
+        Screen.MetaTrainingScreen.route -> StretchingTheme { content() } // Default to stretching theme for meta training
+        else -> StretchingTheme { content() } // Default theme
+    }
 }
+
