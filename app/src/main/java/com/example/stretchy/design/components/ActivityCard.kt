@@ -32,6 +32,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Whatshot
+import com.example.stretchy.database.data.TrainingType
 
 enum class ActivityCardState { Normal, Draft }
 
@@ -44,6 +45,7 @@ fun ActivityCard(
     lastExercised: String,
     modifier: Modifier = Modifier,
     state: ActivityCardState = ActivityCardState.Normal,
+    trainingType: TrainingType = TrainingType.STRETCH,
     colorIndex: Int = 0, // New parameter to alternate colors
     onClick: () -> Unit = {}
 ) {
@@ -76,16 +78,21 @@ fun ActivityCard(
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         ) {
             Row {
-                // Left accent line with alternating colors
+                // Left accent line with colors based on training type
                 Box(
                     modifier = Modifier
                         .width(4.dp)
                         .fillMaxHeight()
                         .background(
                             color = when {
-                                state == ActivityCardState.Draft -> MaterialTheme.colorScheme.error
-                                colorIndex % 2 == 0 -> MaterialTheme.colorScheme.primary // Orange
-                                else -> MaterialTheme.colorScheme.secondary // Blue
+                                state == ActivityCardState.Draft -> Color(0xFFF44336) // Red for draft
+                                trainingType == TrainingType.STRETCH -> {
+                                    if (colorIndex % 2 == 0) Color(0xFF4CAF50) else Color(0xFF66BB6A) // Green shades
+                                }
+                                trainingType == TrainingType.BODYWEIGHT -> {
+                                    if (colorIndex % 2 == 0) Color(0xFFFF8A65) else Color(0xFFFF5722) // Orange/Red shades
+                                }
+                                else -> Color(0xFF4CAF50) // Default green
                             }
                         )
                 )
@@ -137,8 +144,9 @@ fun ActivityCard(
 private fun ActivityCardSimplePreview() {
     DesignTheme {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            ActivityCard(title = "Deep Hip Openers", setsCount = 7, durationMinutes = 12, streakCount = 15, lastExercised = "2 days ago", colorIndex = 0)
-            ActivityCard(title = "Quick Energy Boost", setsCount = 5, durationMinutes = 5, streakCount = 31, lastExercised = "today", colorIndex = 1)
+            ActivityCard(title = "Deep Hip Openers", setsCount = 7, durationMinutes = 12, streakCount = 15, lastExercised = "2 days ago", trainingType = TrainingType.STRETCH, colorIndex = 0)
+            ActivityCard(title = "Quick Energy Boost", setsCount = 5, durationMinutes = 5, streakCount = 31, lastExercised = "today", trainingType = TrainingType.BODYWEIGHT, colorIndex = 1)
+            ActivityCard(title = "Draft Exercise", setsCount = 8, durationMinutes = 10, streakCount = 0, lastExercised = "never", state = ActivityCardState.Draft, trainingType = TrainingType.STRETCH, colorIndex = 0)
         }
     }
 }

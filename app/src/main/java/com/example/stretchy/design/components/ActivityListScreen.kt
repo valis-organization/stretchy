@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -25,10 +26,12 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.R
+import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.traininglist.ui.composable.Menu
 import com.example.stretchy.features.traininglist.ui.data.Training
 
@@ -56,6 +59,7 @@ fun Training.toActivityItem(streakCount: Int = 0, lastExercised: String = "today
 @Composable
 fun ActivityListScreen(
     activities: List<ActivityItem>,
+    trainingType: TrainingType,
     modifier: Modifier = Modifier,
     onAdd: () -> Unit = {},
     onActivityClick: (ActivityItem) -> Unit = {},
@@ -66,6 +70,7 @@ fun ActivityListScreen(
 ) {
     ActivityListView(
         activities = activities,
+        trainingType = trainingType,
         modifier = modifier,
         onAdd = onAdd,
         onActivityClick = onActivityClick,
@@ -80,6 +85,7 @@ fun ActivityListScreen(
 @Composable
 fun ActivityListView(
     activities: List<ActivityItem>,
+    trainingType: TrainingType,
     modifier: Modifier = Modifier,
     onAdd: () -> Unit = {},
     onActivityClick: (ActivityItem) -> Unit = {},
@@ -88,7 +94,11 @@ fun ActivityListView(
     onPerformExport: () -> Unit = {},
     onPerformImport: suspend () -> Unit = {}
 ) {
-    val colors = MaterialTheme.colorScheme
+    // Define colors based on training type
+    val (primaryColor, secondaryColor) = when (trainingType) {
+        TrainingType.STRETCH -> Pair(Color(0xFF4CAF50), Color(0xFF66BB6A)) // Green colors
+        TrainingType.BODYWEIGHT -> Pair(Color(0xFFFF8A65), Color(0xFFFF5722)) // Orange/Red colors
+    }
 
     Scaffold(
         topBar = {
@@ -105,7 +115,10 @@ fun ActivityListView(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAdd) {
+            FloatingActionButton(
+                onClick = onAdd,
+                shape = CircleShape // Fix: Make FAB circular instead of square
+            ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
             }
         }
@@ -116,7 +129,7 @@ fun ActivityListView(
                 .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(colors.primary.copy(alpha = 0.08f), colors.secondary.copy(alpha = 0.02f))
+                        colors = listOf(primaryColor.copy(alpha = 0.08f), secondaryColor.copy(alpha = 0.02f))
                     )
                 )
         ) {
@@ -142,6 +155,7 @@ fun ActivityListView(
                                 streakCount = item.streakCount,
                                 lastExercised = item.lastExercised,
                                 state = if (item.isDraft) ActivityCardState.Draft else ActivityCardState.Normal,
+                                trainingType = trainingType,
                                 colorIndex = (rowIndex * 2) + itemIndex, // Calculate global index for alternating colors
                                 onClick = { onActivityClick(item) },
                                 modifier = Modifier
@@ -162,32 +176,28 @@ fun ActivityListView(
 
 @Preview(showBackground = true)
 @Composable
-private fun ActivityListScreenPreview() {
+private fun ActivityListScreenStretchPreview() {
     DesignTheme(darkTheme = false) {
         val demo = listOf(
             ActivityItem("Upper Body Release", 8, 6, 3, "2d ago"),
             ActivityItem("Lower Body Mobility", 9, 8, 5, "1d ago"),
             ActivityItem("Complete Neck & Shoulders Relief Program", 6, 4, 2, "3d ago"),
-            ActivityItem("Yoga Flow Stretch", 6, 10, 7, "today", isDraft = true),
-            ActivityItem("Dynamic", 5, 6, 1, "1w ago"),
-            ActivityItem("Post-Workout Cool Down and Recovery Session", 6, 9, 4, "2d ago"),
-            ActivityItem("Hamstring Focus", 5, 12, 8, "today", isDraft = true),
-            ActivityItem("Spine Alignment", 6, 8, 3, "3d ago")
+            ActivityItem("Yoga Flow Stretch", 6, 10, 7, "today", isDraft = true)
         )
-        ActivityListScreen(activities = demo)
+        ActivityListScreen(activities = demo, trainingType = TrainingType.STRETCH)
     }
 }
 
 @Preview(showBackground = true)
 @Composable
-private fun ActivityListViewPreview() {
+private fun ActivityListScreenBodyweightPreview() {
     DesignTheme(darkTheme = false) {
         val demo = listOf(
             ActivityItem("Deep Hip Openers", 7, 12, 15, "2 days ago"),
             ActivityItem("Quick Energy Boost", 5, 5, 31, "today"),
-            ActivityItem("Yoga Flow Stretch", 6, 10, 7, "today", isDraft = true),
+            ActivityItem("HIIT Workout", 6, 10, 7, "today", isDraft = true),
             ActivityItem("Dynamic Warm-up", 5, 6, 1, "1w ago")
         )
-        ActivityListView(activities = demo)
+        ActivityListScreen(activities = demo, trainingType = TrainingType.BODYWEIGHT)
     }
 }

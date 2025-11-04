@@ -27,6 +27,7 @@ fun TrainingListScreenn(
                 // Show empty ActivityListScreen
                 ActivityListScreen(
                     activities = emptyList(),
+                    trainingType = trainingType,
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
                     onActivityClick = { /* No items to click */ },
                     onExportClick = onExportClick,
@@ -39,6 +40,7 @@ fun TrainingListScreenn(
                 // Show loading state with ActivityListScreen
                 ActivityListScreen(
                     activities = emptyList(),
+                    trainingType = trainingType,
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
                     onActivityClick = { /* Loading state */ },
                     onExportClick = onExportClick,
@@ -65,6 +67,7 @@ fun TrainingListScreenn(
 
                 ActivityListScreen(
                     activities = activities,
+                    trainingType = trainingType,
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
                     onActivityClick = { activityItem ->
                         // Find the original training by name and navigate to execute it
@@ -81,6 +84,7 @@ fun TrainingListScreenn(
                 // Show error state with ActivityListScreen
                 ActivityListScreen(
                     activities = emptyList(),
+                    trainingType = trainingType,
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
                     onActivityClick = { /* Error state */ },
                     onExportClick = onExportClick,
