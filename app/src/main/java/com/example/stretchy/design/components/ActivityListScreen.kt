@@ -29,16 +29,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-
+import com.example.stretchy.features.traininglist.ui.data.Training
 
 data class ActivityItem(
     val title: String,
-    val sets: Int,
-    val minutes: Int,
-    val calories: Int,
-    val dateLabel: String,
+    val sets: Int, // numberOfExercises from Training
+    val minutes: Int, // timeInSeconds converted to minutes from Training
+    val streakCount: Int, // streak count (new field)
+    val lastExercised: String, // last exercised time (new field)
     val isDraft: Boolean = false
 )
+
+// Extension function to convert Training to ActivityItem
+fun Training.toActivityItem(streakCount: Int = 0, lastExercised: String = "today"): ActivityItem {
+    return ActivityItem(
+        title = name,
+        sets = numberOfExercises,
+        minutes = timeInSeconds / 60, // convert seconds to minutes
+        streakCount = streakCount,
+        lastExercised = lastExercised,
+        isDraft = false // can be determined based on some Training property if needed
+    )
+}
 
 @Composable
 fun ActivityListScreen(
@@ -46,7 +58,27 @@ fun ActivityListScreen(
     modifier: Modifier = Modifier,
     onAdd: () -> Unit = {},
     onFilter: () -> Unit = {},
-    onSearch: () -> Unit = {}
+    onSearch: () -> Unit = {},
+    onActivityClick: (ActivityItem) -> Unit = {}
+) {
+    ActivityListView(
+        activities = activities,
+        modifier = modifier,
+        onAdd = onAdd,
+        onFilter = onFilter,
+        onSearch = onSearch,
+        onActivityClick = onActivityClick
+    )
+}
+
+@Composable
+fun ActivityListView(
+    activities: List<ActivityItem>,
+    modifier: Modifier = Modifier,
+    onAdd: () -> Unit = {},
+    onFilter: () -> Unit = {},
+    onSearch: () -> Unit = {},
+    onActivityClick: (ActivityItem) -> Unit = {}
 ) {
     val colors = MaterialTheme.colorScheme
 
@@ -78,9 +110,10 @@ fun ActivityListScreen(
                             title = item.title,
                             setsCount = item.sets,
                             durationMinutes = item.minutes,
-                            calories = item.calories,
-                            dateLabel = item.dateLabel,
+                            streakCount = item.streakCount,
+                            lastExercised = item.lastExercised,
                             state = if (item.isDraft) ActivityCardState.Draft else ActivityCardState.Normal,
+                            onClick = { onActivityClick(item) },
                             modifier = Modifier
                                 .weight(1f)
                                 .fillMaxHeight() // Fill the row height
@@ -93,29 +126,6 @@ fun ActivityListScreen(
             }
             item { Spacer(modifier = Modifier.padding(bottom = 72.dp)) }
         }
-
-        Surface(
-            tonalElevation = 8.dp,
-            shape = RoundedCornerShape(32.dp),
-            color = MaterialTheme.colorScheme.surface,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                    .fillMaxWidth(0.9f),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IconButton(onClick = onFilter) { Icon(imageVector = Icons.Default.FilterList, contentDescription = "Filter") }
-                    IconButton(onClick = onSearch) { Icon(imageVector = Icons.Default.Search, contentDescription = "Search") }
-                }
-                FloatingActionButton(onClick = onAdd) { Icon(imageVector = Icons.Default.Add, contentDescription = "Add") }
-            }
-        }
     }
 }
 
@@ -124,22 +134,29 @@ fun ActivityListScreen(
 private fun ActivityListScreenPreview() {
     DesignTheme(darkTheme = false) {
         val demo = listOf(
-            // Row 1: Short titles
-            ActivityItem("Upper Body", 8, 6, 8, "8m"),
-            ActivityItem("Lower Body", 9, 8, 9, "10m"),
-
-            // Row 2: Long + short with draft
-            ActivityItem("Complete Neck & Shoulders Relief Program", 6, 4, 6, "6m"),
-            ActivityItem("Yoga Flow Stretch", 6, 10, 20, "20m", isDraft = true),
-
-            // Row 3: Mixed
-            ActivityItem("Dynamic", 5, 6, 10, "6m"),
-            ActivityItem("Post-Workout Cool Down and Recovery Session", 6, 9, 14, "9m"),
-
-            // Row 4: Draft + normal
-            ActivityItem("Hamstring Focus", 5, 12, 11, "12m", isDraft = true),
-            ActivityItem("Spine Alignment", 6, 8, 10, "14m")
+            ActivityItem("Upper Body Release", 8, 6, 3, "2d ago"),
+            ActivityItem("Lower Body Mobility", 9, 8, 5, "1d ago"),
+            ActivityItem("Complete Neck & Shoulders Relief Program", 6, 4, 2, "3d ago"),
+            ActivityItem("Yoga Flow Stretch", 6, 10, 7, "today", isDraft = true),
+            ActivityItem("Dynamic", 5, 6, 1, "1w ago"),
+            ActivityItem("Post-Workout Cool Down and Recovery Session", 6, 9, 4, "2d ago"),
+            ActivityItem("Hamstring Focus", 5, 12, 8, "today", isDraft = true),
+            ActivityItem("Spine Alignment", 6, 8, 3, "3d ago")
         )
         ActivityListScreen(activities = demo)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun ActivityListViewPreview() {
+    DesignTheme(darkTheme = false) {
+        val demo = listOf(
+            ActivityItem("Upper Body", 8, 6, 3, "2d ago"),
+            ActivityItem("Lower Body", 9, 8, 5, "1d ago"),
+            ActivityItem("Yoga Flow Stretch", 6, 10, 7, "today", isDraft = true),
+            ActivityItem("Dynamic Warm-up", 5, 6, 1, "1w ago")
+        )
+        ActivityListView(activities = demo)
     }
 }

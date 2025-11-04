@@ -39,8 +39,8 @@ fun ActivityCard(
     title: String,
     setsCount: Int,
     durationMinutes: Int,
-    calories: Int,
-    dateLabel: String,
+    streakCount: Int,
+    lastExercised: String,
     modifier: Modifier = Modifier,
     state: ActivityCardState = ActivityCardState.Normal,
     onClick: () -> Unit = {}
@@ -75,34 +75,37 @@ fun ActivityCard(
         ) {
             Column(
                 modifier = Modifier
-                    .padding(12.dp)
+                    .padding(10.dp)
                     .fillMaxHeight(), // Fill available height from row
                 verticalArrangement = Arrangement.SpaceBetween // Title to top, metrics to bottom
             ) {
                 // Top: Title
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                    style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp),
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Bottom: Metrics (always at bottom)
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                // Bottom: Metrics (always at bottom) with margin from title
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
                         Text(text = setsCount.toString(), style = MaterialTheme.typography.bodySmall)
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Icon(imageVector = Icons.Filled.AccessTime, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(imageVector = Icons.Filled.AccessTime, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
                         Text(text = "${durationMinutes}m", style = MaterialTheme.typography.bodySmall)
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Icon(imageVector = Icons.Filled.Whatshot, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(16.dp))
-                        Text(text = calories.toString(), style = MaterialTheme.typography.bodySmall)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Icon(imageVector = Icons.Filled.Whatshot, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+                        Text(text = streakCount.toString(), style = MaterialTheme.typography.bodySmall)
                         Text(text = " • ")
-                        Text(text = dateLabel, style = MaterialTheme.typography.bodySmall)
+                        Text(text = lastExercised, style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -114,7 +117,7 @@ fun ActivityCard(
 @Composable
 private fun ActivityCardSimplePreview() {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        ActivityCard(title = "Short Title", setsCount = 5, durationMinutes = 10, calories = 20, dateLabel = "today")
-        ActivityCard(title = "Very Long Title That Takes Two Lines", setsCount = 5, durationMinutes = 10, calories = 20, dateLabel = "today", state = ActivityCardState.Draft)
+        ActivityCard(title = "Short Title", setsCount = 5, durationMinutes = 10, streakCount = 3, lastExercised = "2d ago")
+        ActivityCard(title = "Very Long Title That Takes Two Lines", setsCount = 8, durationMinutes = 15, streakCount = 7, lastExercised = "today", state = ActivityCardState.Draft)
     }
 }
