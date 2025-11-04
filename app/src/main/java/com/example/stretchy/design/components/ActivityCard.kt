@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -32,6 +32,7 @@ import androidx.compose.ui.zIndex
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Whatshot
 import com.example.stretchy.database.data.TrainingType
 
@@ -122,71 +123,130 @@ fun ActivityCard(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            // Count icon with circle background
-                            Box(
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .background(
-                                        color = when (trainingType) {
+                        // 4-column layout with variable spacing
+                        Row(
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            // Column 1: Count and Fire icons
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                // Count icon with circle background
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .background(
+                                            color = when (trainingType) {
+                                                TrainingType.STRETCH -> Color(0xFF4CAF50)
+                                                TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
+                                            }.copy(alpha = 0.15f),
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.List,
+                                        contentDescription = null,
+                                        tint = when (trainingType) {
                                             TrainingType.STRETCH -> Color(0xFF4CAF50)
                                             TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
-                                        }.copy(alpha = 0.15f),
-                                        shape = CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
+                                        },
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+
+                                // Fire icon - red only when streak > 0
+                                Box(
+                                    modifier = Modifier.size(20.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Whatshot,
+                                        contentDescription = null,
+                                        tint = if (streakCount > 0) Color(0xFFFF5722) else Color.Gray,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+
+                            // Column 2: Count and Streak texts (smaller spacing from column 1)
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                horizontalAlignment = Alignment.Start,
+                                modifier = Modifier.padding(start = 4.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.AutoMirrored.Filled.List,
-                                    contentDescription = null,
-                                    tint = when (trainingType) {
-                                        TrainingType.STRETCH -> Color(0xFF4CAF50)
-                                        TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
-                                    },
-                                    modifier = Modifier.size(12.dp)
+                                Text(
+                                    text = setsCount.toString(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(vertical = 2.dp)
+                                )
+                                Text(
+                                    text = streakCount.toString(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(vertical = 2.dp)
                                 )
                             }
-                            Text(text = setsCount.toString(), style = MaterialTheme.typography.bodySmall)
 
-                            Spacer(modifier = Modifier.width(4.dp))
-
-                            // Time icon with circle background
-                            Box(
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .background(
-                                        color = when (trainingType) {
+                            // Column 3: Time icon + calendar (normal spacing from column 2)
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .background(
+                                            color = when (trainingType) {
+                                                TrainingType.STRETCH -> Color(0xFF4CAF50)
+                                                TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
+                                            }.copy(alpha = 0.15f),
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.AccessTime,
+                                        contentDescription = null,
+                                        tint = when (trainingType) {
                                             TrainingType.STRETCH -> Color(0xFF4CAF50)
                                             TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
-                                        }.copy(alpha = 0.15f),
-                                        shape = CircleShape
-                                    ),
-                                contentAlignment = Alignment.Center
+                                        },
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                                Box(
+                                    modifier = Modifier.size(20.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.DateRange,
+                                        contentDescription = null,
+                                        tint = Color.Gray,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                }
+                            }
+
+                            // Column 4: Time and last exercised (smaller spacing from column 3)
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
+                                horizontalAlignment = Alignment.Start,
+                                modifier = Modifier.padding(start = 4.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Filled.AccessTime,
-                                    contentDescription = null,
-                                    tint = when (trainingType) {
-                                        TrainingType.STRETCH -> Color(0xFF4CAF50)
-                                        TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
-                                    },
-                                    modifier = Modifier.size(12.dp)
+                                Text(
+                                    text = "${durationMinutes}m",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    modifier = Modifier.padding(vertical = 2.dp)
+                                )
+                                Text(
+                                    text = lastExercised,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(vertical = 2.dp)
                                 )
                             }
-                            Text(text = "${durationMinutes}m", style = MaterialTheme.typography.bodySmall)
-                        }
-
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            // Fire icon - always orange
-                            Icon(
-                                imageVector = Icons.Filled.Whatshot,
-                                contentDescription = null,
-                                tint = Color(0xFFFF9800), // Always orange
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(text = streakCount.toString(), style = MaterialTheme.typography.bodySmall)
-                            Text(text = " • ", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                            Text(text = lastExercised, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                         }
                     }
                 }
