@@ -11,7 +11,9 @@ This project now includes a theme system that supports two separate visual theme
 
 ### Key features:
 - **Transparent status bar** that shows theme colors
+- **Clean header design** with title and menu icons (no TopAppBar)
 - **White bottom bar** with colored icons matching the active theme
+- **Proper system UI handling** (bottom bar doesn't go under navigation)
 - **Themed floating action buttons**
 - **Consistent card design** (white for normal cards, light pink for drafts)
 - **Automatic theme switching** based on navigation

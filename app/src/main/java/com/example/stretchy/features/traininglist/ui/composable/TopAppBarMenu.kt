@@ -40,7 +40,7 @@ fun Menu(
         Icon(
             imageVector = Icons.Filled.MoreVert,
             contentDescription = stringResource(id = R.string.desc_menu_icon),
-            tint = Color.White
+            tint = Color.Black
         )
         DropdownMenu(
             expanded = expanded,

@@ -88,6 +88,12 @@ Te kolory są dostępne poprzez `colors.backgroundGradient` jako lista kolorów 
 
 Status bar jest teraz przezroczysty i pokazuje kolor tła aktywnego motywu, tworząc spójny wygląd z resztą aplikacji.
 
+## UI Structure Changes
+
+- **TopAppBar usunięty**: Zastąpiony zwykłym tekstem tytułu w górnej części ekranu
+- **Menu Import/Export**: Teraz znajduje się jako ikona obok tytułu (nie w TopAppBar)
+- **Bottom Bar**: Dodano `navigationBarsPadding()` aby nie chodził pod system UI
+
 ## Karty (Cards)
 
 - **Normalne karty**: Mają białe tło dla lepszej czytelności

@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,7 +18,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -81,7 +82,6 @@ fun ActivityListScreen(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityListView(
     activities: List<ActivityItem>,
@@ -101,19 +101,6 @@ fun ActivityListView(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(id = R.string.app_name)) },
-                actions = {
-                    Menu(
-                        onRequestExportPermission = onExportClick,
-                        onRequestImportPermission = onImportClick,
-                        onPerformExport = onPerformExport,
-                        onPerformImport = onPerformImport
-                    )
-                }
-            )
-        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAdd,
@@ -135,12 +122,37 @@ fun ActivityListView(
                     )
                 )
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+            Column(
+                modifier = Modifier.fillMaxSize()
             ) {
+                // Custom header with title and import/export icons
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.app_name),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+
+                    Menu(
+                        onRequestExportPermission = onExportClick,
+                        onRequestImportPermission = onImportClick,
+                        onPerformExport = onPerformExport,
+                        onPerformImport = onPerformImport
+                    )
+                }
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                 val rows = activities.chunked(2)
                 itemsIndexed(rows) { rowIndex, rowItems ->
                     Row(
@@ -171,6 +183,7 @@ fun ActivityListView(
                     }
                 }
                 item { Spacer(modifier = Modifier.padding(bottom = 16.dp)) }
+                }
             }
         }
     }

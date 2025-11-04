@@ -10,6 +10,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -70,7 +71,8 @@ fun BottomNavBar(
             ) {
                 BottomNavigation(
                     backgroundColor = Color.White,
-                    contentColor = Color.Gray
+                    contentColor = Color.Gray,
+                    modifier = Modifier.navigationBarsPadding()
                 ) {
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val currentRoute = navBackStackEntry?.destination?.route
