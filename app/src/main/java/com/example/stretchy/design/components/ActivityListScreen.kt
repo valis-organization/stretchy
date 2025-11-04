@@ -3,21 +3,17 @@ package com.example.stretchy.design.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -28,12 +24,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.R
@@ -290,7 +287,7 @@ fun ActivityListView(
 private fun ActivityListScreenStretchPreview() {
     DesignTheme(darkTheme = false) {
         val demo = listOf(
-            ActivityItem("Upper Body Release", 8, 6, 3, "2d ago"),
+            ActivityItem("Upper Body Release", 9, 6, 3, "2d ago"),
             ActivityItem("Lower Body Mobility", 9, 8, 5, "1d ago"),
             ActivityItem("Complete Neck & Shoulders Relief Program", 6, 4, 2, "3d ago"),
             ActivityItem("Yoga Flow Stretch", 6, 10, 7, "today", isDraft = true)
@@ -312,3 +309,4 @@ private fun ActivityListScreenBodyweightPreview() {
         ActivityListScreen(activities = demo, trainingType = TrainingType.BODYWEIGHT)
     }
 }
+
