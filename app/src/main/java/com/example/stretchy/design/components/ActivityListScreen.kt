@@ -10,7 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.lazy.LazyColumn
@@ -83,6 +88,86 @@ fun ActivityListScreen(
 }
 
 @Composable
+private fun SectionHeader(
+    title: String,
+    trainingType: TrainingType
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+    ) {
+        // Circular icon based on training type
+        val (backgroundColor, iconColor) = when (trainingType) {
+            TrainingType.STRETCH -> Pair(Color(0xFF4CAF50), Color.White) // Green
+            TrainingType.BODYWEIGHT -> Pair(Color(0xFFFF9800), Color.White) // Orange
+        }
+
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .background(backgroundColor, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = when (trainingType) {
+                    TrainingType.STRETCH -> "S"
+                    TrainingType.BODYWEIGHT -> "T"
+                },
+                color = iconColor,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun ActivityRow(
+    rowItems: List<ActivityItem>,
+    trainingType: TrainingType,
+    globalRowIndex: Int,
+    onActivityClick: (ActivityItem) -> Unit
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+    ) {
+        rowItems.forEachIndexed { itemIndex, item ->
+            ActivityCard(
+                title = item.title,
+                setsCount = item.sets,
+                durationMinutes = item.minutes,
+                streakCount = item.streakCount,
+                lastExercised = item.lastExercised,
+                state = if (item.isDraft) ActivityCardState.Draft else ActivityCardState.Normal,
+                trainingType = trainingType,
+                colorIndex = (globalRowIndex * 2) + itemIndex,
+                onClick = { onActivityClick(item) },
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+            )
+        }
+        if (rowItems.size == 1) {
+            Spacer(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
 fun ActivityListView(
     activities: List<ActivityItem>,
     trainingType: TrainingType,
@@ -151,38 +236,49 @@ fun ActivityListView(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                val rows = activities.chunked(2)
-                itemsIndexed(rows) { rowIndex, rowItems ->
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(IntrinsicSize.Min) // Row height equals tallest child
-                    ) {
-                        rowItems.forEachIndexed { itemIndex, item ->
-                            ActivityCard(
-                                title = item.title,
-                                setsCount = item.sets,
-                                durationMinutes = item.minutes,
-                                streakCount = item.streakCount,
-                                lastExercised = item.lastExercised,
-                                state = if (item.isDraft) ActivityCardState.Draft else ActivityCardState.Normal,
-                                trainingType = trainingType,
-                                colorIndex = (rowIndex * 2) + itemIndex, // Calculate global index for alternating colors
-                                onClick = { onActivityClick(item) },
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight() // Fill the row height
-                            )
-                        }
-                        if (rowItems.size == 1) {
-                            Spacer(modifier = Modifier.weight(1f))
-                        }
+                    // Most Used Section
+                    item {
+                        SectionHeader(
+                            title = "Most Used",
+                            trainingType = trainingType
+                        )
                     }
-                }
-                item { Spacer(modifier = Modifier.padding(bottom = 16.dp)) }
+
+                    // Most Used Items (placeholder - empty for now as requested)
+                    val mostUsedItems = emptyList<ActivityItem>()
+                    val mostUsedRows = mostUsedItems.chunked(2)
+                    itemsIndexed(mostUsedRows) { rowIndex, rowItems ->
+                        ActivityRow(
+                            rowItems = rowItems,
+                            trainingType = trainingType,
+                            globalRowIndex = rowIndex,
+                            onActivityClick = onActivityClick
+                        )
+                    }
+
+                    // All Trainings/Stretches Section
+                    item {
+                        SectionHeader(
+                            title = when (trainingType) {
+                                TrainingType.STRETCH -> "All Stretchings"
+                                TrainingType.BODYWEIGHT -> "All Trainings"
+                            },
+                            trainingType = trainingType
+                        )
+                    }
+
+                    // All activities
+                    val allRows = activities.chunked(2)
+                    itemsIndexed(allRows) { rowIndex, rowItems ->
+                        ActivityRow(
+                            rowItems = rowItems,
+                            trainingType = trainingType,
+                            globalRowIndex = mostUsedRows.size + rowIndex,
+                            onActivityClick = onActivityClick
+                        )
+                    }
                 }
             }
         }

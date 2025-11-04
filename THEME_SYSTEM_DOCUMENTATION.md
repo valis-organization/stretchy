@@ -93,6 +93,16 @@ Status bar jest teraz przezroczysty i pokazuje kolor tła aktywnego motywu, twor
 - **TopAppBar usunięty**: Zastąpiony zwykłym tekstem tytułu w górnej części ekranu
 - **Menu Import/Export**: Teraz znajduje się jako ikona obok tytułu (nie w TopAppBar)
 - **Bottom Bar**: Dodano `navigationBarsPadding()` aby nie chodził pod system UI
+- **Sekcje**: Dodano sekcje "Most Used" i "All Stretches/Trainings" z kolorowymi ikonami
+- **Usunięto niepotrzebną przestrzeń**: Karty teraz kończą się na poziomie bottom bar
+
+## Kolorowe ikony w kartach
+
+- **Ikona fire**: Zawsze pomarańczowa (`#FF9800`) niezależnie od motywu
+- **Ikony count i time**: Mają kolor motywu z półprzezroczystym kółkiem w tle
+  - Zielone dla stretching (`#4CAF50`)
+  - Pomarańczowe dla training (`#FF9800`)
+- **Ikony w sekcjach**: Kolorowe kółka z literami "S" (stretching) i "T" (training)
 
 ## Karty (Cards)
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -122,18 +123,70 @@ fun ActivityCard(
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Icon(imageVector = Icons.AutoMirrored.Filled.List, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+                            // Count icon with circle background
+                            Box(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .background(
+                                        color = when (trainingType) {
+                                            TrainingType.STRETCH -> Color(0xFF4CAF50)
+                                            TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
+                                        }.copy(alpha = 0.15f),
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.List,
+                                    contentDescription = null,
+                                    tint = when (trainingType) {
+                                        TrainingType.STRETCH -> Color(0xFF4CAF50)
+                                        TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
+                                    },
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
                             Text(text = setsCount.toString(), style = MaterialTheme.typography.bodySmall)
+
                             Spacer(modifier = Modifier.width(4.dp))
-                            Icon(imageVector = Icons.Filled.AccessTime, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+
+                            // Time icon with circle background
+                            Box(
+                                modifier = Modifier
+                                    .size(20.dp)
+                                    .background(
+                                        color = when (trainingType) {
+                                            TrainingType.STRETCH -> Color(0xFF4CAF50)
+                                            TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
+                                        }.copy(alpha = 0.15f),
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.AccessTime,
+                                    contentDescription = null,
+                                    tint = when (trainingType) {
+                                        TrainingType.STRETCH -> Color(0xFF4CAF50)
+                                        TrainingType.BODYWEIGHT -> Color(0xFFFF9800)
+                                    },
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
                             Text(text = "${durationMinutes}m", style = MaterialTheme.typography.bodySmall)
                         }
 
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Icon(imageVector = Icons.Filled.Whatshot, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(14.dp))
+                            // Fire icon - always orange
+                            Icon(
+                                imageVector = Icons.Filled.Whatshot,
+                                contentDescription = null,
+                                tint = Color(0xFFFF9800), // Always orange
+                                modifier = Modifier.size(16.dp)
+                            )
                             Text(text = streakCount.toString(), style = MaterialTheme.typography.bodySmall)
-                            Text(text = " • ")
-                            Text(text = lastExercised, style = MaterialTheme.typography.bodySmall)
+                            Text(text = " • ", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            Text(text = lastExercised, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                         }
                     }
                 }

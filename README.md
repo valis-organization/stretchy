@@ -17,6 +17,8 @@ This project now includes a theme system that supports two separate visual theme
 - **Themed floating action buttons**
 - **Consistent card design** (white for normal cards, light pink for drafts)
 - **Automatic theme switching** based on navigation
+- **Sectioned layout** with "Most Used" and "All Stretches/Trainings" sections
+- **Colorful icons** with theme-matching colors and visual enhancements
 
 See `THEME_SYSTEM_DOCUMENTATION.md` for full details (colors, usage, previews).
 
