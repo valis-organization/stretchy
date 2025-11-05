@@ -74,7 +74,7 @@ fun Navigation(
             route = Screen.ExerciseCreatorScreen.route,
             arguments = listOf(
                 navArgument("id") { defaultValue = "-1" },
-                navArgument("trainingType") {})
+                navArgument("trainingType") { defaultValue = "STRETCH" })
         ) {
             val vm: CreateOrEditTrainingViewModel = hiltViewModel()
             CreateTrainingScreenn(

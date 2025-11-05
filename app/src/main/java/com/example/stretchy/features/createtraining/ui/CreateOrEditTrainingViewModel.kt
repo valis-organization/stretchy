@@ -33,7 +33,13 @@ class CreateOrEditTrainingViewModel @Inject constructor(
 
     // Get parameters from savedStateHandle
     val trainingId: Long = savedStateHandle.get<String>("id")?.toLongOrNull() ?: -1L
-    val trainingType: TrainingType = savedStateHandle.get<TrainingType>("trainingType") ?: TrainingType.STRETCH
+    val trainingType: TrainingType = savedStateHandle.get<String>("trainingType")?.let {
+        try {
+            TrainingType.valueOf(it)
+        } catch (_: IllegalArgumentException) {
+            TrainingType.STRETCH
+        }
+    } ?: TrainingType.STRETCH
 
     private val fetchTrainingByIdUseCase = FetchTrainingByIdUseCase(repository)
     private val createTrainingUseCase = CreateTrainingUseCase(repository)

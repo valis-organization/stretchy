@@ -31,7 +31,10 @@ fun TrainingListScreenn(
                     activities = emptyList(),
                     trainingType = trainingType,
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
-                    onActivityClick = { /* No items to click */ },
+                    onActivityClick = { /* Error state */ },
+                    onActivityEdit = { /* Error state */ },
+                    onActivityCopy = { /* Error state */ },
+                    onActivityDelete = { /* Error state */ },
                     onExportClick = onExportClick,
                     onImportClick = onImportClick,
                     onPerformExport = { viewModel.export() },
@@ -45,6 +48,9 @@ fun TrainingListScreenn(
                     trainingType = trainingType,
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
                     onActivityClick = { /* Loading state */ },
+                    onActivityEdit = { /* Loading state */ },
+                    onActivityCopy = { /* Loading state */ },
+                    onActivityDelete = { /* Loading state */ },
                     onExportClick = onExportClick,
                     onImportClick = onImportClick,
                     onPerformExport = { viewModel.export() },
@@ -72,9 +78,19 @@ fun TrainingListScreenn(
                     trainingType = trainingType,
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
                     onActivityClick = { activityItem ->
-                        // Find the original training by name and navigate to execute it
-                        val training = state.trainings.find { it.name == activityItem.title }
-                        training?.let { navigationViewModel.navigateToExecuteTraining(it.id) }
+                        // Navigate to execute training using the activity's ID
+                        navigationViewModel.navigateToExecuteTraining(activityItem.id)
+                    },
+                    onActivityEdit = { activityItem ->
+                        // Navigate to edit training using the activity's ID
+                        navigationViewModel.navigateToEditTraining(activityItem.id, trainingType.name)
+                    },
+                    onActivityCopy = { activityItem ->
+                        // TODO: Implement copy functionality
+                    },
+                    onActivityDelete = { activityItem ->
+                        // TODO: Implement delete functionality
+                        // viewModel.deleteTraining(activityItem.id)
                     },
                     onExportClick = onExportClick,
                     onImportClick = onImportClick,
@@ -88,7 +104,10 @@ fun TrainingListScreenn(
                     activities = emptyList(),
                     trainingType = trainingType,
                     onAdd = { navigationViewModel.navigateToCreateTraining(trainingType.name) },
-                    onActivityClick = { /* Error state */ },
+                    onActivityClick = { /* Empty state */ },
+                    onActivityEdit = { /* Empty state */ },
+                    onActivityCopy = { /* Empty state */ },
+                    onActivityDelete = { /* Empty state */ },
                     onExportClick = onExportClick,
                     onImportClick = onImportClick,
                     onPerformExport = { viewModel.export() },

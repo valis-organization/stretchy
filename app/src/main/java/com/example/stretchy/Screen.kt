@@ -8,7 +8,7 @@ sealed class Screen(val route: String) {
 
     object StretchingListScreen : Screen("stretchingListScreen")
     object ExerciseCreatorScreen : Screen("exerciseCreatorScreen?id={id}&trainingType={trainingType}") {
-        fun createRoute(id: String = "-1", trainingType: String = "BODYWEIGHT"): String {
+        fun createRoute(id: String = "-1", trainingType: String = "STRETCH"): String {
             return "exerciseCreatorScreen?id=$id&trainingType=$trainingType"
         }
     }

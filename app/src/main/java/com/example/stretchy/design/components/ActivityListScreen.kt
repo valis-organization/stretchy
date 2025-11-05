@@ -39,6 +39,7 @@ import com.example.stretchy.features.traininglist.ui.composable.Menu
 import com.example.stretchy.features.traininglist.ui.data.Training
 
 data class ActivityItem(
+    val id: String, // training ID
     val title: String,
     val sets: Int, // numberOfExercises from Training
     val minutes: Int, // timeInSeconds converted to minutes from Training
@@ -50,6 +51,7 @@ data class ActivityItem(
 // Extension function to convert Training to ActivityItem
 fun Training.toActivityItem(streakCount: Int = 0, lastExercised: String = "today"): ActivityItem {
     return ActivityItem(
+        id = id,
         title = name,
         sets = numberOfExercises,
         minutes = timeInSeconds / 60, // convert seconds to minutes
@@ -66,6 +68,9 @@ fun ActivityListScreen(
     modifier: Modifier = Modifier,
     onAdd: () -> Unit = {},
     onActivityClick: (ActivityItem) -> Unit = {},
+    onActivityEdit: (ActivityItem) -> Unit = {},
+    onActivityCopy: (ActivityItem) -> Unit = {},
+    onActivityDelete: (ActivityItem) -> Unit = {},
     onExportClick: () -> Unit = {},
     onImportClick: () -> Unit = {},
     onPerformExport: () -> Unit = {},
@@ -77,6 +82,9 @@ fun ActivityListScreen(
         modifier = modifier,
         onAdd = onAdd,
         onActivityClick = onActivityClick,
+        onActivityEdit = onActivityEdit,
+        onActivityCopy = onActivityCopy,
+        onActivityDelete = onActivityDelete,
         onExportClick = onExportClick,
         onImportClick = onImportClick,
         onPerformExport = onPerformExport,
@@ -134,7 +142,10 @@ private fun ActivityRow(
     rowItems: List<ActivityItem>,
     trainingType: TrainingType,
     globalRowIndex: Int,
-    onActivityClick: (ActivityItem) -> Unit
+    onActivityClick: (ActivityItem) -> Unit,
+    onActivityEdit: (ActivityItem) -> Unit = {},
+    onActivityCopy: (ActivityItem) -> Unit = {},
+    onActivityDelete: (ActivityItem) -> Unit = {}
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -153,6 +164,9 @@ private fun ActivityRow(
                 trainingType = trainingType,
                 colorIndex = (globalRowIndex * 2) + itemIndex,
                 onClick = { onActivityClick(item) },
+                onEdit = { onActivityEdit(item) },
+                onCopy = { onActivityCopy(item) },
+                onDelete = { onActivityDelete(item) },
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight()
@@ -171,6 +185,9 @@ fun ActivityListView(
     modifier: Modifier = Modifier,
     onAdd: () -> Unit = {},
     onActivityClick: (ActivityItem) -> Unit = {},
+    onActivityEdit: (ActivityItem) -> Unit = {},
+    onActivityCopy: (ActivityItem) -> Unit = {},
+    onActivityDelete: (ActivityItem) -> Unit = {},
     onExportClick: () -> Unit = {},
     onImportClick: () -> Unit = {},
     onPerformExport: () -> Unit = {},
@@ -251,7 +268,10 @@ fun ActivityListView(
                             rowItems = rowItems,
                             trainingType = trainingType,
                             globalRowIndex = rowIndex,
-                            onActivityClick = onActivityClick
+                            onActivityClick = onActivityClick,
+                            onActivityEdit = onActivityEdit,
+                            onActivityCopy = onActivityCopy,
+                            onActivityDelete = onActivityDelete
                         )
                     }
 
@@ -273,7 +293,10 @@ fun ActivityListView(
                             rowItems = rowItems,
                             trainingType = trainingType,
                             globalRowIndex = mostUsedRows.size + rowIndex,
-                            onActivityClick = onActivityClick
+                            onActivityClick = onActivityClick,
+                            onActivityEdit = onActivityEdit,
+                            onActivityCopy = onActivityCopy,
+                            onActivityDelete = onActivityDelete
                         )
                     }
                 }
@@ -284,13 +307,13 @@ fun ActivityListView(
 
 @Preview(showBackground = true)
 @Composable
-private fun ActivityListScreenStretchPreview() {
-    DesignTheme(darkTheme = false) {
+private fun ActivityListScreenStretchPreviewDark() {
+    StretchingTheme(darkTheme = true) {
         val demo = listOf(
-            ActivityItem("Upper Body Release", 9, 6, 3, "2d ago"),
-            ActivityItem("Lower Body Mobility", 9, 8, 5, "1d ago"),
-            ActivityItem("Complete Neck & Shoulders Relief Program", 6, 4, 2, "3d ago"),
-            ActivityItem("Yoga Flow Stretch", 6, 10, 7, "today", isDraft = true)
+            ActivityItem("1", "Upper Body Release", 9, 6, 3, "2d ago"),
+            ActivityItem("2", "Lower Body Mobility", 9, 8, 5, "1d ago"),
+            ActivityItem("3", "Complete Neck & Shoulders Relief Program", 6, 4, 2, "3d ago"),
+            ActivityItem("4", "Yoga Flow Stretch", 6, 10, 7, "today", isDraft = true)
         )
         ActivityListScreen(activities = demo, trainingType = TrainingType.STRETCH)
     }
@@ -298,13 +321,13 @@ private fun ActivityListScreenStretchPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun ActivityListScreenBodyweightPreview() {
-    DesignTheme(darkTheme = false) {
+private fun ActivityListScreenBodyweightPreviewDark() {
+    TrainingTheme(darkTheme = true) {
         val demo = listOf(
-            ActivityItem("Deep Hip Openers", 7, 12, 15, "2 days ago"),
-            ActivityItem("Quick Energy Boost", 5, 5, 31, "today"),
-            ActivityItem("HIIT Workout", 6, 10, 7, "today", isDraft = true),
-            ActivityItem("Dynamic Warm-up", 5, 6, 1, "1w ago")
+            ActivityItem("1", "Deep Hip Openers", 7, 12, 15, "2 days ago"),
+            ActivityItem("2", "Quick Energy Boost", 5, 5, 31, "today"),
+            ActivityItem("3", "HIIT Workout", 6, 10, 7, "today", isDraft = true),
+            ActivityItem("4", "Dynamic Warm-up", 5, 6, 1, "1w ago")
         )
         ActivityListScreen(activities = demo, trainingType = TrainingType.BODYWEIGHT)
     }
