@@ -22,9 +22,10 @@ fun NewTrainingEditScreen(
     viewModel: CreateOrEditTrainingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showNameEditDialog by remember { mutableStateOf(false) }
     var showExerciseNameEditDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
     var editingExerciseIndex by remember { mutableStateOf(-1) }
+    var deletingExerciseIndex by remember { mutableStateOf(-1) }
 
     when (val state = uiState) {
         is CreateTrainingUiState.Success -> {
@@ -38,7 +39,7 @@ fun NewTrainingEditScreen(
                     isTimelessExercise = exerciseWithBreak.exercise.duration <= 0,
                     breakTimeSeconds = exerciseWithBreak.nextBreakDuration ?: 0,
                     customBreakTimeSeconds = (exerciseWithBreak.nextBreakDuration ?: 0).toFloat(),
-                    isBreakExpanded = false,
+                    isBreakExpanded = false, // Break expansion is managed internally by the widget
                     isExpanded = exerciseWithBreak.isExpanded,
                     accentColor = generateExerciseColor(index)
                 )
@@ -50,8 +51,8 @@ fun NewTrainingEditScreen(
                 onBackClick = {
                     navController.popBackStack()
                 },
-                onTrainingNameEdit = {
-                    showNameEditDialog = true
+                onTrainingNameEdit = { newName ->
+                    viewModel.setTrainingName(newName)
                 },
                 onExerciseStateChange = { index, newState ->
                     // Convert back to ExercisesWithBreaks and update
@@ -63,7 +64,7 @@ fun NewTrainingEditScreen(
                                 duration = if (newState.isTimelessExercise) 0 else newState.selectedTimeSeconds
                             ),
                             nextBreakDuration = if (newState.breakTimeSeconds > 0) newState.breakTimeSeconds else null,
-                            isExpanded = newState.isExpanded
+                            isExpanded = newState.isExpanded // Only persist main exercise expansion state
                         )
                         currentExercises[index] = updatedExercise
                         viewModel.setExercises(currentExercises)
@@ -85,16 +86,9 @@ fun NewTrainingEditScreen(
                     viewModel.setExercises(currentExercises)
                 },
                 onDeleteExercise = { index ->
-                    // Delete exercise at index
-                    val currentExercises = state.exercisesWithBreaks.toMutableList()
-                    if (index < currentExercises.size && currentExercises.size > 1) {
-                        currentExercises.removeAt(index)
-                        // Update listIds to maintain consistency
-                        val updatedExercises = currentExercises.mapIndexed { newIndex, exercise ->
-                            exercise.copy(listId = newIndex)
-                        }
-                        viewModel.setExercises(updatedExercises)
-                    }
+                    // Show confirmation dialog before deleting
+                    deletingExerciseIndex = index
+                    showDeleteConfirmDialog = true
                 },
                 onEditExerciseName = { index ->
                     editingExerciseIndex = index
@@ -111,17 +105,6 @@ fun NewTrainingEditScreen(
                 isEditing = state.editingTraining
             )
 
-            // Training Name Edit Dialog
-            if (showNameEditDialog) {
-                TrainingNameEditDialog(
-                    currentName = state.currentName,
-                    onDismiss = { showNameEditDialog = false },
-                    onConfirm = { newName ->
-                        viewModel.setTrainingName(newName)
-                        showNameEditDialog = false
-                    }
-                )
-            }
 
             // Exercise Name Edit Dialog
             if (showExerciseNameEditDialog && editingExerciseIndex >= 0 && editingExerciseIndex < state.exercisesWithBreaks.size) {
@@ -140,6 +123,31 @@ fun NewTrainingEditScreen(
                         viewModel.setExercises(currentExercises)
                         showExerciseNameEditDialog = false
                         editingExerciseIndex = -1
+                    }
+                )
+            }
+
+            // Delete Confirmation Dialog
+            if (showDeleteConfirmDialog && deletingExerciseIndex >= 0 && deletingExerciseIndex < state.exercisesWithBreaks.size) {
+                DeleteConfirmationDialog(
+                    exerciseName = state.exercisesWithBreaks[deletingExerciseIndex].exercise.name.ifEmpty { "Exercise ${deletingExerciseIndex + 1}" },
+                    onDismiss = {
+                        showDeleteConfirmDialog = false
+                        deletingExerciseIndex = -1
+                    },
+                    onConfirm = {
+                        // Delete exercise at index
+                        val currentExercises = state.exercisesWithBreaks.toMutableList()
+                        if (deletingExerciseIndex < currentExercises.size && currentExercises.size > 1) {
+                            currentExercises.removeAt(deletingExerciseIndex)
+                            // Update listIds to maintain consistency
+                            val updatedExercises = currentExercises.mapIndexed { newIndex, exercise ->
+                                exercise.copy(listId = newIndex)
+                            }
+                            viewModel.setExercises(updatedExercises)
+                        }
+                        showDeleteConfirmDialog = false
+                        deletingExerciseIndex = -1
                     }
                 )
             }
@@ -174,6 +182,36 @@ fun NewTrainingEditScreen(
             Box(modifier = Modifier.fillMaxSize())
         }
     }
+}
+
+@Composable
+private fun DeleteConfirmationDialog(
+    exerciseName: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Delete Exercise") },
+        text = {
+            Text("Are you sure you want to delete \"$exerciseName\"? This action cannot be undone.")
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                Text("Delete")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
 }
 
 @Composable
@@ -215,44 +253,7 @@ private fun ExerciseNameEditDialog(
     )
 }
 
-@Composable
-private fun TrainingNameEditDialog(
-    currentName: String,
-    onDismiss: () -> Unit,
-    onConfirm: (String) -> Unit
-) {
-    var textFieldValue by remember { mutableStateOf(TextFieldValue(currentName)) }
 
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Edit Training Name") },
-        text = {
-            Column {
-                Text("Enter a new name for your training:")
-                Spacer(modifier = Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = textFieldValue,
-                    onValueChange = { textFieldValue = it },
-                    label = { Text("Training Name") },
-                    singleLine = true
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = { onConfirm(textFieldValue.text) },
-                enabled = textFieldValue.text.isNotBlank()
-            ) {
-                Text("Save")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
 
 // Generate colors for exercises
 private fun generateExerciseColor(index: Int): Color {

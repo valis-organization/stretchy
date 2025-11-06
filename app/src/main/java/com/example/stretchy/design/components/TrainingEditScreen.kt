@@ -27,7 +27,7 @@ fun TrainingEditScreen(
     trainingName: String = "Upper Body Release",
     exercises: List<ExerciseWidgetState> = emptyList(),
     onBackClick: () -> Unit = {},
-    onTrainingNameEdit: () -> Unit = {},
+    onTrainingNameEdit: (String) -> Unit = { _ -> },
     onExerciseStateChange: (Int, ExerciseWidgetState) -> Unit = { _, _ -> },
     onAddExercise: () -> Unit = {},
     onDeleteExercise: (Int) -> Unit = { _ -> },
@@ -104,49 +104,13 @@ fun TrainingEditScreen(
             // Training Name Section
             item {
                 Spacer(modifier = Modifier.height(8.dp))
-
-                Card(
+                OutlinedTextField(
+                    value = trainingName,
+                    onValueChange = { newName -> onTrainingNameEdit(newName) },
+                    label = { Text("Training Name") },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = "Training Name",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = trainingName,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                        IconButton(
-                            onClick = onTrainingNameEdit,
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "Edit Training Name",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                    }
-                }
+                    singleLine = true
+                )
             }
 
             // Exercise Summary
