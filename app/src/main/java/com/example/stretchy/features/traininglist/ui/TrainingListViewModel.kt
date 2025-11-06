@@ -67,6 +67,12 @@ class TrainingListViewModel @Inject constructor(
         }
     }
 
+    fun loadTrainings() {
+        viewModelScope.launch(Dispatchers.IO) {
+            fetchTrainingList()
+        }
+    }
+
     private suspend fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
         try {

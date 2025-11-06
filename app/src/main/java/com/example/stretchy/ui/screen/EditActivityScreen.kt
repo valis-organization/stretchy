@@ -54,7 +54,12 @@ fun ExerciseWidget(
             .wrapContentWidth(align = Alignment.CenterHorizontally)
             .widthIn(max = 340.dp)
             .wrapContentHeight()
-            .clickable { onStateChange(state.copy(isExpanded = !state.isExpanded)) },
+            .clickable {
+                onStateChange(state.copy(
+                    isExpanded = !state.isExpanded,
+                    isBreakExpanded = if (!state.isExpanded) false else state.isBreakExpanded // Collapse break section when expanding exercise
+                ))
+            },
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -192,7 +197,10 @@ fun ExerciseWidget(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            onStateChange(state.copy(isBreakExpanded = !state.isBreakExpanded))
+                            onStateChange(state.copy(
+                                isBreakExpanded = !state.isBreakExpanded,
+                                isExpanded = if (!state.isBreakExpanded) false else state.isExpanded // Collapse exercise section when expanding break
+                            ))
                         }
                         .padding(vertical = 4.dp)
                 ) {

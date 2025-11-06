@@ -3,8 +3,10 @@ package com.example.stretchy.features.createtraining.ui.composable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -178,8 +180,8 @@ fun NewTrainingEditScreen(
             CreateTrainingScreenn(navController, viewModel)
         }
         CreateTrainingUiState.Init -> {
-            // Loading state - could show a loading indicator
-            Box(modifier = Modifier.fillMaxSize())
+            // Show loading indicator while initializing
+            TrainingEditLoadingScreen()
         }
     }
 }
@@ -270,6 +272,32 @@ private fun generateExerciseColor(index: Int): Color {
         Color(0xFFF44336)  // Red
     )
     return colors[index % colors.size]
+}
+
+@Composable
+private fun TrainingEditLoadingScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp),
+                color = MaterialTheme.colorScheme.primary,
+                strokeWidth = 4.dp
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Loading training...",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
 }
 
 
