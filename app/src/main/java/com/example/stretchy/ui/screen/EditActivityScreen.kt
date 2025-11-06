@@ -15,11 +15,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Dp
+import com.example.stretchy.design.components.StretchingTheme
 
 // Compact exercise widget state
 data class ExerciseWidgetState(
@@ -235,19 +237,32 @@ fun ExerciseWidget(
 private fun TimeButton(
     isSelected: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
     time: Int? = null,
-    isIcon: Boolean = false,
-    modifier: Modifier = Modifier
+    isIcon: Boolean = false
 ) {
-    val bg = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant
-    val contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    // slightly darker primary for stronger selected visual
+    val primary = MaterialTheme.colorScheme.primary
+    val darken = 0.78f
+    val darkerPrimary = Color(
+        (primary.red * darken).coerceIn(0f, 1f),
+        (primary.green * darken).coerceIn(0f, 1f),
+        (primary.blue * darken).coerceIn(0f, 1f),
+        primary.alpha
+    )
+
+    val bg = if (isSelected) darkerPrimary else MaterialTheme.colorScheme.surfaceVariant
+    val contentColor = if (isSelected) {
+        if (bg.luminance() < 0.5f) Color.White else Color.Black
+    } else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
+            .height(24.dp)
+            .clip(RoundedCornerShape(12.dp))
             .background(bg)
             .clickable { onClick() }
-            .padding(horizontal = 1.dp),
+            .padding(horizontal = 8.dp), // only horizontal padding; vertical centering via fixed height
         contentAlignment = Alignment.Center
     ) {
         if (isIcon) {
@@ -255,13 +270,16 @@ private fun TimeButton(
                 imageVector = Icons.Default.AllInclusive,
                 contentDescription = "Timeless",
                 tint = contentColor,
-                modifier = Modifier.size(16.dp)
+                modifier = Modifier.size(16.dp).align(Alignment.Center)
             )
         } else {
             Text(
                 text = "${time}s",
                 fontSize = 10.sp,
-                color = contentColor
+                maxLines = 1,
+                color = contentColor,
+                modifier = Modifier.align(Alignment.Center),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
         }
     }
@@ -290,13 +308,12 @@ fun EditActivityScreen(modifier: Modifier = Modifier) {
 @Preview(showBackground = true, name = "List of Widgets")
 @Composable
 fun EditActivityListPreview() {
-    MaterialTheme {
+    // Use app theme so primaryContainer/onPrimaryContainer are picked from DesignTheme
+    StretchingTheme {
         // Constrain preview width and allow height to wrap content so it looks compact
         Box(modifier = Modifier.width(340.dp).wrapContentHeight()) {
             EditActivityScreen(modifier = Modifier.width(340.dp).wrapContentHeight())
         }
     }
 }
-
-// Removed CollapsedVariant1Preview and CollapsedVariant2Preview
 

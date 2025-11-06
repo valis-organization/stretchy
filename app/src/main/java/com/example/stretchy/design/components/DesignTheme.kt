@@ -102,19 +102,23 @@ fun DesignTheme(
 
     val scheme = if (darkTheme) darkColorScheme(
         primary = colors.accentStart,
+        primaryContainer = colors.accentStart.copy(alpha = 0.18f),
         secondary = colors.accentEnd,
         surface = colors.cardSurface,
         background = colors.backgroundDark,
         onPrimary = Color.White,
+        onPrimaryContainer = Color.White,
         onSecondary = Color.White,
         onSurface = colors.metricTextPrimary,
         onBackground = colors.metricTextPrimary
     ) else lightColorScheme(
         primary = colors.accentStart,
+        primaryContainer = colors.accentStart.copy(alpha = 0.18f),
         secondary = colors.accentEnd,
         surface = colors.cardSurface,
         background = Color.White,
         onPrimary = Color.White,
+        onPrimaryContainer = Color.White,
         onSecondary = Color.White,
         onSurface = colors.metricTextPrimary,
         onBackground = colors.metricTextPrimary
@@ -144,4 +148,3 @@ fun TrainingTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {
 fun DesignTheme(darkTheme: Boolean = false, content: @Composable () -> Unit) {
     StretchingTheme(darkTheme = darkTheme, content = content)
 }
-
