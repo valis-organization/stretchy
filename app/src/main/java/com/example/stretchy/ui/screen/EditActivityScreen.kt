@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.DragHandle
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.LocalCafe
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,7 +45,9 @@ fun ExerciseWidget(
     state: ExerciseWidgetState,
     onStateChange: (ExerciseWidgetState) -> Unit,
     modifier: Modifier = Modifier,
-    numberCircleSize: Dp = 18.5.dp) {
+    numberCircleSize: Dp = 18.5.dp,
+    onDelete: (() -> Unit)? = null,
+    onEditName: (() -> Unit)? = null) {
     // constrain card width so it doesn't stretch full width and center it via parent Box
     Card(
         modifier = modifier
@@ -97,8 +100,29 @@ fun ExerciseWidget(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .then(
+                                if (onEditName != null) {
+                                    Modifier.clickable { onEditName() }
+                                } else Modifier
+                            )
                     )
+
+                    // Delete button (only show when onDelete is provided)
+                    onDelete?.let { deleteCallback ->
+                        IconButton(
+                            onClick = deleteCallback,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Delete Exercise",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
                 Spacer(modifier = Modifier.height(6.dp))
                 if (state.isExpanded) {

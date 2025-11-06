@@ -15,6 +15,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
 import com.example.stretchy.features.createtraining.ui.composable.CreateTrainingScreenn
+import com.example.stretchy.features.createtraining.ui.composable.NewTrainingEditScreen
 import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
 import com.example.stretchy.features.executetraining.ui.composable.ExecuteTrainingScreenn
@@ -77,7 +78,7 @@ fun Navigation(
                 navArgument("trainingType") { defaultValue = "STRETCH" })
         ) {
             val vm: CreateOrEditTrainingViewModel = hiltViewModel()
-            CreateTrainingScreenn(
+            NewTrainingEditScreen(
                 navController = navController,
                 viewModel = vm
             )

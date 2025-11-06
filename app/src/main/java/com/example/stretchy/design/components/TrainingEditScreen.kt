@@ -29,7 +29,12 @@ fun TrainingEditScreen(
     onBackClick: () -> Unit = {},
     onTrainingNameEdit: () -> Unit = {},
     onExerciseStateChange: (Int, ExerciseWidgetState) -> Unit = { _, _ -> },
-    onAddExercise: () -> Unit = {}
+    onAddExercise: () -> Unit = {},
+    onDeleteExercise: (Int) -> Unit = { _ -> },
+    onEditExerciseName: (Int) -> Unit = { _ -> },
+    onSave: () -> Unit = {},
+    canSave: Boolean = true,
+    isEditing: Boolean = false
 ) {
     val exerciseCount = exercises.size
     val breakCount = exercises.count { it.breakTimeSeconds > 0 }
@@ -40,7 +45,7 @@ fun TrainingEditScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Editing Training",
+                            text = if (isEditing) "Editing Training" else "Create Training",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurface
@@ -53,6 +58,18 @@ fun TrainingEditScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
                             tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                },
+                actions = {
+                    TextButton(
+                        onClick = onSave,
+                        enabled = canSave
+                    ) {
+                        Text(
+                            text = if (isEditing) "Save" else "Create",
+                            color = if (canSave) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 },
@@ -150,6 +167,10 @@ fun TrainingEditScreen(
                     onStateChange = { newState ->
                         onExerciseStateChange(index, newState)
                     },
+                    onDelete = if (exercises.size > 1) {
+                        { onDeleteExercise(index) }
+                    } else null, // Don't allow deletion if it's the last exercise
+                    onEditName = { onEditExerciseName(index) },
                     numberCircleSize = 18.5.dp,
                     modifier = Modifier.fillMaxWidth()
                 )
