@@ -20,16 +20,30 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.flow.collectLatest
+import android.widget.Toast
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.design.components.ActivityListScreen
+import com.example.stretchy.design.components.ConfirmDeleteDialog
 import com.example.stretchy.design.components.StretchingTheme
 import com.example.stretchy.design.components.TrainingTheme
 import com.example.stretchy.design.components.toActivityItem
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
+import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
 import com.example.stretchy.navigation.NavigationViewModel
 import kotlin.random.Random
@@ -43,6 +57,25 @@ fun TrainingListScreenn(
     trainingType: TrainingType
 ) {
     val state = viewModel.uiState.collectAsState().value
+    val context = LocalContext.current
+
+    // State for delete confirmation dialog
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var trainingToDelete by remember { mutableStateOf<Training?>(null) }
+
+    // Handle UI events (toasts, etc.)
+    LaunchedEffect(Unit) {
+        viewModel.events.collectLatest { event ->
+            when (event) {
+                is TrainingListViewModel.UiEvent.ShowToast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+                is TrainingListViewModel.UiEvent.ShowErrorDialog -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
 
     // Use appropriate theme based on training type
     val content: @Composable () -> Unit = {
@@ -96,11 +129,19 @@ fun TrainingListScreenn(
                         navigationViewModel.navigateToEditTraining(activityItem.id, trainingType.name)
                     },
                     onActivityCopy = { activityItem ->
-                        // TODO: Implement copy functionality
+                        // Find the training to copy and call ViewModel
+                        val training = state.trainings.find { it.id == activityItem.id }
+                        if (training != null) {
+                            viewModel.copyTraining(training)
+                        }
                     },
                     onActivityDelete = { activityItem ->
-                        // TODO: Implement delete functionality
-                        // viewModel.deleteTraining(activityItem.id)
+                        // Find the training to delete and show confirmation dialog
+                        val training = state.trainings.find { it.id == activityItem.id }
+                        if (training != null) {
+                            trainingToDelete = training
+                            showDeleteDialog = true
+                        }
                     },
                     onExportClick = onExportClick,
                     onImportClick = onImportClick,
@@ -122,6 +163,25 @@ fun TrainingListScreenn(
     when (trainingType) {
         TrainingType.STRETCH -> StretchingTheme { content() }
         TrainingType.BODYWEIGHT -> TrainingTheme { content() }
+    }
+
+    // Delete confirmation dialog
+    if (showDeleteDialog && trainingToDelete != null) {
+        ConfirmDeleteDialog(
+            title = "Delete Training",
+            message = "Are you sure you want to delete \"${trainingToDelete!!.name}\"? This action cannot be undone.",
+            onDismiss = {
+                showDeleteDialog = false
+                trainingToDelete = null
+            },
+            onConfirm = {
+                trainingToDelete?.let { training ->
+                    viewModel.deleteTraining(training)
+                }
+                showDeleteDialog = false
+                trainingToDelete = null
+            }
+        )
     }
 }
 
