@@ -84,7 +84,9 @@ fun ExerciseWidget(
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Medium,
                             color = state.accentColor,
-                            modifier = Modifier.align(Alignment.Center)
+                            maxLines = 1,
+                            lineHeight = 10.sp,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
 
@@ -158,7 +160,7 @@ fun ExerciseWidget(
                 // subtle separator between main area and break
                 HorizontalDivider(modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 6.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 1.dp)
+                    .padding(vertical = 1.dp), color = MaterialTheme.colorScheme.surfaceVariant, thickness = 1.dp)
 
                 // break row with coffee icon - clickable to expand break settings
                 Row(
@@ -182,7 +184,7 @@ fun ExerciseWidget(
 
                 // break time selection when expanded
                 if (state.isBreakExpanded) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(0.dp))
                     Column {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
@@ -316,4 +318,3 @@ fun EditActivityListPreview() {
         }
     }
 }
-
