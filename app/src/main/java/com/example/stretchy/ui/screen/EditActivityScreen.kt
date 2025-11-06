@@ -95,12 +95,6 @@ fun ExerciseWidget(
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.weight(1f)
                     )
-
-                    // show timeless icon if collapsed and timeless
-                    if (!state.isExpanded && state.isTimelessExercise) {
-                        Icon(imageVector = Icons.Default.AllInclusive, contentDescription = "Timeless",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
-                    }
                 }
                 Spacer(modifier = Modifier.height(6.dp))
                 if (state.isExpanded) {
