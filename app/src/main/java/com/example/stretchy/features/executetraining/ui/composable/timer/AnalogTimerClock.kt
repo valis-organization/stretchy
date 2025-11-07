@@ -20,8 +20,38 @@ import androidx.compose.ui.unit.sp
 import com.example.stretchy.theme.AzureBlue
 import kotlin.math.*
 
+enum class TimerTheme {
+    TRAINING,
+    STRETCHING
+}
+
+data class TimerColorScheme(
+    val progressColor: Color,
+    val backgroundCircleColor: Color,
+    val markersColor: Color,
+    val textColor: Color
+)
+
+private fun getTimerColorScheme(theme: TimerTheme, isBreak: Boolean): TimerColorScheme {
+    return when (theme) {
+        TimerTheme.TRAINING -> TimerColorScheme(
+            progressColor = if (isBreak) Color.White else AzureBlue,
+            backgroundCircleColor = Color.LightGray.copy(alpha = 0.3f),
+            markersColor = Color.Gray,
+            textColor = if (isBreak) Color.White else Color.Black
+        )
+        TimerTheme.STRETCHING -> TimerColorScheme(
+            progressColor = if (isBreak) Color.White else Color(0xFF4CAF50), // Green for stretching
+            backgroundCircleColor = Color.LightGray.copy(alpha = 0.2f),
+            markersColor = Color.Gray.copy(alpha = 0.7f),
+            textColor = if (isBreak) Color.White else Color.Black
+        )
+    }
+}
+
 /**
  * Analog timer clock component that displays time in a circular format
+ * Supports different themes for Training and Stretching modes
  */
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -29,6 +59,7 @@ fun AnalogTimerClock(
     modifier: Modifier = Modifier,
     timeRemaining: Float,
     totalTime: Float = timeRemaining,
+    theme: TimerTheme = TimerTheme.TRAINING,
     isBreak: Boolean = false,
     strokeWidth: Float = 10f
 ) {
@@ -47,6 +78,7 @@ fun AnalogTimerClock(
 
     val progress = if (totalTime > 0) timeRemaining / totalTime else 0f
     val sweepAngle = 360f * progress
+    val colorScheme = getTimerColorScheme(theme, isBreak)
 
     Box(
         contentAlignment = Alignment.Center,
@@ -56,7 +88,7 @@ fun AnalogTimerClock(
             drawAnalogClock(
                 progress = progress,
                 sweepAngle = sweepAngle,
-                isBreak = isBreak,
+                colorScheme = colorScheme,
                 strokeWidth = strokeWidth,
                 size = size
             )
@@ -74,7 +106,7 @@ fun AnalogTimerClock(
                 text = formatTime(animatedSeconds.toFloat() * 1000),
                 fontSize = 48.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isBreak) Color.White else Color.Black
+                color = colorScheme.textColor
             )
         }
     }
@@ -83,7 +115,7 @@ fun AnalogTimerClock(
 private fun DrawScope.drawAnalogClock(
     progress: Float,
     sweepAngle: Float,
-    isBreak: Boolean,
+    colorScheme: TimerColorScheme,
     strokeWidth: Float,
     size: androidx.compose.ui.geometry.Size
 ) {
@@ -92,7 +124,7 @@ private fun DrawScope.drawAnalogClock(
 
     // Draw background circle
     drawCircle(
-        color = Color.LightGray.copy(alpha = 0.3f),
+        color = colorScheme.backgroundCircleColor,
         radius = radius,
         center = center,
         style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
@@ -100,7 +132,7 @@ private fun DrawScope.drawAnalogClock(
 
     // Draw progress arc
     drawArc(
-        color = if (isBreak) Color.White else AzureBlue,
+        color = colorScheme.progressColor,
         startAngle = -90f,
         sweepAngle = sweepAngle,
         useCenter = false,
@@ -120,7 +152,7 @@ private fun DrawScope.drawAnalogClock(
         val endY = center.y + endRadius * sin(Math.toRadians(angle.toDouble())).toFloat()
 
         drawLine(
-            color = Color.Gray,
+            color = colorScheme.markersColor,
             start = Offset(startX, startY),
             end = Offset(endX, endY),
             strokeWidth = 2f,

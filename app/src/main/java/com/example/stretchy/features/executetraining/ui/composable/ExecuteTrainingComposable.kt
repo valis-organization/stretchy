@@ -31,6 +31,87 @@ import com.example.stretchy.features.executetraining.ui.data.DisplayableActivity
 import com.example.stretchy.database.data.ActivityType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.shape.CircleShape
+import com.example.stretchy.features.executetraining.ui.composable.timer.TimerTheme
+
+// View State definitions - simplified for clean View layer
+sealed class ExecuteTrainingViewState {
+    object Loading : ExecuteTrainingViewState()
+    object Error : ExecuteTrainingViewState()
+    data class Completed(
+        val numberOfExercises: Int,
+        val timeSpent: String,
+        val onNavigateBack: () -> Unit
+    ) : ExecuteTrainingViewState()
+    data class Active(
+        val title: String,
+        val subtitle: String?,
+        val timeRemaining: Float,
+        val totalTime: Float,
+        val timerTheme: TimerTheme,
+        val isBreak: Boolean,
+        val showTimer: Boolean,
+        val nextExercise: String?,
+        val progressPercent: Float
+    ) : ExecuteTrainingViewState()
+}
+
+data class ViewData(
+    val title: String,
+    val subtitle: String?,
+    val timeRemaining: Float,
+    val totalTime: Float,
+    val timerTheme: TimerTheme,
+    val isBreak: Boolean,
+    val showTimer: Boolean,
+    val nextExercise: String?
+)
+
+private fun prepareViewData(
+    currentItem: com.example.stretchy.features.executetraining.ui.data.ActivityItemExerciseAndBreakMerged,
+    currentActivityType: ActivityType,
+    currentSeconds: Float
+): ViewData {
+    return when (currentActivityType) {
+        ActivityType.BREAK -> {
+            ViewData(
+                title = "Get Ready",
+                subtitle = currentItem.exercise.nextExercise ?: "",
+                timeRemaining = currentSeconds,
+                totalTime = currentItem.exercise.totalExerciseTime.toFloat() * 1000,
+                timerTheme = TimerTheme.TRAINING, // Use Training theme for breaks as requested
+                isBreak = true,
+                showTimer = true,
+                nextExercise = null
+            )
+        }
+        ActivityType.TIMELESS_EXERCISE -> {
+            val exercise = currentItem.exercise as DisplayableActivityItem.TimelessExercise
+            ViewData(
+                title = exercise.name,
+                subtitle = "Tap when ready to continue",
+                timeRemaining = 0f,
+                totalTime = 0f,
+                timerTheme = TimerTheme.TRAINING, // Default to training
+                isBreak = false,
+                showTimer = false,
+                nextExercise = exercise.nextExercise
+            )
+        }
+        else -> {
+            val exercise = currentItem.exercise as DisplayableActivityItem.Exercise
+            ViewData(
+                title = exercise.name,
+                subtitle = null,
+                timeRemaining = currentSeconds,
+                totalTime = exercise.totalExerciseTime.toFloat() * 1000,
+                timerTheme = TimerTheme.TRAINING, // Default to training, can be changed based on exercise type
+                isBreak = false,
+                showTimer = true,
+                nextExercise = exercise.nextExercise
+            )
+        }
+    }
+}
 
 @Composable
 fun ExecuteTrainingScreenn(
@@ -83,33 +164,47 @@ fun ExecuteTrainingScreenn(
         ) {
             when {
                 state.isLoading -> {
-                    LoadingState()
+                    ExecuteTrainingView(
+                        viewState = ExecuteTrainingViewState.Loading
+                    )
                 }
                 state.error != null -> {
-                    ErrorState()
+                    ExecuteTrainingView(
+                        viewState = ExecuteTrainingViewState.Error
+                    )
                 }
                 state.trainingCompleted != null -> {
-                    TrainingCompletedState(
-                        trainingCompleted = state.trainingCompleted,
-                        navController = navController
+                    ExecuteTrainingView(
+                        viewState = ExecuteTrainingViewState.Completed(
+                            numberOfExercises = state.trainingCompleted.numberOfExercises,
+                            timeSpent = state.trainingCompleted.currentTrainingTime,
+                            onNavigateBack = { navController.popBackStack() }
+                        )
                     )
                 }
                 state.displayableActivityItemListWithBreakMerged != null -> {
-                    TrainingActiveState(
-                        state = state
-                    )
-                }
-            }
+                    // Extract data from state and prepare for view
+                    val currentPage = state.currentDisplayPage
+                    val currentItem = state.displayableActivityItemListWithBreakMerged.getOrNull(currentPage)
+                    val currentActivityType = state.activityTypes?.getOrNull(currentPage)
 
-            // Progress bar at bottom
-            if (state.displayableActivityItemListWithBreakMerged != null && state.trainingCompleted == null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(bottom = 16.dp),
-                    contentAlignment = Alignment.BottomCenter
-                ) {
-                    AnimatedTrainingProgressBar(percentage = state.trainingProgressPercent)
+                    if (currentItem != null && currentActivityType != null) {
+                        val viewData = prepareViewData(currentItem, currentActivityType, state.currentSeconds)
+
+                        ExecuteTrainingView(
+                            viewState = ExecuteTrainingViewState.Active(
+                                title = viewData.title,
+                                subtitle = viewData.subtitle,
+                                timeRemaining = viewData.timeRemaining,
+                                totalTime = viewData.totalTime,
+                                timerTheme = viewData.timerTheme,
+                                isBreak = viewData.isBreak,
+                                showTimer = viewData.showTimer,
+                                nextExercise = viewData.nextExercise,
+                                progressPercent = state.trainingProgressPercent
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -121,8 +216,44 @@ fun TextSpacer(fontSize: TextUnit) {
     Text("", fontSize = fontSize)
 }
 
+/**
+ * Pure View Component - receives prepared data and renders UI
+ * No business logic, no state extraction - just presentation
+ */
 @Composable
-private fun LoadingState() {
+fun ExecuteTrainingView(viewState: ExecuteTrainingViewState) {
+    when (viewState) {
+        is ExecuteTrainingViewState.Loading -> {
+            LoadingView()
+        }
+        is ExecuteTrainingViewState.Error -> {
+            ErrorView()
+        }
+        is ExecuteTrainingViewState.Completed -> {
+            CompletedView(
+                numberOfExercises = viewState.numberOfExercises,
+                timeSpent = viewState.timeSpent,
+                onNavigateBack = viewState.onNavigateBack
+            )
+        }
+        is ExecuteTrainingViewState.Active -> {
+            ActiveTrainingView(
+                title = viewState.title,
+                subtitle = viewState.subtitle,
+                timeRemaining = viewState.timeRemaining,
+                totalTime = viewState.totalTime,
+                timerTheme = viewState.timerTheme,
+                isBreak = viewState.isBreak,
+                showTimer = viewState.showTimer,
+                nextExercise = viewState.nextExercise,
+                progressPercent = viewState.progressPercent
+            )
+        }
+    }
+}
+
+@Composable
+private fun LoadingView() {
     Text(
         text = stringResource(id = R.string.loading),
         fontSize = 32.sp,
@@ -132,7 +263,7 @@ private fun LoadingState() {
 }
 
 @Composable
-private fun ErrorState() {
+private fun ErrorView() {
     Text(
         text = stringResource(id = R.string.error),
         fontSize = 32.sp,
@@ -142,27 +273,92 @@ private fun ErrorState() {
 }
 
 @Composable
-private fun TrainingCompletedState(
-    trainingCompleted: com.example.stretchy.features.executetraining.ui.data.TrainingCompleted,
-    navController: NavController
+private fun CompletedView(
+    numberOfExercises: Int,
+    timeSpent: String,
+    onNavigateBack: () -> Unit
 ) {
-    TrainingSummaryVieww(
-        numberOfExercises = trainingCompleted.numberOfExercises,
-        timeSpent = trainingCompleted.currentTrainingTime,
-        navController = navController
-    )
+    // Custom completion view that uses callback instead of NavController
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFFF8DC)), // Light yellow background like TrainingSummary
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(24.dp)
+        ) {
+            Text(
+                text = stringResource(id = R.string.you_finished_training),
+                fontSize = 28.sp,
+                textAlign = TextAlign.Center,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            Text(
+                text = stringResource(id = R.string.total_exercises, numberOfExercises),
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = stringResource(id = R.string.time_spent, timeSpent),
+                fontSize = 24.sp,
+                textAlign = TextAlign.Center,
+                color = Color.Black,
+                fontWeight = FontWeight.Bold
+            )
+
+            Spacer(modifier = Modifier.height(64.dp))
+
+            // Finish button
+            Box(
+                modifier = Modifier
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null
+                    ) { onNavigateBack() }
+                    .background(
+                        Color.Black,
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                    )
+                    .padding(horizontal = 48.dp, vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = stringResource(id = R.string.finish),
+                    color = Color.White,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
 }
 
+/**
+ * Active Training View - Clean 3-section layout with injected values
+ */
 @Composable
-private fun TrainingActiveState(
-    state: com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState
+private fun ActiveTrainingView(
+    title: String,
+    subtitle: String?,
+    timeRemaining: Float,
+    totalTime: Float,
+    timerTheme: TimerTheme,
+    isBreak: Boolean,
+    showTimer: Boolean,
+    nextExercise: String?,
+    progressPercent: Float
 ) {
-    val currentPage = state.currentDisplayPage
-    val currentItem = state.displayableActivityItemListWithBreakMerged?.getOrNull(currentPage)
-    val currentActivityType = state.activityTypes?.getOrNull(currentPage)
-
-    if (currentItem == null || currentActivityType == null) return
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -170,121 +366,81 @@ private fun TrainingActiveState(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Top section with title
+        // Top section - Title
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
         ) {
-            when (currentActivityType) {
-                ActivityType.BREAK -> {
-                    BreakTitle(
-                        nextExerciseName = currentItem.exercise.nextExercise ?: ""
-                    )
-                }
-                ActivityType.TIMELESS_EXERCISE -> {
-                    val exercise = currentItem.exercise as DisplayableActivityItem.TimelessExercise
-                    TimelessExerciseTitle(
-                        exerciseName = exercise.name
-                    )
-                }
-                else -> {
-                    val exercise = currentItem.exercise as DisplayableActivityItem.Exercise
-                    ExerciseTitle(
-                        exerciseName = exercise.name
-                    )
-                }
-            }
+            TitleSection(
+                title = title,
+                subtitle = subtitle
+            )
         }
 
-        // Center section with timer
+        // Center section - Timer or Indicator
         Box(
             modifier = Modifier.weight(2f),
             contentAlignment = Alignment.Center
         ) {
-            when (currentActivityType) {
-                ActivityType.TIMELESS_EXERCISE -> {
-                    TimelessExerciseIndicator()
-                }
-                else -> {
-                    AnalogTimerClock(
-                        timeRemaining = state.currentSeconds,
-                        totalTime = currentItem.exercise.totalExerciseTime.toFloat() * 1000,
-                        isBreak = currentActivityType == ActivityType.BREAK,
-                        modifier = Modifier.size(280.dp)
-                    )
-                }
+            if (showTimer) {
+                AnalogTimerClock(
+                    timeRemaining = timeRemaining,
+                    totalTime = totalTime,
+                    theme = timerTheme,
+                    isBreak = isBreak,
+                    modifier = Modifier.size(280.dp)
+                )
+            } else {
+                TimelessExerciseIndicator()
             }
         }
 
-        // Bottom section with next exercise info
+        // Bottom section - Next exercise + Progress bar
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
         ) {
-            NextExerciseInfo(
-                nextExerciseName = currentItem.exercise.nextExercise,
-                currentActivityType = currentActivityType
-            )
+            NextExerciseSection(nextExercise = nextExercise, showForBreak = isBreak)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AnimatedTrainingProgressBar(percentage = progressPercent)
         }
     }
 }
 
 @Composable
-private fun ExerciseTitle(exerciseName: String) {
-    Text(
-        text = exerciseName,
-        fontSize = 28.sp,
-        fontWeight = FontWeight.Bold,
-        textAlign = TextAlign.Center,
-        color = Color.Black
-    )
-}
-
-@Composable
-private fun BreakTitle(nextExerciseName: String) {
+private fun TitleSection(title: String, subtitle: String?) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = stringResource(id = R.string.prepare_next_exercise),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = nextExerciseName,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = Color.Black
-        )
-    }
-}
-
-@Composable
-private fun TimelessExerciseTitle(exerciseName: String) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = exerciseName,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = Color.Black
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = "Tap when ready to continue",
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = Color.Gray,
-            textAlign = TextAlign.Center
-        )
+        if (subtitle != null) {
+            Text(
+                text = stringResource(id = R.string.prepare_next_exercise),
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color.Gray,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = subtitle,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                color = Color.Black
+            )
+        } else {
+            Text(
+                text = title,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                color = Color.Black
+            )
+        }
     }
 }
 
@@ -312,11 +468,8 @@ private fun TimelessExerciseIndicator() {
 }
 
 @Composable
-private fun NextExerciseInfo(
-    nextExerciseName: String?,
-    currentActivityType: ActivityType
-) {
-    if (!nextExerciseName.isNullOrBlank() && currentActivityType != ActivityType.BREAK) {
+private fun NextExerciseSection(nextExercise: String?, showForBreak: Boolean) {
+    if (!nextExercise.isNullOrBlank() && !showForBreak) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -329,7 +482,7 @@ private fun NextExerciseInfo(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = nextExerciseName,
+                text = nextExercise,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center,
@@ -342,32 +495,18 @@ private fun NextExerciseInfo(
 @Preview(name = "Execute Training - Preview", showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
 private fun ExecuteTrainingScreenPreview() {
-    // Mock exercise item
-    val mockExercise = DisplayableActivityItem.Exercise(
-        name = "Push-ups",
-        nextExercise = "Squats",
-        currentTime = 15000f,
-        totalExerciseTime = 30
-    )
-    val mockItem = com.example.stretchy.features.executetraining.ui.data.ActivityItemExerciseAndBreakMerged(
-        exercise = mockExercise,
-        breakItem = null
-    )
 
-    val mockState = com.example.stretchy.features.executetraining.ui.data.ExecuteTrainingUiState(
-        isLoading = false,
-        error = null,
-        displayableActivityItemListWithBreakMerged = listOf(mockItem),
-        trainingCompleted = null,
-        currentSeconds = 15000f,
-        trainingProgressPercent = 0.25f,
-        activityTypes = listOf(com.example.stretchy.database.data.ActivityType.EXERCISE),
-        currentDisplayPage = 0,
-        soundEvent = null
+    ExecuteTrainingView(
+        viewState = ExecuteTrainingViewState.Active(
+            title = "Push-ups",
+            subtitle = null,
+            timeRemaining = 15000f,
+            totalTime = 30000f,
+            timerTheme = TimerTheme.TRAINING,
+            isBreak = false,
+            showTimer = true,
+            nextExercise = "Squats",
+            progressPercent = 0.25f
+        )
     )
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(24.dp),
+}
