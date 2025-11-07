@@ -41,6 +41,77 @@ data class ExerciseWidgetState(
 )
 
 @Composable
+private fun TimeSelectionWidget(
+    availableTimes: List<Int>,
+    selectedTime: Float,
+    onTimeSelected: (Int) -> Unit,
+    onCustomTimeChanged: (Float) -> Unit,
+    accentColor: Color,
+    modifier: Modifier = Modifier,
+    showTimelessOption: Boolean = false,
+    isTimeless: Boolean = false,
+    onTimelessToggle: (() -> Unit)? = null
+) {
+    Column(modifier = modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            availableTimes.forEach { time ->
+                TimeButton(
+                    isSelected = if (showTimelessOption) {
+                        time == selectedTime.toInt() && !isTimeless
+                    } else {
+                        time == selectedTime.toInt()
+                    },
+                    onClick = {
+                        onTimeSelected(time)
+                    },
+                    modifier = Modifier
+                        .height(24.dp)
+                        .defaultMinSize(minWidth = 36.dp),
+                    time = time
+                )
+            }
+
+            // Show timeless button only for exercise time (not break time)
+            if (showTimelessOption && onTimelessToggle != null) {
+                TimeButton(
+                    isSelected = isTimeless,
+                    onClick = onTimelessToggle,
+                    modifier = Modifier
+                        .height(24.dp)
+                        .defaultMinSize(minWidth = 36.dp),
+                    isIcon = true
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // Only show slider if not timeless (for exercise) or always show (for break)
+        if (!showTimelessOption || !isTimeless) {
+            Column(modifier = Modifier.height(10.dp)) {
+                Slider(
+                    value = selectedTime,
+                    onValueChange = onCustomTimeChanged,
+                    valueRange = 1f..120f,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = SliderDefaults.colors(
+                        thumbColor = accentColor,
+                        activeTrackColor = accentColor,
+                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+    }
+}
+
+@Composable
 fun ExerciseWidget(
     state: ExerciseWidgetState,
     onStateChange: (ExerciseWidgetState) -> Unit,
@@ -53,13 +124,7 @@ fun ExerciseWidget(
         modifier = modifier
             .wrapContentWidth(align = Alignment.CenterHorizontally)
             .widthIn(max = 340.dp)
-            .wrapContentHeight()
-            .clickable {
-                onStateChange(state.copy(
-                    isExpanded = !state.isExpanded,
-                    isBreakExpanded = if (!state.isExpanded) false else state.isBreakExpanded // Collapse break section when expanding exercise
-                ))
-            },
+            .wrapContentHeight(),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -69,7 +134,17 @@ fun ExerciseWidget(
             Box(modifier = Modifier.width(4.dp).fillMaxHeight().background(state.accentColor))
             // content
             Column(modifier = Modifier.padding(8.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            onStateChange(state.copy(
+                                isExpanded = !state.isExpanded,
+                            ))
+                        }
+                        .padding(vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     // drag handle (six dots)
                     Icon(
                         imageVector = Icons.Default.DragHandle,
@@ -105,13 +180,7 @@ fun ExerciseWidget(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .weight(1f)
-                            .then(
-                                if (onEditName != null) {
-                                    Modifier.clickable { onEditName() }
-                                } else Modifier
-                            )
+                        modifier = Modifier.weight(1f)
                     )
 
                     // Delete button (only show when onDelete is provided)
@@ -131,46 +200,30 @@ fun ExerciseWidget(
                 }
                 Spacer(modifier = Modifier.height(6.dp))
                 if (state.isExpanded) {
-                    Column {
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically) {
-                            state.availableTimes.forEach { time ->
-                                TimeButton(
-                                    isSelected = time == state.customTimeSeconds.toInt() && !state.isTimelessExercise,
-                                    onClick = {
-                                        onStateChange(state.copy(selectedTimeSeconds = time, customTimeSeconds = time.toFloat(), isTimelessExercise = false))
-                                    },
-                                    modifier = Modifier
-                                        .height(24.dp)
-                                        .defaultMinSize(minWidth = 36.dp),
-                                    time = time
-                                )
-                            }
-
-                            TimeButton(
-                                isSelected = state.isTimelessExercise,
-                                onClick = {
-                                    onStateChange(state.copy(isTimelessExercise = !state.isTimelessExercise))
-                                },
-                                modifier = Modifier
-                                    .height(24.dp)
-                                    .defaultMinSize(minWidth = 36.dp),
-                                isIcon = true
-                            )
+                    TimeSelectionWidget(
+                        availableTimes = state.availableTimes,
+                        selectedTime = state.customTimeSeconds,
+                        onTimeSelected = { time ->
+                            onStateChange(state.copy(
+                                selectedTimeSeconds = time,
+                                customTimeSeconds = time.toFloat(),
+                                isTimelessExercise = false
+                            ))
+                        },
+                        onCustomTimeChanged = { new ->
+                            val rounded = new.toInt()
+                            onStateChange(state.copy(
+                                customTimeSeconds = new,
+                                selectedTimeSeconds = rounded
+                            ))
+                        },
+                        accentColor = state.accentColor,
+                        showTimelessOption = true,
+                        isTimeless = state.isTimelessExercise,
+                        onTimelessToggle = {
+                            onStateChange(state.copy(isTimelessExercise = !state.isTimelessExercise))
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        if (!state.isTimelessExercise) {
-                            Column(modifier = Modifier.height(10.dp)) {
-                                Slider(value = state.customTimeSeconds, onValueChange = { new ->
-                                    val rounded = new.toInt()
-                                    onStateChange(state.copy(customTimeSeconds = new, selectedTimeSeconds = rounded))
-                                }, valueRange = 1f..120f, modifier = Modifier.fillMaxWidth(),
-                                    colors = SliderDefaults.colors(thumbColor = state.accentColor, activeTrackColor = state.accentColor,
-                                        inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant))
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                    }
+                    )
                 } else {
                     // collapsed: show time with clock icon
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -196,10 +249,11 @@ fun ExerciseWidget(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable {
+                        .clickable(
+                            onClickLabel = "Expand break settings"
+                        ) {
                             onStateChange(state.copy(
                                 isBreakExpanded = !state.isBreakExpanded,
-                                isExpanded = if (!state.isBreakExpanded) false else state.isExpanded // Collapse exercise section when expanding break
                             ))
                         }
                         .padding(vertical = 4.dp)
@@ -216,51 +270,25 @@ fun ExerciseWidget(
 
                 // break time selection when expanded
                 if (state.isBreakExpanded) {
-                    Spacer(modifier = Modifier.height(0.dp))
-                    Column {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            state.availableBreakTimes.forEach { time ->
-                                TimeButton(
-                                    isSelected = time == state.customBreakTimeSeconds.toInt(),
-                                    onClick = {
-                                        onStateChange(state.copy(
-                                            breakTimeSeconds = time,
-                                            customBreakTimeSeconds = time.toFloat()
-                                        ))
-                                    },
-                                    modifier = Modifier
-                                        .height(24.dp)
-                                        .defaultMinSize(minWidth = 36.dp),
-                                    time = time
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Column(modifier = Modifier.height(10.dp)) {
-                            Slider(
-                                value = state.customBreakTimeSeconds,
-                                onValueChange = { new ->
-                                    val rounded = new.toInt()
-                                    onStateChange(state.copy(
-                                        customBreakTimeSeconds = new,
-                                        breakTimeSeconds = rounded
-                                    ))
-                                },
-                                valueRange = 1f..120f,
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = SliderDefaults.colors(
-                                    thumbColor = state.accentColor,
-                                    activeTrackColor = state.accentColor,
-                                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
-                                )
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(6.dp))
-                    }
+                    TimeSelectionWidget(
+                        availableTimes = state.availableBreakTimes,
+                        selectedTime = state.customBreakTimeSeconds,
+                        onTimeSelected = { time ->
+                            onStateChange(state.copy(
+                                breakTimeSeconds = time,
+                                customBreakTimeSeconds = time.toFloat()
+                            ))
+                        },
+                        onCustomTimeChanged = { new ->
+                            val rounded = new.toInt()
+                            onStateChange(state.copy(
+                                customBreakTimeSeconds = new,
+                                breakTimeSeconds = rounded
+                            ))
+                        },
+                        accentColor = state.accentColor,
+                        showTimelessOption = false
+                    )
                 }
             }
         }
