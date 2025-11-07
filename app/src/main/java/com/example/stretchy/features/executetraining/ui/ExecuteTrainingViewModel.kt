@@ -206,6 +206,13 @@ class ExecuteTrainingViewModel @Inject constructor(
     private fun handleBreak() {
         val list = _uiState.value.activityTypes as MutableList<ActivityType>
         list[_uiState.value.currentDisplayPage] = ActivityType.BREAK
+
+        // Setup break timer with correct duration
+        val currentActivity = trainingWithActivities.activities[index]
+        if (currentActivity.activityType == ActivityType.BREAK) {
+            timer.setDuration(currentActivity.duration)
+        }
+
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             error = null,
@@ -483,7 +490,7 @@ class ExecuteTrainingViewModel @Inject constructor(
                 if (breakActivity != null) {
                     breakAfterActivity = breakActivity.toActivityItem(
                         nextActivityName,
-                        breakActivity.duration.toFloat()
+                        breakActivity.duration.toFloat() * 1000
                     ) as DisplayableActivityItem.Break
                 }
 
