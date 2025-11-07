@@ -11,20 +11,38 @@ import com.example.stretchy.database.converter.TrainingTypeConverter
 import com.example.stretchy.database.dao.ActivityDao
 import com.example.stretchy.database.dao.TrainingDao
 import com.example.stretchy.database.dao.TrainingWithActivitiesDao
+// NEW: Decoupled break system imports
+import com.example.stretchy.database.dao.BreakTemplateDao
+import com.example.stretchy.database.dao.TrainingSequenceDao
+import com.example.stretchy.database.entity.BreakTemplateEntity
+import com.example.stretchy.database.entity.TrainingSequenceEntity
+import com.example.stretchy.database.migration.MigrationToDecoupledBreaks
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.entity.ActivityEntity
 import com.example.stretchy.database.entity.TrainingActivityEntity
 import com.example.stretchy.database.entity.TrainingEntity
 
 @Database(
-    entities = [TrainingEntity::class, ActivityEntity::class, TrainingActivityEntity::class],
-    version = 2
+    entities = [
+        TrainingEntity::class,
+        ActivityEntity::class,
+        TrainingActivityEntity::class, // Keep for backward compatibility during migration
+        // NEW: Decoupled break system entities
+        BreakTemplateEntity::class,
+        TrainingSequenceEntity::class
+    ],
+    version = 3,
+    exportSchema = true
 )
 @TypeConverters(TrainingTypeConverter::class, ActivityTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
     abstract fun trainingDao(): TrainingDao
     abstract fun trainingWithActivitiesDao(): TrainingWithActivitiesDao
+
+    // NEW: Decoupled break system DAOs
+    abstract fun breakTemplateDao(): BreakTemplateDao
+    abstract fun trainingSequenceDao(): TrainingSequenceDao
 
     companion object {
         const val NAME = "stretchydb"
@@ -258,5 +276,8 @@ abstract class AppDatabase : RoomDatabase() {
                 addBreaksToTrainings()
             }
         }
+
+        // NEW: Migration to decoupled break system (version 2 -> 3)
+        val MIGRATION_2_3 = MigrationToDecoupledBreaks.MIGRATION_2_3
     }
 }

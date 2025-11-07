@@ -17,6 +17,10 @@ import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import androidx.lifecycle.SavedStateHandle
+// NEW: Migration support imports (will be activated during migration)
+// import com.example.stretchy.database.migration.MigrationFlags
+// import com.example.stretchy.features.executetraining.repository.HybridTrainingRepository
+// import com.example.stretchy.features.executetraining.migration.ExecuteTrainingMigrationAdapter
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -29,13 +33,22 @@ import java.util.*
 @HiltViewModel
 class ExecuteTrainingViewModel @Inject constructor(
     repository: Repository,
-    private val savedStateHandle: SavedStateHandle
+    private val savedStateHandle: SavedStateHandle,
+    // NEW: Migration support (commented out until migration is active)
+    // private val migrationFlags: MigrationFlags,
+    // private val hybridRepository: HybridTrainingRepository,
+    // private val migrationAdapter: ExecuteTrainingMigrationAdapter
 ) : ViewModel() {
 
     // Get trainingId from savedStateHandle
     val trainingId: Long = savedStateHandle.get<String>("id")?.toLongOrNull() ?: -1L
 
     private val fetchTrainingByIdUseCase = FetchTrainingByIdUseCase(repository)
+
+    // NEW: Migration-aware system (will be activated during migration)
+    // private var isUsingNewSystem: Boolean = false
+    // private var migrationAdapter: ExecuteTrainingMigrationAdapter? = null
+    // private var hybridData: HybridTrainingRepository.TrainingDataResult? = null
     private val _uiState = initUiState()
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState.asStateFlow()
 
@@ -171,6 +184,120 @@ class ExecuteTrainingViewModel @Inject constructor(
         val currentPage = currentState.currentDisplayPage
         return findPreviousExercisePage(currentPage) != null
     }
+
+    // NEW: Decoupled activity switching methods (will be activated after migration)
+
+    /*
+    /**
+     * Universal method for switching activities (manual or automatic)
+     * Replaces complex navigation logic with clean switch system
+     */
+    private fun switchToNextActivity(mode: TrainingActivitySwitcher.SwitchMode) {
+        val currentItem = currentSequenceItem ?: return
+
+        when (val result = activitySwitcher.switchToNext(currentItem, mode)) {
+            is TrainingActivitySwitcher.SwitchResult.MoveToExercise -> {
+                moveToExercise(result.exercise)
+            }
+            is TrainingActivitySwitcher.SwitchResult.MoveToBreak -> {
+                moveToBreak(result.breakItem)
+            }
+            TrainingActivitySwitcher.SwitchResult.TrainingCompleted -> {
+                completeTraining()
+            }
+            TrainingActivitySwitcher.SwitchResult.NoActionNeeded -> {
+                // Do nothing
+            }
+        }
+    }
+
+    /**
+     * Move to specific exercise - handles timer setup and UI state
+     */
+    private fun moveToExercise(exercise: ExerciseItem) {
+        currentSequenceItem = exercise
+
+        // Setup timer for exercise
+        timer.setDuration(exercise.duration)
+
+        // Update UI state
+        _uiState.value = _uiState.value.copy(
+            currentSeconds = exercise.duration.toFloat() * 1000,
+            isLoading = false,
+            error = null
+        )
+
+        // Start timer
+        if (isPaused) {
+            startTimer()
+        }
+    }
+
+    /**
+     * Move to specific break - handles timer setup and UI state
+     */
+    private fun moveToBreak(breakItem: BreakItem) {
+        currentSequenceItem = breakItem
+
+        // Setup timer for break
+        timer.setDuration(breakItem.duration)
+
+        // Update UI state
+        _uiState.value = _uiState.value.copy(
+            currentSeconds = breakItem.duration.toFloat() * 1000,
+            isLoading = false,
+            error = null
+        )
+
+        // Start timer
+        startTimer()
+    }
+
+    /**
+     * Handle automatic progression when timer ends
+     */
+    fun onTimerCompleted() {
+        switchToNextActivity(TrainingActivitySwitcher.SwitchMode.AutomaticProgression)
+    }
+
+    /**
+     * Handle user manual navigation to next exercise
+     */
+    fun onUserNavigateNext() {
+        switchToNextActivity(TrainingActivitySwitcher.SwitchMode.UserSkipToNext)
+    }
+
+    /**
+     * Handle user manual navigation to previous exercise
+     */
+    fun onUserNavigatePrevious() {
+        switchToNextActivity(TrainingActivitySwitcher.SwitchMode.UserSkipToPrevious)
+    }
+
+    /**
+     * Handle user skipping current break
+     */
+    fun onUserSkipBreak() {
+        switchToNextActivity(TrainingActivitySwitcher.SwitchMode.UserSkipBreak)
+    }
+
+    /**
+     * Check if user can navigate using new decoupled system
+     */
+    fun canNavigateToNextExercise(): Boolean {
+        val currentItem = currentSequenceItem ?: return false
+        return activitySwitcher.canNavigateToNext(currentItem)
+    }
+
+    fun canNavigateToPreviousExercise(): Boolean {
+        val currentItem = currentSequenceItem ?: return false
+        return activitySwitcher.canNavigateToPrevious(currentItem)
+    }
+
+    private fun completeTraining() {
+        setTrainingFinishedState(_uiState.value.displayableActivityItemListWithBreakMerged!!.size)
+    }
+    */
 
     private suspend fun startExerciseTrainingFlow(currentActivity: Activity) {
         timer.flow.takeWhile { it >= 0 && !skippedByUser }
