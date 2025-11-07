@@ -161,15 +161,28 @@ private fun DrawScope.drawAnalogClock(
     }
 }
 
-@Preview(name = "Analog Timer Clock", showBackground = true)
+@Preview(name = "Analog Timer Clock - Exercise", showBackground = true)
 @Composable
 private fun AnalogTimerClockPreview() {
     AnalogTimerClock(
         modifier = Modifier.size(200.dp),
         timeRemaining = 15000f,
         totalTime = 30000f,
-        isBreak = false,
-        strokeWidth = 10f
+        theme = TimerTheme.TRAINING,
+        isBreak = false
     )
+}
+
+@Preview(name = "Analog Timer Clock - Break", showBackground = true, backgroundColor = 0xFF333333)
+@Composable
+private fun AnalogTimerClockBreakPreview() {
+    AnalogTimerClock(
+        modifier = Modifier.size(200.dp),
+        timeRemaining = 8000f,
+        totalTime = 15000f,
+        theme = TimerTheme.TRAINING,
+        isBreak = true
+    )
+}
 }
 

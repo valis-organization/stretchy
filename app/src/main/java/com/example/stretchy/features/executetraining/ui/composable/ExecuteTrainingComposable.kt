@@ -74,7 +74,7 @@ private fun prepareViewData(
     return when (currentActivityType) {
         ActivityType.BREAK -> {
             ViewData(
-                title = "Get Ready",
+                title = "BREAK", // Special marker for breaks
                 subtitle = currentItem.exercise.nextExercise ?: "",
                 timeRemaining = currentSeconds,
                 totalTime = currentItem.exercise.totalExerciseTime.toFloat() * 1000,
@@ -416,30 +416,53 @@ private fun TitleSection(title: String, subtitle: String?) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        if (subtitle != null) {
-            Text(
-                text = stringResource(id = R.string.prepare_next_exercise),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Gray,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = subtitle,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = Color.Black
-            )
-        } else {
-            Text(
-                text = title,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                color = Color.Black
-            )
+        when {
+            title == "BREAK" && subtitle != null -> {
+                // Break screen: Show "Get Ready" and next exercise name
+                Text(
+                    text = stringResource(id = R.string.prepare_next_exercise),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = Color.Black
+                )
+            }
+            subtitle != null && subtitle.contains("continue") -> {
+                // Timeless exercise: Show exercise name and instruction
+                Text(
+                    text = title,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = Color.Black
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center
+                )
+            }
+            else -> {
+                // Regular exercise: Just show exercise name
+                Text(
+                    text = title,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    color = Color.Black
+                )
+            }
         }
     }
 }
@@ -492,10 +515,9 @@ private fun NextExerciseSection(nextExercise: String?, showForBreak: Boolean) {
     }
 }
 
-@Preview(name = "Execute Training - Preview", showBackground = true, widthDp = 360, heightDp = 800)
+@Preview(name = "Execute Training - Exercise", showBackground = true, widthDp = 360, heightDp = 800)
 @Composable
-private fun ExecuteTrainingScreenPreview() {
-
+private fun ExecuteTrainingExercisePreview() {
     ExecuteTrainingView(
         viewState = ExecuteTrainingViewState.Active(
             title = "Push-ups",
@@ -510,3 +532,40 @@ private fun ExecuteTrainingScreenPreview() {
         )
     )
 }
+
+@Preview(name = "Execute Training - Break", showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun ExecuteTrainingBreakPreview() {
+    ExecuteTrainingView(
+        viewState = ExecuteTrainingViewState.Active(
+            title = "BREAK",
+            subtitle = "Squats",
+            timeRemaining = 10000f,
+            totalTime = 15000f,
+            timerTheme = TimerTheme.TRAINING,
+            isBreak = true,
+            showTimer = true,
+            nextExercise = null,
+            progressPercent = 0.60f
+        )
+    )
+}
+
+@Preview(name = "Execute Training - Timeless", showBackground = true, widthDp = 360, heightDp = 800)
+@Composable
+private fun ExecuteTrainingTimelessPreview() {
+    ExecuteTrainingView(
+        viewState = ExecuteTrainingViewState.Active(
+            title = "Plank Hold",
+            subtitle = "Tap when ready to continue",
+            timeRemaining = 0f,
+            totalTime = 0f,
+            timerTheme = TimerTheme.TRAINING,
+            isBreak = false,
+            showTimer = false,
+            nextExercise = "Mountain Climbers",
+            progressPercent = 0.40f
+        )
+    )
+}
+
