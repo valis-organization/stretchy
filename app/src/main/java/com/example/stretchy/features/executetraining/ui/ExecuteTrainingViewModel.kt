@@ -5,15 +5,24 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.features.executetraining.Timer
+import com.example.stretchy.features.executetraining.ImprovedTimer
+import com.example.stretchy.features.executetraining.createImprovedTimer
 import com.example.stretchy.features.executetraining.sound.data.SoundEvent
 import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifier
 import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifierImpl
 import com.example.stretchy.features.executetraining.sound.data.TrainingEvent
 import com.example.stretchy.features.executetraining.ui.data.*
+import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
 import com.example.stretchy.repository.Activity
 import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
+import androidx.lifecycle.SavedStateHandle
+// NEW: Migration support imports (will be activated during migration)
+// import com.example.stretchy.database.migration.MigrationFlags
+// import com.example.stretchy.features.executetraining.repository.HybridTrainingRepository
+// import com.example.stretchy.features.executetraining.migration.ExecuteTrainingMigrationAdapter
+import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -21,11 +30,36 @@ import kotlinx.coroutines.withContext
 import java.lang.Thread.sleep
 import java.util.*
 
-class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long) : ViewModel() {
-    private val _uiState = initUiState()
-    val uiState: StateFlow<ExecuteTrainingUiState> = _uiState
+@HiltViewModel
+class ExecuteTrainingViewModel @Inject constructor(
+    repository: Repository,
+    private val savedStateHandle: SavedStateHandle,
+    // NEW: Migration support (commented out until migration is active)
+    // private val migrationFlags: MigrationFlags,
+    // private val hybridRepository: HybridTrainingRepository,
+    // private val migrationAdapter: ExecuteTrainingMigrationAdapter
+) : ViewModel() {
 
-    private var timer: Timer = Timer()
+    // Get trainingId from savedStateHandle
+    val trainingId: Long = savedStateHandle.get<String>("id")?.toLongOrNull() ?: -1L
+
+    private val fetchTrainingByIdUseCase = FetchTrainingByIdUseCase(repository)
+
+    // NEW: Migration-aware system (will be activated during migration)
+    // private var isUsingNewSystem: Boolean = false
+    // private var migrationAdapter: ExecuteTrainingMigrationAdapter? = null
+    // private var hybridData: HybridTrainingRepository.TrainingDataResult? = null
+    private val _uiState = initUiState()
+    val uiState: StateFlow<ExecuteTrainingUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<UiEvent>()
+    val events: SharedFlow<UiEvent> = _events.asSharedFlow()
+
+    sealed class UiEvent {
+        data class ShowToast(val message: String) : UiEvent()
+        data class PlaySound(val soundEvent: SoundEvent) : UiEvent()
+    }
+    private var timer: ImprovedTimer = createImprovedTimer(viewModelScope)
     private var isPaused = true
 
     private var startingTimestampSaved = false
@@ -45,7 +79,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         }
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+            trainingWithActivities = fetchTrainingByIdUseCase(trainingId)
             initializeDisplayableList()
             initializeSoundManager()
 
@@ -94,6 +128,177 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         }
     }
 
+    fun goToNextExercise() {
+        val currentState = _uiState.value
+        val currentPage = currentState.currentDisplayPage
+        val activities = currentState.displayableActivityItemListWithBreakMerged ?: return
+
+        // Find next non-break page
+        val nextExercisePage = findNextExercisePage(currentPage, activities.size)
+        if (nextExercisePage != null) {
+            changePage(nextExercisePage, isSkippedByUser = true)
+        }
+    }
+
+    fun goToPreviousExercise() {
+        val currentState = _uiState.value
+        val currentPage = currentState.currentDisplayPage
+        currentState.displayableActivityItemListWithBreakMerged ?: return
+
+        // Find previous non-break page
+        val previousExercisePage = findPreviousExercisePage(currentPage)
+        if (previousExercisePage != null) {
+            changePage(previousExercisePage, isSkippedByUser = true)
+        }
+    }
+
+    private fun findNextExercisePage(currentPage: Int, totalPages: Int): Int? {
+        for (i in (currentPage + 1) until totalPages) {
+            val activityType = _uiState.value.activityTypes?.getOrNull(i)
+            if (activityType != ActivityType.BREAK) {
+                return i
+            }
+        }
+        return null
+    }
+
+    private fun findPreviousExercisePage(currentPage: Int): Int? {
+        for (i in (currentPage - 1) downTo 0) {
+            val activityType = _uiState.value.activityTypes?.getOrNull(i)
+            if (activityType != ActivityType.BREAK) {
+                return i
+            }
+        }
+        return null
+    }
+
+    fun canGoToNext(): Boolean {
+        val currentState = _uiState.value
+        val currentPage = currentState.currentDisplayPage
+        val activities = currentState.displayableActivityItemListWithBreakMerged ?: return false
+        return findNextExercisePage(currentPage, activities.size) != null
+    }
+
+    fun canGoToPrevious(): Boolean {
+        val currentState = _uiState.value
+        val currentPage = currentState.currentDisplayPage
+        return findPreviousExercisePage(currentPage) != null
+    }
+
+    // NEW: Decoupled activity switching methods (will be activated after migration)
+
+    /*
+    /**
+     * Universal method for switching activities (manual or automatic)
+     * Replaces complex navigation logic with clean switch system
+     */
+    private fun switchToNextActivity(mode: TrainingActivitySwitcher.SwitchMode) {
+        val currentItem = currentSequenceItem ?: return
+
+        when (val result = activitySwitcher.switchToNext(currentItem, mode)) {
+            is TrainingActivitySwitcher.SwitchResult.MoveToExercise -> {
+                moveToExercise(result.exercise)
+            }
+            is TrainingActivitySwitcher.SwitchResult.MoveToBreak -> {
+                moveToBreak(result.breakItem)
+            }
+            TrainingActivitySwitcher.SwitchResult.TrainingCompleted -> {
+                completeTraining()
+            }
+            TrainingActivitySwitcher.SwitchResult.NoActionNeeded -> {
+                // Do nothing
+            }
+        }
+    }
+
+    /**
+     * Move to specific exercise - handles timer setup and UI state
+     */
+    private fun moveToExercise(exercise: ExerciseItem) {
+        currentSequenceItem = exercise
+
+        // Setup timer for exercise
+        timer.setDuration(exercise.duration)
+
+        // Update UI state
+        _uiState.value = _uiState.value.copy(
+            currentSeconds = exercise.duration.toFloat() * 1000,
+            isLoading = false,
+            error = null
+        )
+
+        // Start timer
+        if (isPaused) {
+            startTimer()
+        }
+    }
+
+    /**
+     * Move to specific break - handles timer setup and UI state
+     */
+    private fun moveToBreak(breakItem: BreakItem) {
+        currentSequenceItem = breakItem
+
+        // Setup timer for break
+        timer.setDuration(breakItem.duration)
+
+        // Update UI state
+        _uiState.value = _uiState.value.copy(
+            currentSeconds = breakItem.duration.toFloat() * 1000,
+            isLoading = false,
+            error = null
+        )
+
+        // Start timer
+        startTimer()
+    }
+
+    /**
+     * Handle automatic progression when timer ends
+     */
+    fun onTimerCompleted() {
+        switchToNextActivity(TrainingActivitySwitcher.SwitchMode.AutomaticProgression)
+    }
+
+    /**
+     * Handle user manual navigation to next exercise
+     */
+    fun onUserNavigateNext() {
+        switchToNextActivity(TrainingActivitySwitcher.SwitchMode.UserSkipToNext)
+    }
+
+    /**
+     * Handle user manual navigation to previous exercise
+     */
+    fun onUserNavigatePrevious() {
+        switchToNextActivity(TrainingActivitySwitcher.SwitchMode.UserSkipToPrevious)
+    }
+
+    /**
+     * Handle user skipping current break
+     */
+    fun onUserSkipBreak() {
+        switchToNextActivity(TrainingActivitySwitcher.SwitchMode.UserSkipBreak)
+    }
+
+    /**
+     * Check if user can navigate using new decoupled system
+     */
+    fun canNavigateToNextExercise(): Boolean {
+        val currentItem = currentSequenceItem ?: return false
+        return activitySwitcher.canNavigateToNext(currentItem)
+    }
+
+    fun canNavigateToPreviousExercise(): Boolean {
+        val currentItem = currentSequenceItem ?: return false
+        return activitySwitcher.canNavigateToPrevious(currentItem)
+    }
+
+    private fun completeTraining() {
+        setTrainingFinishedState(_uiState.value.displayableActivityItemListWithBreakMerged!!.size)
+    }
+    */
+
     private suspend fun startExerciseTrainingFlow(currentActivity: Activity) {
         timer.flow.takeWhile { it >= 0 && !skippedByUser }
             .collect { currentSeconds ->
@@ -128,6 +333,13 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
     private fun handleBreak() {
         val list = _uiState.value.activityTypes as MutableList<ActivityType>
         list[_uiState.value.currentDisplayPage] = ActivityType.BREAK
+
+        // Setup break timer with correct duration
+        val currentActivity = trainingWithActivities.activities[index]
+        if (currentActivity.activityType == ActivityType.BREAK) {
+            timer.setDuration(currentActivity.duration)
+        }
+
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             error = null,
@@ -140,7 +352,8 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         if (!skippedByUser) {
             index++
         }
-        if (currentActivity.activityType == ActivityType.BREAK && !skippedByUser) {
+        // Auto-advance the page for all activity types when not skipped by user
+        if (!skippedByUser) {
             currentPage++
             changePage(destinationPage = currentPage, false)
         }
@@ -155,8 +368,15 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
             index = nextIndex
         }
         val currentActivity = trainingWithActivities.activities[index]
+
+        // Reset timer for new exercise
+        setupTimer(currentActivity)
+
         handleSwipeWhenTimerIsPausedEdgeCase(currentActivity)
         notifySoundHandlerActivityUpdated()
+
+        // Reset skippedByUser after setup
+        skippedByUser = false
     }
 
     private fun trainingFinished(): Boolean {
@@ -275,6 +495,9 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 numberOfExercises = allExercisesCount
             ),
         )
+        viewModelScope.launch {
+            _events.emit(UiEvent.ShowToast("Training completed!"))
+        }
     }
 
     private fun notifySoundHandlerActivityUpdated() {
@@ -394,7 +617,7 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
                 if (breakActivity != null) {
                     breakAfterActivity = breakActivity.toActivityItem(
                         nextActivityName,
-                        breakActivity.duration.toFloat()
+                        breakActivity.duration.toFloat() * 1000
                     ) as DisplayableActivityItem.Break
                 }
 
@@ -456,10 +679,20 @@ class ExecuteTrainingViewModel(val repository: Repository, val trainingId: Long)
         }
     }
 
+    fun quitTraining() {
+        // Navigation will be handled externally via NavigationViewModel
+    }
+
+    /**
+     * Clean up timer resources when ViewModel is cleared
+     */
+    override fun onCleared() {
+        super.onCleared()
+        timer.cleanup()
+    }
+
     companion object {
-        private const val TIMER_LOG_TAG = "TIMER"
+        const val TAG = "ExecuteTrainingViewModel}"
+        const val TIMER_LOG_TAG = "ExecuteTrainingTimer"
     }
 }
-
-
-

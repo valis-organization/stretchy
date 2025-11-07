@@ -1,32 +1,28 @@
-package com.example.stretchy
+package com.example.stretchy.navigation
 
-import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.stretchy.activity.di.ActivityComponent
+import com.example.stretchy.Screen
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.extensions.daggerViewModel
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
-import com.example.stretchy.features.createtraining.ui.composable.CreateTrainingComposable
-import com.example.stretchy.features.createtraining.ui.di.CreateTrainingComponent
-import com.example.stretchy.features.executetraining.di.ExecuteTrainingComponent
+import com.example.stretchy.features.createtraining.ui.composable.NewTrainingEditScreen
+import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
-import com.example.stretchy.features.executetraining.ui.composable.ExecuteTrainingComposable
-import com.example.stretchy.features.traininglist.di.TrainingListComponent
+import com.example.stretchy.features.executetraining.ui.composable.ExecuteTrainingScreen
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
-import com.example.stretchy.features.traininglist.ui.composable.TrainingListComposable
+import com.example.stretchy.features.traininglist.ui.composable.TrainingListScreen
 
 @Composable
 fun Navigation(
-    activityComponent: ActivityComponent,
+    soundPlayer: SoundPlayer,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
     startDestination: String,
@@ -38,57 +34,49 @@ fun Navigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     handleBottomNavBarVisibility(navBackStackEntry, hideBottomNavBar, showBottomNavBar)
 
+    // Centralized navigation handler
+    val navigationViewModel: NavigationViewModel = viewModel()
+    HandleNavigationEvents(
+        navEvents = navigationViewModel.navEvents,
+        navController = navController
+    )
+
     NavHost(navController = navController, startDestination = startDestination) {
         composable(
             route = Screen.TrainingListScreen.route,
         ) {
-            val component = TrainingListComponent.create(activityComponent, trainingType)
-            val vm = createTrainingListViewModel(
-                component,
-                activityComponent.activity(),
-                LocalViewModelStoreOwner.current!!
-            )
-            TrainingListComposable(
-                navController = navController,
+            val vm: TrainingListViewModel = hiltViewModel()
+            vm.setTrainingType(TrainingType.BODYWEIGHT)
+            TrainingListScreen(
                 viewModel = vm,
+                navigationViewModel = navigationViewModel,
                 onExportClick = onExportClick,
                 onImportClick = onImportClick,
-                trainingType = trainingType
+                trainingType = TrainingType.BODYWEIGHT
             )
         }
 
         composable(
             route = Screen.StretchingListScreen.route
         ) {
-            val component = TrainingListComponent.create(activityComponent, trainingType)
-            val vm = createTrainingListViewModel(
-                component,
-                activityComponent.activity(),
-                LocalViewModelStoreOwner.current!!
-            )
-            TrainingListComposable(
-                navController = navController,
+            val vm: TrainingListViewModel = hiltViewModel()
+            vm.setTrainingType(TrainingType.STRETCH)
+            TrainingListScreen(
                 viewModel = vm,
+                navigationViewModel = navigationViewModel,
                 onExportClick = onExportClick,
                 onImportClick = onImportClick,
-                trainingType = trainingType
+                trainingType = TrainingType.STRETCH
             )
         }
         composable(
             route = Screen.ExerciseCreatorScreen.route,
             arguments = listOf(
                 navArgument("id") { defaultValue = "-1" },
-                navArgument("trainingType") {})
+                navArgument("trainingType") { defaultValue = "STRETCH" })
         ) {
-            val trainingId = it.arguments?.getString("id")!!.toLong()
-            val component =
-                CreateTrainingComponent.create(activityComponent, trainingId, trainingType)
-            val vm = createCreateTrainingViewModel(
-                component,
-                activityComponent.activity(),
-                LocalViewModelStoreOwner.current!!
-            )
-            CreateTrainingComposable(
+            val vm: CreateOrEditTrainingViewModel = hiltViewModel()
+            NewTrainingEditScreen(
                 navController = navController,
                 viewModel = vm
             )
@@ -97,51 +85,16 @@ fun Navigation(
             route = Screen.ExecuteTrainingScreen.route,
             arguments = listOf(navArgument("id") { defaultValue = "-1" })
         ) {
-            val trainingId = it.arguments?.getString("id")!!.toLong()
-            val component = ExecuteTrainingComponent.create(activityComponent, trainingId)
-            val vm = createExecuteTrainingViewModel(
-                component,
-                activityComponent.activity(),
-                LocalViewModelStoreOwner.current!!,
-            )
-            ExecuteTrainingComposable(
+            val vm: ExecuteTrainingViewModel = hiltViewModel()
+            ExecuteTrainingScreen(
                 vm,
-                activityComponent.speaker(),
+                soundPlayer,
                 navController
             )
         }
     }
 }
 
-private fun createExecuteTrainingViewModel(
-    executeTrainingComponent: ExecuteTrainingComponent,
-    componentActivity: ComponentActivity,
-    viewModelStoreOwner: ViewModelStoreOwner,
-): ExecuteTrainingViewModel {
-    val provider = executeTrainingComponent.viewModelProvider()
-    val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
-    return vm
-}
-
-private fun createCreateTrainingViewModel(
-    createTrainingComponent: CreateTrainingComponent,
-    componentActivity: ComponentActivity,
-    viewModelStoreOwner: ViewModelStoreOwner,
-): CreateOrEditTrainingViewModel {
-    val provider = createTrainingComponent.viewModelProvider()
-    val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
-    return vm
-}
-
-private fun createTrainingListViewModel(
-    trainingListComponent: TrainingListComponent,
-    componentActivity: ComponentActivity,
-    viewModelStoreOwner: ViewModelStoreOwner,
-): TrainingListViewModel {
-    val provider = trainingListComponent.viewModelProvider()
-    val vm by componentActivity.daggerViewModel(owner = viewModelStoreOwner) { provider }
-    return vm
-}
 
 private fun handleBottomNavBarVisibility(
     navBackStackEntry: NavBackStackEntry?, hideBottomNavBar: () -> Unit,

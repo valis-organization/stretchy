@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.theme.LapisLazuli
 
@@ -50,3 +51,40 @@ fun TrainingProgressBar(
         )
     }
 }
+
+@Preview(name = "Progress Bar - 25%", showBackground = true)
+@Composable
+private fun TrainingProgressBar25Preview() {
+    TrainingProgressBar(
+        progressBarFillingAmount = 1f,
+        percentage = 0.25f
+    )
+}
+
+@Preview(name = "Progress Bar - 50%", showBackground = true)
+@Composable
+private fun TrainingProgressBar50Preview() {
+    TrainingProgressBar(
+        progressBarFillingAmount = 1f,
+        percentage = 0.5f
+    )
+}
+
+@Preview(name = "Progress Bar - 75%", showBackground = true)
+@Composable
+private fun TrainingProgressBar75Preview() {
+    TrainingProgressBar(
+        progressBarFillingAmount = 1f,
+        percentage = 0.75f
+    )
+}
+
+@Preview(name = "Progress Bar - 100%", showBackground = true)
+@Composable
+private fun TrainingProgressBar100Preview() {
+    TrainingProgressBar(
+        progressBarFillingAmount = 1f,
+        percentage = 1f
+    )
+}
+

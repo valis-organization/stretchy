@@ -1,45 +1,50 @@
 package com.example.stretchy.activity
-
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.os.Build.VERSION.SDK_INT
 import android.os.Bundle
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.app.ActivityCompat
-import com.example.stretchy.activity.di.ActivityComponent
-import com.example.stretchy.navigation.BottomNavigationBar
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.view.WindowCompat
+import com.example.stretchy.features.executetraining.sound.SoundPlayer
+import com.example.stretchy.permission.PermissionManager
+import com.example.stretchy.permission.rememberStoragePermissionState
+import com.example.stretchy.ui.navigation.BottomNavBar
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    private lateinit var activityComponent: ActivityComponent
+
+    @Inject
+    lateinit var soundPlayer: SoundPlayer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activityComponent = ActivityComponent.create(this)
-        setContent {
-            BottomNavigationBar(activityComponent, grantPermissions = { grantPermissions(it) })
-        }
-    }
 
-    private fun grantPermissions(permission: String) {
-        if (SDK_INT >= Build.VERSION_CODES.R) {
-            val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-            intent.data = Uri.parse("package:" + applicationContext.packageName)
-            startActivity(intent)
-        } else {
-            ActivityCompat.requestPermissions(
-                this,
-                arrayOf(
-                    permission
-                ),
-                100
+        // Enable edge-to-edge and make status bar transparent
+        enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        setContent {
+            // Make status bar transparent
+            SideEffect {
+                window.statusBarColor = Color.Transparent.toArgb()
+                window.navigationBarColor = Color.Transparent.toArgb()
+                WindowCompat.getInsetsController(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = false // Dark status bar content for light themes
+                }
+            }
+
+            // Remember permission manager & compose state
+            val permissionManager = remember { PermissionManager(this) }
+            val storagePermissionState = rememberStoragePermissionState(permissionManager)
+            BottomNavBar(
+                storagePermissionState = storagePermissionState,
+                soundPlayer = soundPlayer
             )
         }
     }
 }
-
-
-
