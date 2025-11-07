@@ -5,7 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.common.convertSecondsToMinutes
 import com.example.stretchy.database.data.ActivityType
-import com.example.stretchy.features.executetraining.Timer
+import com.example.stretchy.features.executetraining.ImprovedTimer
+import com.example.stretchy.features.executetraining.createImprovedTimer
 import com.example.stretchy.features.executetraining.sound.data.SoundEvent
 import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifier
 import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifierImpl
@@ -45,8 +46,7 @@ class ExecuteTrainingViewModel @Inject constructor(
         data class ShowToast(val message: String) : UiEvent()
         data class PlaySound(val soundEvent: SoundEvent) : UiEvent()
     }
-
-    private var timer: Timer = Timer()
+    private var timer: ImprovedTimer = createImprovedTimer(viewModelScope)
     private var isPaused = true
 
     private var startingTimestampSaved = false
@@ -482,6 +482,14 @@ class ExecuteTrainingViewModel @Inject constructor(
 
     fun quitTraining() {
         // Navigation will be handled externally via NavigationViewModel
+    }
+
+    /**
+     * Clean up timer resources when ViewModel is cleared
+     */
+    override fun onCleared() {
+        super.onCleared()
+        timer.cleanup()
     }
 
     companion object {

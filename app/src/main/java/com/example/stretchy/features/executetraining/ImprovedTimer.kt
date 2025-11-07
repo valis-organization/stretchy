@@ -4,91 +4,81 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
 
 /**
- * Improved Timer implementation that fixes memory leaks and performance issues
- * from the original Timer class.
+ * Improved Timer class that provides better lifecycle management and uses proper coroutine scope
+ * instead of GlobalScope for better memory management and cancellation support.
  */
-class ImprovedTimer(private val scope: CoroutineScope) {
-
-    private val _timeRemaining = MutableStateFlow(0L)
-    val timeRemaining: StateFlow<Long> = _timeRemaining.asStateFlow()
-
-    private val _isRunning = MutableStateFlow(false)
-    val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
+class ImprovedTimer(
+    private val scope: CoroutineScope
+) {
+    private val _timerFlow = MutableStateFlow(0f)
+    val flow: StateFlow<Float> = _timerFlow.asStateFlow()
 
     private var timerJob: Job? = null
-    private var totalDuration: Long = 0L
+    private var currentMs: Int = 0
+
+    private var paused = true
+    private var isRunning = false
 
     /**
-     * Progress as a percentage (0.0 to 1.0)
+     * Start the timer countdown
      */
-    val progress: StateFlow<Float> = _timeRemaining.map { remaining ->
-        if (totalDuration <= 0) 0f
-        else (totalDuration - remaining).toFloat() / totalDuration.toFloat()
-    }.stateIn(scope, SharingStarted.WhileSubscribed(), 0f)
-
-    /**
-     * Time remaining in seconds (for display purposes)
-     */
-    val timeRemainingInSeconds: StateFlow<Int> = _timeRemaining.map { millis ->
-        (millis / 1000).toInt()
-    }.stateIn(scope, SharingStarted.WhileSubscribed(), 0)
-
     fun start() {
-        if (_isRunning.value) return
+        if (isRunning && !paused) return
 
-        _isRunning.value = true
+        paused = false
+        isRunning = true
 
+        timerJob?.cancel()
         timerJob = scope.launch {
-            while (_timeRemaining.value > 0 && _isRunning.value) {
-                delay(100) // Update every 100ms instead of 10ms
-                _timeRemaining.value = maxOf(0, _timeRemaining.value - 100)
+            while (currentMs > 0 && !paused && isActive) {
+                delay(10)
+                if (!paused) {
+                    currentMs -= 10
+                    _timerFlow.emit(currentMs.toFloat())
+                }
             }
-
-            // Timer finished
-            if (_timeRemaining.value <= 0) {
-                _isRunning.value = false
+            if (currentMs <= 0) {
+                _timerFlow.emit(0f)
+                isRunning = false
             }
         }
     }
 
+    /**
+     * Pause the timer
+     */
     fun pause() {
-        _isRunning.value = false
+        paused = true
         timerJob?.cancel()
     }
 
-    fun stop() {
-        _isRunning.value = false
-        timerJob?.cancel()
-        _timeRemaining.value = 0L
-        totalDuration = 0L
-    }
 
+
+    /**
+     * Set the duration of the timer in seconds
+     */
     fun setDuration(seconds: Int) {
-        val millis = seconds * 1000L
-        totalDuration = millis
-        _timeRemaining.value = millis
+        val newDurationMs = seconds * 1000
+        currentMs = newDurationMs
+
+        _timerFlow.value = newDurationMs.toFloat()
     }
 
-    fun addTime(seconds: Int) {
-        val additionalMillis = seconds * 1000L
-        totalDuration += additionalMillis
-        _timeRemaining.value += additionalMillis
-    }
 
-    fun isFinished(): Boolean = _timeRemaining.value <= 0L
 
     /**
      * Clean up resources when the timer is no longer needed
      */
     fun cleanup() {
         timerJob?.cancel()
-        _isRunning.value = false
+        isRunning = false
+        paused = true
     }
 }
 
 /**
  * Factory function to create timer with proper scope
  */
-fun createTimer(scope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob())): ImprovedTimer {
+fun createImprovedTimer(scope: CoroutineScope): ImprovedTimer {
     return ImprovedTimer(scope)
 }

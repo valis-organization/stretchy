@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stretchy.R
 import com.example.stretchy.features.executetraining.ui.composable.TextSpacer
-import com.example.stretchy.features.executetraining.ui.composable.timer.TimerVieww
+import com.example.stretchy.features.executetraining.ui.composable.timer.AnalogTimerClock
 
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -47,11 +47,11 @@ fun BreakVieww(
             }
         }
         Spacer(modifier = Modifier.height(100.dp))
-        TimerVieww(
-            isBreak = true,
-            totalSeconds = totalTime.toFloat() * 1000,
+        AnalogTimerClock(
+            timeRemaining = currentTime,
+            totalTime = totalTime.toFloat() * 1000,
             modifier = Modifier.size(300.dp),
-            currentSeconds = currentTime
+            isBreak = true
         )
         Spacer(modifier = Modifier.height(44.dp))
         TextSpacer(fontSize = 40.sp)
