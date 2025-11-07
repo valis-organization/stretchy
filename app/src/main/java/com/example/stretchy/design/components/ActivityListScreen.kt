@@ -76,10 +76,9 @@ fun ActivityListScreen(
     onPerformExport: () -> Unit = {},
     onPerformImport: suspend () -> Unit = {}
 ) {
-    ActivityListView(
+    ActivityListContent(
         activities = activities,
         trainingType = trainingType,
-        modifier = modifier,
         onAdd = onAdd,
         onActivityClick = onActivityClick,
         onActivityEdit = onActivityEdit,
@@ -179,7 +178,7 @@ private fun ActivityRow(
 }
 
 @Composable
-fun ActivityListView(
+fun ActivityListContent(
     activities: List<ActivityItem>,
     trainingType: TrainingType,
     modifier: Modifier = Modifier,
@@ -217,7 +216,10 @@ fun ActivityListView(
                 .padding(paddingValues)
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(primaryColor.copy(alpha = 0.08f), secondaryColor.copy(alpha = 0.02f))
+                        colors = listOf(
+                            primaryColor.copy(alpha = 0.08f),
+                            secondaryColor.copy(alpha = 0.02f)
+                        )
                     )
                 )
         ) {

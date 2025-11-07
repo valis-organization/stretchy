@@ -177,7 +177,7 @@ fun NewTrainingEditScreen(
                 }
             }
             // Show old screen as fallback for errors
-            CreateTrainingScreenn(navController, viewModel)
+            CreateTrainingScreen(navController, viewModel)
         }
         CreateTrainingUiState.Init -> {
             // Show loading indicator while initializing

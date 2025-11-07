@@ -2,7 +2,8 @@ package com.example.stretchy.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,16 +12,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.stretchy.Screen
 import com.example.stretchy.database.data.TrainingType
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.stretchy.features.createtraining.ui.CreateOrEditTrainingViewModel
-import com.example.stretchy.features.createtraining.ui.composable.CreateTrainingScreenn
 import com.example.stretchy.features.createtraining.ui.composable.NewTrainingEditScreen
 import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.features.executetraining.ui.ExecuteTrainingViewModel
-import com.example.stretchy.features.executetraining.ui.composable.ExecuteTrainingScreenn
+import com.example.stretchy.features.executetraining.ui.composable.ExecuteTrainingScreen
 import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
-import com.example.stretchy.features.traininglist.ui.composable.TrainingListScreenn
+import com.example.stretchy.features.traininglist.ui.composable.TrainingListScreen
 
 @Composable
 fun Navigation(
@@ -49,7 +47,7 @@ fun Navigation(
         ) {
             val vm: TrainingListViewModel = hiltViewModel()
             vm.setTrainingType(TrainingType.BODYWEIGHT)
-            TrainingListScreenn(
+            TrainingListScreen(
                 viewModel = vm,
                 navigationViewModel = navigationViewModel,
                 onExportClick = onExportClick,
@@ -63,7 +61,7 @@ fun Navigation(
         ) {
             val vm: TrainingListViewModel = hiltViewModel()
             vm.setTrainingType(TrainingType.STRETCH)
-            TrainingListScreenn(
+            TrainingListScreen(
                 viewModel = vm,
                 navigationViewModel = navigationViewModel,
                 onExportClick = onExportClick,
@@ -88,7 +86,7 @@ fun Navigation(
             arguments = listOf(navArgument("id") { defaultValue = "-1" })
         ) {
             val vm: ExecuteTrainingViewModel = hiltViewModel()
-            ExecuteTrainingScreenn(
+            ExecuteTrainingScreen(
                 vm,
                 soundPlayer,
                 navController

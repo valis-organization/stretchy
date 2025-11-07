@@ -184,5 +184,4 @@ private fun AnalogTimerClockBreakPreview() {
         isBreak = true
     )
 }
-}
 
