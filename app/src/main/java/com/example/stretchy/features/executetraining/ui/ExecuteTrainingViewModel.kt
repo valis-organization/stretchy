@@ -115,6 +115,63 @@ class ExecuteTrainingViewModel @Inject constructor(
         }
     }
 
+    fun goToNextExercise() {
+        val currentState = _uiState.value
+        val currentPage = currentState.currentDisplayPage
+        val activities = currentState.displayableActivityItemListWithBreakMerged ?: return
+
+        // Find next non-break page
+        val nextExercisePage = findNextExercisePage(currentPage, activities.size)
+        if (nextExercisePage != null) {
+            changePage(nextExercisePage, isSkippedByUser = true)
+        }
+    }
+
+    fun goToPreviousExercise() {
+        val currentState = _uiState.value
+        val currentPage = currentState.currentDisplayPage
+        currentState.displayableActivityItemListWithBreakMerged ?: return
+
+        // Find previous non-break page
+        val previousExercisePage = findPreviousExercisePage(currentPage)
+        if (previousExercisePage != null) {
+            changePage(previousExercisePage, isSkippedByUser = true)
+        }
+    }
+
+    private fun findNextExercisePage(currentPage: Int, totalPages: Int): Int? {
+        for (i in (currentPage + 1) until totalPages) {
+            val activityType = _uiState.value.activityTypes?.getOrNull(i)
+            if (activityType != ActivityType.BREAK) {
+                return i
+            }
+        }
+        return null
+    }
+
+    private fun findPreviousExercisePage(currentPage: Int): Int? {
+        for (i in (currentPage - 1) downTo 0) {
+            val activityType = _uiState.value.activityTypes?.getOrNull(i)
+            if (activityType != ActivityType.BREAK) {
+                return i
+            }
+        }
+        return null
+    }
+
+    fun canGoToNext(): Boolean {
+        val currentState = _uiState.value
+        val currentPage = currentState.currentDisplayPage
+        val activities = currentState.displayableActivityItemListWithBreakMerged ?: return false
+        return findNextExercisePage(currentPage, activities.size) != null
+    }
+
+    fun canGoToPrevious(): Boolean {
+        val currentState = _uiState.value
+        val currentPage = currentState.currentDisplayPage
+        return findPreviousExercisePage(currentPage) != null
+    }
+
     private suspend fun startExerciseTrainingFlow(currentActivity: Activity) {
         timer.flow.takeWhile { it >= 0 && !skippedByUser }
             .collect { currentSeconds ->
@@ -161,7 +218,8 @@ class ExecuteTrainingViewModel @Inject constructor(
         if (!skippedByUser) {
             index++
         }
-        if (currentActivity.activityType == ActivityType.BREAK && !skippedByUser) {
+        // Auto-advance the page for all activity types when not skipped by user
+        if (!skippedByUser) {
             currentPage++
             changePage(destinationPage = currentPage, false)
         }
@@ -176,8 +234,15 @@ class ExecuteTrainingViewModel @Inject constructor(
             index = nextIndex
         }
         val currentActivity = trainingWithActivities.activities[index]
+
+        // Reset timer for new exercise
+        setupTimer(currentActivity)
+
         handleSwipeWhenTimerIsPausedEdgeCase(currentActivity)
         notifySoundHandlerActivityUpdated()
+
+        // Reset skippedByUser after setup
+        skippedByUser = false
     }
 
     private fun trainingFinished(): Boolean {
