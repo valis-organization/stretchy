@@ -15,15 +15,18 @@ import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.entity.ActivityEntity
 import com.example.stretchy.database.entity.TrainingActivityEntity
 import com.example.stretchy.database.entity.TrainingEntity
+import com.example.stretchy.database.entity.BreakEntity
+import com.example.stretchy.database.dao.BreakDao
 
 @Database(
-    entities = [TrainingEntity::class, ActivityEntity::class, TrainingActivityEntity::class],
-    version = 2
+    entities = [TrainingEntity::class, ActivityEntity::class, TrainingActivityEntity::class, BreakEntity::class],
+    version = 3
 )
 @TypeConverters(TrainingTypeConverter::class, ActivityTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
     abstract fun trainingDao(): TrainingDao
+    abstract fun breakDao(): BreakDao
     abstract fun trainingWithActivitiesDao(): TrainingWithActivitiesDao
 
     companion object {
@@ -256,6 +259,142 @@ abstract class AppDatabase : RoomDatabase() {
                 addBreakActivity()
                 changePrimaryKeys()
                 addBreaksToTrainings()
+            }
+        }
+
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            @SuppressLint("Range")
+            override fun migrate(database: SupportSQLiteDatabase) {
+                android.util.Log.i("MIG_3", "Starting migration from version 2 to 3: Converting breaks to separate entities")
+
+                try {
+                    // Step 1: Create breaks table
+                    android.util.Log.d("MIG_3", "Creating breaks table")
+                    database.execSQL("""
+                        CREATE TABLE breaks (
+                            breakId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                            duration INTEGER NOT NULL
+                        )
+                    """)
+                    database.execSQL("CREATE INDEX index_breaks_duration ON breaks(duration)")
+
+                    // Step 2: Add breakId column to training_activities
+                    android.util.Log.d("MIG_3", "Adding breakId column to training_activities")
+                    database.execSQL("ALTER TABLE training_activities ADD COLUMN breakId INTEGER")
+
+                    // Step 3: Migrate break activities to breaks table and update references
+                    android.util.Log.d("MIG_3", "Migrating break activities to breaks table")
+
+                    // Get all BREAK activities grouped by duration
+                    val breakActivitiesCursor = database.query("""
+                        SELECT DISTINCT duration FROM activity 
+                        WHERE activityType = 'BREAK'
+                        ORDER BY duration
+                    """)
+
+                    val durationToBreakId = mutableMapOf<Int, Long>()
+
+                    // Create unique break entities for each duration
+                    if (breakActivitiesCursor.moveToFirst()) {
+                        do {
+                            val duration = breakActivitiesCursor.getInt(0)
+                            database.execSQL("INSERT INTO breaks (duration) VALUES ($duration)")
+
+                            val newBreakIdCursor = database.query("SELECT last_insert_rowid()")
+                            newBreakIdCursor.moveToFirst()
+                            val breakId = newBreakIdCursor.getLong(0)
+                            newBreakIdCursor.close()
+
+                            durationToBreakId[duration] = breakId
+                            android.util.Log.d("MIG_3", "Created break entity: id=$breakId, duration=$duration")
+                        } while (breakActivitiesCursor.moveToNext())
+                    }
+                    breakActivitiesCursor.close()
+
+                    // Step 4: Update training_activities to reference breaks instead of break activities
+                    android.util.Log.d("MIG_3", "Updating training_activities references")
+
+                    // Find activities that are followed by breaks
+                    val trainingActivitiesCursor = database.query("""
+                        SELECT ta1.tId, ta1.aId, ta1.activityOrder, a.duration
+                        FROM training_activities ta1
+                        JOIN training_activities ta2 ON ta1.tId = ta2.tId AND ta2.activityOrder = ta1.activityOrder + 1
+                        JOIN activity a ON ta2.aId = a.activityId
+                        WHERE a.activityType = 'BREAK'
+                    """)
+
+                    if (trainingActivitiesCursor.moveToFirst()) {
+                        do {
+                            val tId = trainingActivitiesCursor.getLong(0)
+                            val aId = trainingActivitiesCursor.getLong(1)
+                            val activityOrder = trainingActivitiesCursor.getInt(2)
+                            val breakDuration = trainingActivitiesCursor.getInt(3)
+
+                            val breakId = durationToBreakId[breakDuration]
+                            if (breakId != null) {
+                                database.execSQL("""
+                                    UPDATE training_activities 
+                                    SET breakId = $breakId 
+                                    WHERE tId = $tId AND aId = $aId AND activityOrder = $activityOrder
+                                """)
+                                android.util.Log.d("MIG_3", "Updated activity: tId=$tId, aId=$aId, order=$activityOrder -> breakId=$breakId")
+                            }
+                        } while (trainingActivitiesCursor.moveToNext())
+                    }
+                    trainingActivitiesCursor.close()
+
+                    // Step 5: Remove break activities from training_activities and activity tables
+                    android.util.Log.d("MIG_3", "Cleaning up break activities")
+
+                    database.execSQL("""
+                        DELETE FROM training_activities 
+                        WHERE aId IN (SELECT activityId FROM activity WHERE activityType = 'BREAK')
+                    """)
+
+                    val deletedBreakActivities = database.execSQL("""
+                        DELETE FROM activity WHERE activityType = 'BREAK'
+                    """)
+
+                    // Step 6: Validation
+                    android.util.Log.d("MIG_3", "Performing validation checks")
+
+                    val breaksCountCursor = database.query("SELECT COUNT(*) FROM breaks")
+                    breaksCountCursor.moveToFirst()
+                    val breaksCount = breaksCountCursor.getInt(0)
+                    breaksCountCursor.close()
+
+                    val activitiesWithBreaksCursor = database.query("SELECT COUNT(*) FROM training_activities WHERE breakId IS NOT NULL")
+                    activitiesWithBreaksCursor.moveToFirst()
+                    val activitiesWithBreaks = activitiesWithBreaksCursor.getInt(0)
+                    activitiesWithBreaksCursor.close()
+
+                    // Step 7: Additional validation
+                    val orphanedBreaksCursor = database.query("""
+                        SELECT COUNT(*) FROM breaks 
+                        WHERE breakId NOT IN (
+                            SELECT DISTINCT breakId FROM training_activities WHERE breakId IS NOT NULL
+                        )
+                    """)
+                    orphanedBreaksCursor.moveToFirst()
+                    val orphanedBreaks = orphanedBreaksCursor.getInt(0)
+                    orphanedBreaksCursor.close()
+
+                    val remainingBreakActivitiesCursor = database.query("SELECT COUNT(*) FROM activity WHERE activityType = 'BREAK'")
+                    remainingBreakActivitiesCursor.moveToFirst()
+                    val remainingBreakActivities = remainingBreakActivitiesCursor.getInt(0)
+                    remainingBreakActivitiesCursor.close()
+
+                    android.util.Log.i("MIG_3", "Migration completed successfully: $breaksCount unique breaks created, $activitiesWithBreaks activities have breaks")
+                    android.util.Log.i("MIG_3", "Post-migration validation: $orphanedBreaks orphaned breaks, $remainingBreakActivities remaining break activities")
+
+                    if (remainingBreakActivities > 0) {
+                        android.util.Log.w("MIG_3", "Warning: $remainingBreakActivities break activities still exist after migration")
+                    }
+
+                } catch (e: Exception) {
+                    android.util.Log.e("MIG_3", "Migration failed: ${e.message}", e)
+                    throw e
+                }
             }
         }
     }

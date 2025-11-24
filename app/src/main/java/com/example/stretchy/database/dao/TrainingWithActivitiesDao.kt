@@ -26,4 +26,7 @@ interface TrainingWithActivitiesDao {
 
     @Update
     fun update(trainingActivityEntity: TrainingActivityEntity)
+
+    @Query("UPDATE training_activities SET breakId = :breakId WHERE tId = :trainingId AND activityOrder = :activityOrder")
+    fun updateBreakId(trainingId: Long, activityOrder: Int, breakId: Long)
 }

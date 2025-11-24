@@ -9,5 +9,6 @@ import androidx.room.Entity
 class TrainingActivityEntity(
     val tId: Long,
     val aId: Long,
-    val activityOrder: Int
+    val activityOrder: Int,
+    val breakId: Long? = null // Reference to BreakEntity, null = no break after this activity
 )

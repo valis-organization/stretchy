@@ -14,7 +14,7 @@ interface ActivityDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     fun add(activityEntity: ActivityEntity): Long
 
-    @Query("SELECT * FROM activity WHERE name LIKE :name AND duration LIKE :duration")
+    @Query("SELECT * FROM activity WHERE name = :name AND duration = :duration")
     fun getConflictActivity(name: String, duration: Int): ActivityEntity
 
     @Delete
