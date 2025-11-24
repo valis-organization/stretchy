@@ -3,25 +3,27 @@ package com.example.stretchy.ui.navigation
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
-import androidx.compose.material.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.Icon
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.compose.ui.graphics.Color
-import com.example.stretchy.R
 import com.example.stretchy.Screen
-import com.example.stretchy.design.components.LocalDesignColors
-import com.example.stretchy.design.components.StretchingTheme
-import com.example.stretchy.design.components.TrainingTheme
 import com.example.stretchy.design.components.StretchingTheme
 import com.example.stretchy.design.components.TrainingTheme
 import com.example.stretchy.features.executetraining.sound.SoundPlayer
@@ -35,32 +37,14 @@ import com.example.stretchy.ui.screen.TrainingScreen
 @Composable
 fun BottomNavBar(
     storagePermissionState: StoragePermissionState,
-    soundPlayer: SoundPlayer
+    soundPlayer: SoundPlayer,
+    screens: List<BottomNavScreen>
 ) {
     val navController = rememberNavController()
     var showBottomNavBar by remember { mutableStateOf(true) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val screens = listOf(
-        BottomNavScreen(
-            R.string.stretching,
-            painterResource(id = R.drawable.ic_stretching),
-            Screen.StretchingListScreen.route
-        ),
-        BottomNavScreen(
-            R.string.meta_training,
-            painterResource(id = R.drawable.ic_meta_training),
-            Screen.MetaTrainingScreen.route
-        ),
-        BottomNavScreen(
-            R.string.training,
-            painterResource(id = R.drawable.ic_training),
-            Screen.TrainingListScreen.route
-        ),
-    )
-
-    // Determine theme based on current route and wrap content
     val content: @Composable () -> Unit = {
         Scaffold(
         bottomBar = {
@@ -141,4 +125,3 @@ fun BottomNavBar(
         else -> StretchingTheme { content() } // Default theme
     }
 }
-

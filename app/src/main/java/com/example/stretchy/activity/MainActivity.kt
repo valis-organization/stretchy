@@ -14,6 +14,10 @@ import com.example.stretchy.permission.rememberStoragePermissionState
 import com.example.stretchy.ui.navigation.BottomNavBar
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
+import com.example.stretchy.navigation.BottomNavScreen
+import com.example.stretchy.Screen
+import androidx.compose.ui.res.painterResource
+import com.example.stretchy.R
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -41,9 +45,29 @@ class MainActivity : ComponentActivity() {
             // Remember permission manager & compose state
             val permissionManager = remember { PermissionManager(this) }
             val storagePermissionState = rememberStoragePermissionState(permissionManager)
+
+            val screens = listOf(
+                BottomNavScreen(
+                    route = Screen.StretchingListScreen.route,
+                    icon = painterResource(id = R.drawable.ic_stretching),
+                    labelRes = R.string.stretching
+                ),
+                BottomNavScreen(
+                    route = Screen.TrainingListScreen.route,
+                    icon = painterResource(id = R.drawable.ic_training),
+                    labelRes = R.string.training
+                ),
+                BottomNavScreen(
+                    route = Screen.MetaTrainingScreen.route,
+                    icon = painterResource(id = R.drawable.ic_meta_training),
+                    labelRes = R.string.meta_training
+                )
+            )
+
             BottomNavBar(
                 storagePermissionState = storagePermissionState,
-                soundPlayer = soundPlayer
+                soundPlayer = soundPlayer,
+                screens = screens
             )
         }
     }
