@@ -16,7 +16,6 @@ import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPrefer
 import com.example.stretchy.features.domain.usecases.CreateTrainingUseCase
 import com.example.stretchy.features.domain.usecases.EditTrainingUseCase
 import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
-import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import androidx.lifecycle.SavedStateHandle
 import javax.inject.Inject
@@ -32,7 +31,14 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class CreateOrEditTrainingViewModel @Inject constructor(
-    repository: Repository,
+    // Clean Architecture: Use cases injected directly, no repository dependency
+    private val fetchTrainingByIdUseCase: FetchTrainingByIdUseCase,
+    private val createTrainingUseCase: CreateTrainingUseCase,
+    private val editTrainingUseCase: EditTrainingUseCase,
+    internal val breakManagementUseCase: BreakManagementUseCase,
+    private val fetchTrainingDomainUseCase: FetchTrainingDomainUseCase,
+    private val createTrainingDomainUseCase: CreateTrainingDomainUseCase,
+    private val editTrainingDomainUseCase: EditTrainingDomainUseCase,
     private val automaticBreakPreferences: AutomaticBreakPreferences,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -47,16 +53,7 @@ class CreateOrEditTrainingViewModel @Inject constructor(
         }
     } ?: TrainingType.STRETCH
 
-    // Legacy use cases for backward compatibility
-    private val fetchTrainingByIdUseCase = FetchTrainingByIdUseCase(repository)
-    private val createTrainingUseCase = CreateTrainingUseCase(repository)
-    private val editTrainingUseCase = EditTrainingUseCase(repository)
-
-    // NEW: Domain layer use cases with clean architecture
-    internal val breakManagementUseCase = BreakManagementUseCase(repository)
-    private val fetchTrainingDomainUseCase = FetchTrainingDomainUseCase(repository)
-    private val createTrainingDomainUseCase = CreateTrainingDomainUseCase(repository)
-    private val editTrainingDomainUseCase = EditTrainingDomainUseCase(repository)
+    // ✅ Use cases now injected directly - no manual instantiation needed
 
 
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
