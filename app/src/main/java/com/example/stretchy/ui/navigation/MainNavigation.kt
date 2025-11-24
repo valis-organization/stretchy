@@ -1,9 +1,5 @@
 package com.example.stretchy.ui.navigation
 
-// TODO: DEPRECATED - This file can be deleted after navigation refactoring
-// Navigation is now handled in MainNavigation.kt with single NavHost
-// This file was replaced to fix double NavHost anti-pattern
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
@@ -17,11 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -47,15 +39,24 @@ import com.example.stretchy.navigation.NavigationViewModel
 import com.example.stretchy.permission.StoragePermissionState
 import com.example.stretchy.ui.screen.MetaTrainingBottomBarScreen
 
-
+/**
+ * Main Navigation Component
+ *
+ * Single NavHost architecture that handles:
+ * - Bottom navigation tabs with state preservation
+ * - Full-screen routes (exercise creator, execute training)
+ * - Automatic bottom bar visibility management
+ * - Proper theme switching per route
+ *
+ * Replaces the old double NavHost anti-pattern
+ */
 @Composable
-fun DeprecatedBottomNavBar(
+fun MainNavigation(
     storagePermissionState: StoragePermissionState,
     soundPlayer: SoundPlayer,
     screens: List<BottomNavScreen>
 ) {
     val navController = rememberNavController()
-    var showBottomNavBar by remember { mutableStateOf(true) }
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
@@ -72,7 +73,7 @@ fun DeprecatedBottomNavBar(
         else -> true
     }
 
-    val content: @Composable () -> Unit = {
+    val contentUI: @Composable () -> Unit = {
         Scaffold(
             bottomBar = {
                 AnimatedVisibility(
@@ -169,9 +170,9 @@ fun DeprecatedBottomNavBar(
 
     // Apply appropriate theme based on current route
     when (currentRoute) {
-        Screen.StretchingListScreen.route -> StretchingTheme { content() }
-        Screen.TrainingListScreen.route -> TrainingTheme { content() }
-        Screen.MetaTrainingScreen.route -> StretchingTheme { content() } // Default to stretching theme for meta training
-        else -> StretchingTheme { content() } // Default theme
+        Screen.StretchingListScreen.route -> StretchingTheme { contentUI() }
+        Screen.TrainingListScreen.route -> TrainingTheme { contentUI() }
+        Screen.MetaTrainingScreen.route -> StretchingTheme { contentUI() } // Default to stretching theme for meta training
+        else -> StretchingTheme { contentUI() } // Default theme
     }
 }

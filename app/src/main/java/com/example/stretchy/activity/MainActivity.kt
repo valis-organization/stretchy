@@ -11,7 +11,7 @@ import androidx.core.view.WindowCompat
 import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.permission.PermissionManager
 import com.example.stretchy.permission.rememberStoragePermissionState
-import com.example.stretchy.ui.navigation.BottomNavBar
+import com.example.stretchy.ui.navigation.MainNavigation
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 import com.example.stretchy.navigation.BottomNavScreen
@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
                 )
             )
 
-            BottomNavBar(
+            MainNavigation(
                 storagePermissionState = storagePermissionState,
                 soundPlayer = soundPlayer,
                 screens = screens
