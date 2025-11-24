@@ -1,6 +1,14 @@
 package com.example.stretchy.features.createtraining.domain
 
-import com.example.stretchy.database.data.TrainingType
+// ========= PURE DOMAIN TYPES - No external dependencies =========
+
+/**
+ * Domain training type - independent of database layer
+ */
+enum class DomainTrainingType {
+    STRETCH,
+    BODYWEIGHT
+}
 
 // ========= CLEAN DOMAIN MODELS - Separated from UI and Data layers =========
 
@@ -85,7 +93,7 @@ data class TrainingDomain(
     val id: Long? = null,
     val name: String,
     val exercisesWithBreaks: List<ExerciseWithBreakDomain>,
-    val trainingType: TrainingType,
+    val trainingType: DomainTrainingType,
     val isFinished: Boolean = true
 ) {
     fun isValid(): Boolean = name.isNotBlank() &&

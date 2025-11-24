@@ -123,7 +123,7 @@ object TrainingDomainMapper {
 
         return TrainingWithActivity(
             name = name,
-            trainingType = trainingType,
+            trainingType = trainingType.toRepository(),
             finished = isFinished,
             activities = activities
         ).apply {
@@ -171,7 +171,7 @@ object TrainingDomainMapper {
             id = id,
             name = name,
             exercisesWithBreaks = exercisesWithBreaks,
-            trainingType = trainingType,
+            trainingType = trainingType.toDomain(),
             isFinished = finished
         )
     }
@@ -217,7 +217,7 @@ object TrainingDomainMapper {
         return TrainingDomain(
             name = name,
             exercisesWithBreaks = exercisesWithBreaks.toDomain(),
-            trainingType = trainingType
+            trainingType = trainingType.toDomain()
         )
     }
 }
@@ -247,3 +247,22 @@ fun TrainingWithActivity.toDomainModel(): TrainingDomain =
  */
 fun TrainingDomain.toRepositoryModel(): TrainingWithActivity =
     TrainingDomainMapper.run { toRepository() }
+
+// ========= TYPE CONVERSION - Repository ↔ Domain (MINIMAL) =========
+
+/**
+ * Convert repository TrainingType to domain type
+ */
+fun com.example.stretchy.database.data.TrainingType.toDomain(): DomainTrainingType = when (this) {
+    com.example.stretchy.database.data.TrainingType.STRETCH -> DomainTrainingType.STRETCH
+    com.example.stretchy.database.data.TrainingType.BODYWEIGHT -> DomainTrainingType.BODYWEIGHT
+}
+
+/**
+ * Convert domain type to repository TrainingType
+ */
+fun DomainTrainingType.toRepository(): com.example.stretchy.database.data.TrainingType = when (this) {
+    DomainTrainingType.STRETCH -> com.example.stretchy.database.data.TrainingType.STRETCH
+    DomainTrainingType.BODYWEIGHT -> com.example.stretchy.database.data.TrainingType.BODYWEIGHT
+}
+
