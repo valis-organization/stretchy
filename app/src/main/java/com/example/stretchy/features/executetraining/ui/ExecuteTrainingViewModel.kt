@@ -12,9 +12,8 @@ import com.example.stretchy.features.executetraining.sound.managers.SoundEventNo
 import com.example.stretchy.features.executetraining.sound.managers.SoundEventNotifierImpl
 import com.example.stretchy.features.executetraining.sound.data.TrainingEvent
 import com.example.stretchy.features.executetraining.ui.data.*
-import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
+import com.example.stretchy.features.domain.usecases.FetchTrainingByIdRepoAdapter
 import com.example.stretchy.repository.Activity
-import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import androidx.lifecycle.SavedStateHandle
 import javax.inject.Inject
@@ -28,14 +27,12 @@ import java.util.*
 
 @HiltViewModel
 class ExecuteTrainingViewModel @Inject constructor(
-    repository: Repository,
+    private val fetchTrainingByIdRepoAdapter: FetchTrainingByIdRepoAdapter,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     // Get trainingId from savedStateHandle
     val trainingId: Long = savedStateHandle.get<String>("id")?.toLongOrNull() ?: -1L
-
-    private val fetchTrainingByIdUseCase = FetchTrainingByIdUseCase(repository)
     private val _uiState = initUiState()
     val uiState: StateFlow<ExecuteTrainingUiState> = _uiState.asStateFlow()
 
@@ -66,7 +63,7 @@ class ExecuteTrainingViewModel @Inject constructor(
         }
         _uiState.value = _uiState.value.copy(isLoading = true)
         viewModelScope.launch {
-            trainingWithActivities = fetchTrainingByIdUseCase(trainingId)
+            trainingWithActivities = fetchTrainingByIdRepoAdapter(trainingId)
             initializeDisplayableList()
             initializeSoundManager()
 

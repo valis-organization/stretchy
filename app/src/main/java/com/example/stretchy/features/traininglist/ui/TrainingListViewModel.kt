@@ -5,13 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.TrainingType
 import com.example.stretchy.features.datatransport.DataExporterImpl
 import com.example.stretchy.features.datatransport.DataImporterImpl
-import com.example.stretchy.features.domain.usecases.CopyTrainingUseCase
-import com.example.stretchy.features.domain.usecases.DeleteTrainingUseCase
-import com.example.stretchy.features.domain.usecases.FetchTrainingListUseCase
+import com.example.stretchy.features.domain.usecases.CopyTrainingRepoAdapter
+import com.example.stretchy.features.domain.usecases.DeleteTrainingRepoAdapter
+import com.example.stretchy.features.domain.usecases.FetchTrainingListRepoAdapter
 import com.example.stretchy.features.traininglist.domain.toTraining
 import com.example.stretchy.features.traininglist.ui.data.Training
 import com.example.stretchy.features.traininglist.ui.data.TrainingListUiState
-import com.example.stretchy.repository.Repository
 import com.example.stretchy.repository.TrainingWithActivity
 import androidx.lifecycle.SavedStateHandle
 import javax.inject.Inject
@@ -27,15 +26,14 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class TrainingListViewModel @Inject constructor(
-    repository: Repository,
+    private val fetchTrainingListRepoAdapter: FetchTrainingListRepoAdapter,
+    private val deleteTrainingRepoAdapter: DeleteTrainingRepoAdapter,
+    private val copyTrainingRepoAdapter: CopyTrainingRepoAdapter,
     private val dataImporterImpl: DataImporterImpl,
     private val dataExporterImpl: DataExporterImpl,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val fetchTrainingListUseCase = FetchTrainingListUseCase(repository)
-    private val deleteTrainingUseCase = DeleteTrainingUseCase(repository)
-    private val copyTrainingUseCase = CopyTrainingUseCase(repository)
 
     // Get trainingType from savedStateHandle or default
     private var trainingType: TrainingType = savedStateHandle.get<TrainingType>("trainingType") ?: TrainingType.STRETCH
@@ -46,8 +44,7 @@ class TrainingListViewModel @Inject constructor(
             trainingType = type
             savedStateHandle["trainingType"] = type
             // Reload data with new training type
-            //todo fetch training missing?
-           // fetchTrainings()
+            loadTrainings()
         }
     }
     private val _uiState = MutableStateFlow<TrainingListUiState>(TrainingListUiState.Empty)
@@ -76,7 +73,7 @@ class TrainingListViewModel @Inject constructor(
     private suspend fun fetchTrainingList() {
         _uiState.value = TrainingListUiState.Loading
         try {
-            val trainingWithActivityList = fetchTrainingListUseCase()
+            val trainingWithActivityList = fetchTrainingListRepoAdapter()
             if (trainingWithActivityList.isEmpty()) {
                 _uiState.value = TrainingListUiState.Empty
             } else {
@@ -133,7 +130,7 @@ class TrainingListViewModel @Inject constructor(
     fun deleteTraining(training: Training) {
         viewModelScope.launch {
             try {
-                deleteTrainingUseCase(training.id.toLong())
+                deleteTrainingRepoAdapter(training.id.toLong())
                 fetchTrainingList()
                 _events.emit(UiEvent.ShowToast("Training '${training.name}' deleted"))
             } catch (throwable: Throwable) {
@@ -148,7 +145,7 @@ class TrainingListViewModel @Inject constructor(
     fun copyTraining(training: Training) {
         viewModelScope.launch {
             try {
-                copyTrainingUseCase(training.id.toLong())
+                copyTrainingRepoAdapter(training.id.toLong())
                 fetchTrainingList()
                 _events.emit(UiEvent.ShowToast("Training '${training.name}' copied"))
             } catch (throwable: Throwable) {
@@ -160,7 +157,5 @@ class TrainingListViewModel @Inject constructor(
         }
     }
 
-    companion object {
-        const val COPY = " copy"
-    }
+
 }

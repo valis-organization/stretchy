@@ -6,8 +6,16 @@ import com.example.stretchy.features.createtraining.domain.toRepositoryModel
 import com.example.stretchy.repository.Repository
 
 /**
- * Domain-based Training Use Cases
+ * Domain-based Training Use Cases - Business Logic Layer
+ *
  * Clean layer that works with domain models and provides validation
+ *
+ * TODO: Rename these classes to remove "Domain" suffix:
+ * - CreateTrainingDomainUseCase → CreateTrainingUseCase
+ * - EditTrainingDomainUseCase → EditTrainingUseCase
+ * - FetchTrainingDomainUseCase → FetchTrainingUseCase
+ *
+ * These contain the actual business logic, unlike repository adapters
  */
 
 /**

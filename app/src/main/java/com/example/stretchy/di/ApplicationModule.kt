@@ -58,27 +58,4 @@ object ApplicationModule {
     fun provideDataExporter(repository: Repository): DataExporterImpl {
         return DataExporterImpl(repository)
     }
-
-    // ========= USE CASE PROVIDERS - Clean Architecture =========
-
-
-    @Provides
-    @Singleton
-    fun provideBreakManagementUseCase(repository: Repository): com.example.stretchy.features.createtraining.domain.BreakManagementUseCase =
-        com.example.stretchy.features.createtraining.domain.BreakManagementUseCase(repository)
-
-    @Provides
-    @Singleton
-    fun provideFetchTrainingDomainUseCase(repository: Repository): com.example.stretchy.features.domain.usecases.FetchTrainingDomainUseCase =
-        com.example.stretchy.features.domain.usecases.FetchTrainingDomainUseCase(repository)
-
-    @Provides
-    @Singleton
-    fun provideCreateTrainingDomainUseCase(repository: Repository): com.example.stretchy.features.domain.usecases.CreateTrainingDomainUseCase =
-        com.example.stretchy.features.domain.usecases.CreateTrainingDomainUseCase(repository)
-
-    @Provides
-    @Singleton
-    fun provideEditTrainingDomainUseCase(repository: Repository): com.example.stretchy.features.domain.usecases.EditTrainingDomainUseCase =
-        com.example.stretchy.features.domain.usecases.EditTrainingDomainUseCase(repository)
 }
