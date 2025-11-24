@@ -5,13 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
-fun MetaTrainingScreen() {
+fun MetaTrainingBottomBarScreen() {
     Text("Meta Training Screen - TODO")
 }
 
 @Preview(name = "Meta Training Screen", showBackground = true)
 @Composable
-private fun MetaTrainingScreenPreview() {
-    MetaTrainingScreen()
+private fun MetaTrainingBottomBarScreenPreview() {
+    MetaTrainingBottomBarScreen()
 }
 

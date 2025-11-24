@@ -7,7 +7,7 @@ import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.navigation.Navigation
 
 @Composable
-fun StretchingScreen(
+fun TrainingBottomBarScreen(
     soundPlayer: SoundPlayer,
     grantWritePermission: () -> Unit,
     grantReadPermission: () -> Unit,
@@ -18,9 +18,9 @@ fun StretchingScreen(
         soundPlayer = soundPlayer,
         onExportClick = grantWritePermission,
         onImportClick = grantReadPermission,
-        startDestination = Screen.StretchingListScreen.route,
+        startDestination = Screen.TrainingListScreen.route,
         hideBottomNavBar = hideBottomNavBar,
         showBottomNavBar = showBottomNavBar,
-        trainingType = TrainingType.STRETCH
+        trainingType = TrainingType.BODYWEIGHT
     )
 }

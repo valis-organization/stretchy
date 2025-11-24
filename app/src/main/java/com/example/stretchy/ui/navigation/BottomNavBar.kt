@@ -29,9 +29,9 @@ import com.example.stretchy.design.components.TrainingTheme
 import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.navigation.BottomNavScreen
 import com.example.stretchy.permission.StoragePermissionState
-import com.example.stretchy.ui.screen.MetaTrainingScreen
-import com.example.stretchy.ui.screen.StretchingScreen
-import com.example.stretchy.ui.screen.TrainingScreen
+import com.example.stretchy.ui.screen.MetaTrainingBottomBarScreen
+import com.example.stretchy.ui.screen.StretchingBottomBarScreen
+import com.example.stretchy.ui.screen.TrainingBottomBarScreen
 
 
 @Composable
@@ -93,7 +93,7 @@ fun BottomNavBar(
                 .statusBarsPadding()
         ) {
             composable(Screen.StretchingListScreen.route) {
-                StretchingScreen(
+                StretchingBottomBarScreen(
                     soundPlayer = soundPlayer,
                     grantWritePermission = { storagePermissionState.requestWrite() },
                     grantReadPermission = { storagePermissionState.requestRead() },
@@ -102,10 +102,10 @@ fun BottomNavBar(
                 )
             }
             composable(Screen.MetaTrainingScreen.route) {
-                MetaTrainingScreen()
+                MetaTrainingBottomBarScreen()
             }
             composable(Screen.TrainingListScreen.route) {
-                TrainingScreen(
+                TrainingBottomBarScreen(
                     soundPlayer = soundPlayer,
                     grantWritePermission = { storagePermissionState.requestWrite() },
                     grantReadPermission = { storagePermissionState.requestRead() },
