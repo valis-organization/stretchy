@@ -1,7 +1,5 @@
 package com.example.stretchy.features.createtraining.domain
 
-import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.features.createtraining.domain.*
 import com.example.stretchy.features.createtraining.domain.TrainingDomainMapper.toDomain
 import com.example.stretchy.features.createtraining.domain.TrainingDomainMapper.toUI
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
@@ -43,7 +41,7 @@ fun createTrainingExample(): TrainingDomain {
     return TrainingDomain(
         name = "Morning Workout",
         exercisesWithBreaks = exercisesWithBreaks,
-        trainingType = TrainingType.STRETCH
+        trainingType = DomainTrainingType.STRETCH
     )
 }
 
@@ -103,7 +101,7 @@ fun validationExample(): List<String> {
                 breakAfter = BreakDomain(duration = 0) // Timeless break after invalid exercise
             )
         ),
-        trainingType = TrainingType.STRETCH
+        trainingType = DomainTrainingType.STRETCH
     )
 
     // Validate using domain rules
@@ -185,7 +183,7 @@ class ExampleViewModelUsage(
     private fun getCurrentUIState() = object {
         val name = "Test Training"
         val exercises = emptyList<ExercisesWithBreaks>()
-        val type = TrainingType.STRETCH
+        val type = com.example.stretchy.database.data.TrainingType.STRETCH
     }
 }
 

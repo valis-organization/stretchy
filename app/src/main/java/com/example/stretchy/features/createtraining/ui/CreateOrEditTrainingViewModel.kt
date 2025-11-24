@@ -3,8 +3,6 @@ package com.example.stretchy.features.createtraining.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.features.createtraining.domain.toActivityList
-import com.example.stretchy.features.createtraining.domain.toExercisesWithBreaks
 import com.example.stretchy.features.createtraining.domain.TrainingDomainMapper.toDomain
 import com.example.stretchy.features.createtraining.domain.TrainingDomainMapper.toUI
 import com.example.stretchy.features.createtraining.domain.BreakManagementUseCase
@@ -13,11 +11,9 @@ import com.example.stretchy.features.domain.usecases.CreateTrainingDomainUseCase
 import com.example.stretchy.features.domain.usecases.EditTrainingDomainUseCase
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
-import com.example.stretchy.features.domain.usecases.CreateTrainingUseCase
-import com.example.stretchy.features.domain.usecases.EditTrainingUseCase
-import com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase
-import com.example.stretchy.repository.TrainingWithActivity
 import androidx.lifecycle.SavedStateHandle
+import com.example.stretchy.features.createtraining.domain.UIDomainMapper
+import com.example.stretchy.features.createtraining.domain.toRepository
 import javax.inject.Inject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -31,10 +27,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class CreateOrEditTrainingViewModel @Inject constructor(
-    // Clean Architecture: Use cases injected directly, no repository dependency
-    private val fetchTrainingByIdUseCase: FetchTrainingByIdUseCase,
-    private val createTrainingUseCase: CreateTrainingUseCase,
-    private val editTrainingUseCase: EditTrainingUseCase,
+    // Clean Architecture: ONLY domain use cases - no repository-level use cases
     internal val breakManagementUseCase: BreakManagementUseCase,
     private val fetchTrainingDomainUseCase: FetchTrainingDomainUseCase,
     private val createTrainingDomainUseCase: CreateTrainingDomainUseCase,
@@ -71,17 +64,17 @@ class CreateOrEditTrainingViewModel @Inject constructor(
     init {
         if (trainingId != -1L) {
             viewModelScope.launch(Dispatchers.IO) {
-                val trainingWithActivities = fetchTrainingByIdUseCase(trainingId)
+                val trainingDomain = fetchTrainingDomainUseCase(trainingId)
 
-                with(trainingWithActivities) {
-                    val exerciseList = activities.toExercisesWithBreaks()
+                with(trainingDomain) {
+                    val exerciseList = exercisesWithBreaks.map { it.toUI() }
                     _uiState.emit(
                         CreateTrainingUiState.Success(
                             trainingId,
                             true,
                             name,
                             exerciseList,
-                            trainingType,
+                            this.trainingType.toRepository(),
                             false,
                             isCreateTrainingButtonVisible(name, exerciseList),
                             isAutomaticBreakButtonClicked = true
@@ -109,17 +102,28 @@ class CreateOrEditTrainingViewModel @Inject constructor(
 
     fun editTraining(trainingId: Long, exerciseList: List<ExercisesWithBreaks>) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        val activitiesList = exerciseList.toActivityList(trainingType)
         viewModelScope.launch {
             val success = (_uiState.value as? CreateTrainingUiState.Success)
             if (success != null) {
-                editTrainingUseCase(trainingId, TrainingWithActivity(
-                    stateSuccess.currentName,
-                    trainingType,
-                    true,
-                    activitiesList
-                ))
-                _uiState.emit(CreateTrainingUiState.Done)
+                try {
+                    // ✅ USE UI-DOMAIN MAPPER
+                    val domainTraining = UIDomainMapper.createDomainFromUI(
+                        trainingId = trainingId,
+                        trainingName = stateSuccess.currentName,
+                        exercisesWithBreaks = exerciseList,
+                        trainingType = trainingType
+                    )
+
+                    // ✅ USE DOMAIN USE CASE
+                    editTrainingDomainUseCase(trainingId, domainTraining)
+                    _uiState.emit(CreateTrainingUiState.Done)
+                } catch (ex: Exception) {
+                    _uiState.emit(
+                        CreateTrainingUiState.Error(
+                            CreateTrainingUiState.Error.Reason.Unknown(ex)
+                        )
+                    )
+                }
             }
         }
     }
@@ -166,25 +170,26 @@ class CreateOrEditTrainingViewModel @Inject constructor(
 
     fun createTraining(exerciseList: List<ExercisesWithBreaks>) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        val activitiesList = exerciseList.toActivityList(trainingType)
         viewModelScope.launch {
             if (stateSuccess.currentName == "") {
                 _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName))
             } else {
                 try {
-                    createTrainingUseCase(TrainingWithActivity(
-                        stateSuccess.currentName,
-                        trainingType,
-                        true,
-                        activitiesList
-                ))
-                _uiState.emit(CreateTrainingUiState.Done)
+                    // ✅ USE UI-DOMAIN MAPPER
+                    val domainTraining = UIDomainMapper.createDomainFromUI(
+                        trainingId = null,
+                        trainingName = stateSuccess.currentName,
+                        exercisesWithBreaks = exerciseList,
+                        trainingType = trainingType
+                    )
+
+                    // ✅ USE DOMAIN USE CASE
+                    createTrainingDomainUseCase(domainTraining)
+                    _uiState.emit(CreateTrainingUiState.Done)
                 } catch (ex: Exception) {
                     _uiState.emit(
                         CreateTrainingUiState.Error(
-                            CreateTrainingUiState.Error.Reason.Unknown(
-                                ex
-                            )
+                            CreateTrainingUiState.Error.Reason.Unknown(ex)
                         )
                     )
                 }
@@ -219,9 +224,10 @@ class CreateOrEditTrainingViewModel @Inject constructor(
         exerciseList: List<ExercisesWithBreaks>
     ): Boolean {
         if (trainingId != null && trainingId >= 0) {
-            val trainingFromDb = fetchTrainingByIdUseCase(trainingId)
+            val trainingFromDb = fetchTrainingDomainUseCase(trainingId)
             if (trainingFromDb.name == trainingName) {
-                if (trainingFromDb.activities.toExercisesWithBreaks() == exerciseList) {
+                val dbExerciseList = trainingFromDb.exercisesWithBreaks.map { it.toUI() }
+                if (dbExerciseList == exerciseList) {
                     return false
                 }
             }

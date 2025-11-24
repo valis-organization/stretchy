@@ -61,20 +61,6 @@ object ApplicationModule {
 
     // ========= USE CASE PROVIDERS - Clean Architecture =========
 
-    @Provides
-    @Singleton
-    fun provideFetchTrainingByIdUseCase(repository: Repository): com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase =
-        com.example.stretchy.features.domain.usecases.FetchTrainingByIdUseCase(repository)
-
-    @Provides
-    @Singleton
-    fun provideCreateTrainingUseCase(repository: Repository): com.example.stretchy.features.domain.usecases.CreateTrainingUseCase =
-        com.example.stretchy.features.domain.usecases.CreateTrainingUseCase(repository)
-
-    @Provides
-    @Singleton
-    fun provideEditTrainingUseCase(repository: Repository): com.example.stretchy.features.domain.usecases.EditTrainingUseCase =
-        com.example.stretchy.features.domain.usecases.EditTrainingUseCase(repository)
 
     @Provides
     @Singleton

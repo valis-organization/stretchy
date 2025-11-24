@@ -266,3 +266,40 @@ fun DomainTrainingType.toRepository(): com.example.stretchy.database.data.Traini
     DomainTrainingType.BODYWEIGHT -> com.example.stretchy.database.data.TrainingType.BODYWEIGHT
 }
 
+// ========= UI-DOMAIN MAPPER - Clean separation between UI and Domain layers =========
+
+/**
+ * UI-Domain Mapper - Handles all UI ↔ Domain conversions
+ * Keeps ViewModel free of mapping logic for clean architecture
+ */
+object UIDomainMapper {
+
+    /**
+     * Convert UI training data to Domain model
+     */
+    fun createDomainFromUI(
+        trainingId: Long?,
+        trainingName: String,
+        exercisesWithBreaks: List<ExercisesWithBreaks>,
+        trainingType: com.example.stretchy.database.data.TrainingType
+    ): TrainingDomain {
+        return TrainingDomain(
+            id = trainingId,
+            name = trainingName,
+            exercisesWithBreaks = TrainingDomainMapper.run { exercisesWithBreaks.toDomain() },
+            trainingType = trainingType.toDomain(),
+            isFinished = true
+        )
+    }
+}
+
+/**
+ * Extension function for UI to Domain conversion
+ */
+fun createDomainFromUIData(
+    trainingId: Long?,
+    trainingName: String,
+    exercisesWithBreaks: List<ExercisesWithBreaks>,
+    trainingType: com.example.stretchy.database.data.TrainingType
+): TrainingDomain = UIDomainMapper.createDomainFromUI(trainingId, trainingName, exercisesWithBreaks, trainingType)
+
