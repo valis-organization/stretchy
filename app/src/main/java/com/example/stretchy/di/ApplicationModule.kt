@@ -6,7 +6,9 @@ import com.example.stretchy.database.AppDatabase
 import com.example.stretchy.database.AppDatabase.Companion.MIGRATION_1_2
 import com.example.stretchy.database.AppDatabase.Companion.MIGRATION_2_3
 import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
+import com.example.stretchy.features.datatransport.DataExporter
 import com.example.stretchy.features.datatransport.DataExporterImpl
+import com.example.stretchy.features.datatransport.DataImporter
 import com.example.stretchy.features.datatransport.DataImporterImpl
 import com.example.stretchy.features.executetraining.sound.SoundPlayer
 import com.example.stretchy.repository.Repository
@@ -49,13 +51,13 @@ object ApplicationModule {
 
     @Provides
     @Singleton
-    fun provideDataImporter(repository: Repository): DataImporterImpl {
+    fun provideDataImporter(repository: Repository): DataImporter {
         return DataImporterImpl(repository)
     }
 
     @Provides
     @Singleton
-    fun provideDataExporter(repository: Repository): DataExporterImpl {
+    fun provideDataExporter(repository: Repository): DataExporter {
         return DataExporterImpl(repository)
     }
 }

@@ -3,8 +3,8 @@ package com.example.stretchy.features.traininglist.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.features.datatransport.DataExporterImpl
-import com.example.stretchy.features.datatransport.DataImporterImpl
+import com.example.stretchy.features.datatransport.DataExporter
+import com.example.stretchy.features.datatransport.DataImporter
 import com.example.stretchy.features.domain.usecases.CopyTrainingRepoAdapter
 import com.example.stretchy.features.domain.usecases.DeleteTrainingRepoAdapter
 import com.example.stretchy.features.domain.usecases.FetchTrainingListRepoAdapter
@@ -29,8 +29,8 @@ class TrainingListViewModel @Inject constructor(
     private val fetchTrainingListRepoAdapter: FetchTrainingListRepoAdapter,
     private val deleteTrainingRepoAdapter: DeleteTrainingRepoAdapter,
     private val copyTrainingRepoAdapter: CopyTrainingRepoAdapter,
-    private val dataImporterImpl: DataImporterImpl,
-    private val dataExporterImpl: DataExporterImpl,
+    private val dataImporter: DataImporter,
+    private val dataExporter: DataExporter,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -94,7 +94,7 @@ class TrainingListViewModel @Inject constructor(
 
     suspend fun import() {
         try {
-            dataImporterImpl.importData()
+            dataImporter.importData()
             fetchTrainingList()
         } catch (throwable: Throwable) {
             _uiState.value = TrainingListUiState.Error(
@@ -107,7 +107,7 @@ class TrainingListViewModel @Inject constructor(
     fun export() {
         viewModelScope.launch {
             try {
-                dataExporterImpl.exportData()
+                dataExporter.exportData()
                 _events.emit(UiEvent.ShowToast("Data exported successfully"))
             } catch (throwable: Throwable) {
                 _events.emit(UiEvent.ShowErrorDialog(throwable.localizedMessage ?: "Failed to export data"))
