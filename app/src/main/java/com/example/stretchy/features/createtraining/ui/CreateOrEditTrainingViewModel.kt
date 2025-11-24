@@ -53,7 +53,7 @@ class CreateOrEditTrainingViewModel @Inject constructor(
     private val editTrainingUseCase = EditTrainingUseCase(repository)
 
     // NEW: Domain layer use cases with clean architecture
-    private val breakManagementUseCase = BreakManagementUseCase(repository)
+    internal val breakManagementUseCase = BreakManagementUseCase(repository)
     private val fetchTrainingDomainUseCase = FetchTrainingDomainUseCase(repository)
     private val createTrainingDomainUseCase = CreateTrainingDomainUseCase(repository)
     private val editTrainingDomainUseCase = EditTrainingDomainUseCase(repository)

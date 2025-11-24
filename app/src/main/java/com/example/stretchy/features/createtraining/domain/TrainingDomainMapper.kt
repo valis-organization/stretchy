@@ -99,7 +99,7 @@ object TrainingDomainMapper {
                 activityOrder = index,
                 duration = exerciseWithBreak.exercise.duration,
                 activityType = when {
-                    exerciseWithBreak.exercise.duration == 0 -> ActivityType.HOLD
+                    exerciseWithBreak.exercise.duration == 0 -> ActivityType.TIMELESS_EXERCISE
                     else -> ActivityType.STRETCH // Default based on training type
                 }
             ).apply {
