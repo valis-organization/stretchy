@@ -6,6 +6,7 @@ import com.example.stretchy.database.AppDatabase
 import com.example.stretchy.database.AppDatabase.Companion.MIGRATION_1_2
 import com.example.stretchy.database.AppDatabase.Companion.MIGRATION_2_3
 import com.example.stretchy.database.AppDatabase.Companion.MIGRATION_3_4
+import com.example.stretchy.database.AppDatabase.Companion.MIGRATION_4_5
 import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
 import com.example.stretchy.features.datatransport.DataExporter
 import com.example.stretchy.features.datatransport.DataExporterImpl
@@ -36,7 +37,7 @@ object ApplicationModule {
     fun provideDataBase(@ApplicationContext context: Context): AppDatabase = Room.databaseBuilder(
         context,
         AppDatabase::class.java, AppDatabase.NAME
-    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
+    ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
 
     @Provides
     @Singleton

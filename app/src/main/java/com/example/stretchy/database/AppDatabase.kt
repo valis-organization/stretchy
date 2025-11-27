@@ -6,32 +6,47 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.example.stretchy.database.converter.WorkoutTypeConverter
+import com.example.stretchy.database.dao.TrainingDao
 import com.example.stretchy.database.converter.ActivityTypeConverter
 import com.example.stretchy.database.converter.TrainingTypeConverter
-import com.example.stretchy.database.converter.WorkoutTypeConverter
 import com.example.stretchy.database.dao.ActivityDao
-import com.example.stretchy.database.dao.TrainingDao
 import com.example.stretchy.database.dao.TrainingWithActivitiesDao
 import com.example.stretchy.database.dao.WorkoutDao
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.entity.ActivityEntity
 import com.example.stretchy.database.entity.TrainingActivityEntity
 import com.example.stretchy.database.entity.TrainingEntity
-import com.example.stretchy.database.entity.BreakEntity
 import com.example.stretchy.database.entity.WorkoutEntity
 import com.example.stretchy.database.dao.BreakDao
+import com.example.stretchy.database.entity.BreakEntity
 
 @Database(
-    entities = [TrainingEntity::class, ActivityEntity::class, TrainingActivityEntity::class, BreakEntity::class, WorkoutEntity::class],
-    version = 4
+    entities = [
+        TrainingEntity::class,
+        WorkoutEntity::class,
+        // Old entities kept for migration code compatibility - tables dropped in MIGRATION_4_5
+        ActivityEntity::class,
+        TrainingActivityEntity::class,
+        BreakEntity::class
+    ],
+    version = 5,
+    exportSchema = false
 )
 @TypeConverters(TrainingTypeConverter::class, ActivityTypeConverter::class, WorkoutTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun activityDao(): ActivityDao
     abstract fun trainingDao(): TrainingDao
-    abstract fun breakDao(): BreakDao
-    abstract fun trainingWithActivitiesDao(): TrainingWithActivitiesDao
     abstract fun workoutDao(): WorkoutDao
+
+    // Old DAOs - kept for migration code compatibility but not used in new code
+    @Deprecated("Old structure - only for migration compatibility")
+    abstract fun activityDao(): ActivityDao
+
+    @Deprecated("Old structure - only for migration compatibility")
+    abstract fun breakDao(): BreakDao
+
+    @Deprecated("Old structure - only for migration compatibility")
+    abstract fun trainingWithActivitiesDao(): TrainingWithActivitiesDao
 
     companion object {
         const val NAME = "stretchydb"
@@ -587,6 +602,60 @@ abstract class AppDatabase : RoomDatabase() {
                 cursor.close()
 
                 return sequenceIds.joinToString(",")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                android.util.Log.i("MIG_5", "Starting migration from version 4 to 5: Cleanup old database structures")
+
+                try {
+                    // Step 1: Drop old tables that are no longer needed
+                    android.util.Log.d("MIG_5", "Dropping training_activities table")
+                    database.execSQL("DROP TABLE IF EXISTS training_activities")
+
+                    android.util.Log.d("MIG_5", "Dropping activity table")
+                    database.execSQL("DROP TABLE IF EXISTS activity")
+
+                    android.util.Log.d("MIG_5", "Dropping breaks table")
+                    database.execSQL("DROP TABLE IF EXISTS breaks")
+
+                    // Step 2: Add composite index on workout table for better deduplication lookup
+                    android.util.Log.d("MIG_5", "Adding composite index on workout for find/create operations")
+                    database.execSQL("""
+                        CREATE INDEX IF NOT EXISTS index_workout_lookup 
+                        ON workout(name, durationSeconds, workoutType)
+                    """)
+
+                    // Step 3: Validation - check that all trainings have valid sequences
+                    val cursor = database.query("""
+                        SELECT trainingId, name, sequence, isDraft 
+                        FROM training 
+                        WHERE isDraft IS NULL AND (sequence IS NULL OR sequence = '')
+                    """)
+
+                    var invalidCount = 0
+                    cursor.use {
+                        while (it.moveToNext()) {
+                            invalidCount++
+                            val tId = it.getLong(0)
+                            val name = it.getString(1)
+                            android.util.Log.w("MIG_5", "Training $tId ($name) is saved but has empty sequence")
+                        }
+                    }
+
+                    if (invalidCount > 0) {
+                        android.util.Log.w("MIG_5", "Found $invalidCount saved trainings with invalid sequences - data may need repair")
+                    }
+
+                    android.util.Log.i("MIG_5", "✅ Migration 4->5 completed successfully")
+                    android.util.Log.i("MIG_5", "Database cleanup: Removed old tables (training_activities, activity, breaks)")
+                    android.util.Log.i("MIG_5", "New structure: training + workout tables with optimized indexes")
+
+                } catch (e: Exception) {
+                    android.util.Log.e("MIG_5", "❌ Migration 4->5 failed: ${e.message}", e)
+                    throw e
+                }
             }
         }
     }
