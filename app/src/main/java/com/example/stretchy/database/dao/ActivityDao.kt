@@ -15,7 +15,7 @@ interface ActivityDao {
     fun add(activityEntity: ActivityEntity): Long
 
     @Query("SELECT * FROM activity WHERE name = :name AND duration = :duration")
-    fun getConflictActivity(name: String, duration: Int): ActivityEntity
+    fun getConflictActivity(name: String, duration: Int): ActivityEntity?
 
     @Delete
     fun delete(activityEntity: ActivityEntity)

@@ -19,7 +19,9 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
             val tId = generateTrainingId()
             addTrainingWithActivitiesToDb(training.activities, tId)
             with(training) {
-                db.trainingDao().add(TrainingEntity(tId, name, trainingType, finished))
+                // TODO: Build proper sequence from activities in later step
+                val isDraft = if (finished) null else true
+                db.trainingDao().add(TrainingEntity(tId, name, trainingType, isDraft, ""))
             }
         }
     }
@@ -35,7 +37,9 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
             )
             addTrainingWithActivitiesToDb(editedTraining.activities, trainingId)
             with(editedTraining) {
-                db.trainingDao().update(TrainingEntity(trainingId, name, trainingType, finished))
+                // TODO: Build proper sequence from activities in later step
+                val isDraft = if (finished) null else true
+                db.trainingDao().update(TrainingEntity(trainingId, name, trainingType, isDraft, ""))
             }
         }
     }
@@ -116,7 +120,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
             return TrainingWithActivity(
                 name,
                 trainingType,
-                finished,
+                isDraft != true, // isDraft=null or false means finished=true
                 activitiesMapped.sortedBy { it.activityOrder }
             ).apply { id = trainingId }
         }
@@ -163,7 +167,7 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
                 val result = db.activityDao()
                     .add(ActivityEntity(aId, name, duration, activityType))
                 if (result == -1L) {
-                    aId = db.activityDao().getConflictActivity(name, duration).activityId
+                    aId = db.activityDao().getConflictActivity(name, duration)?.activityId ?: aId
                 }
 
                 // Check if there's a break after this activity

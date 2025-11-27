@@ -8,26 +8,30 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.stretchy.database.converter.ActivityTypeConverter
 import com.example.stretchy.database.converter.TrainingTypeConverter
+import com.example.stretchy.database.converter.WorkoutTypeConverter
 import com.example.stretchy.database.dao.ActivityDao
 import com.example.stretchy.database.dao.TrainingDao
 import com.example.stretchy.database.dao.TrainingWithActivitiesDao
+import com.example.stretchy.database.dao.WorkoutDao
 import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.entity.ActivityEntity
 import com.example.stretchy.database.entity.TrainingActivityEntity
 import com.example.stretchy.database.entity.TrainingEntity
 import com.example.stretchy.database.entity.BreakEntity
+import com.example.stretchy.database.entity.WorkoutEntity
 import com.example.stretchy.database.dao.BreakDao
 
 @Database(
-    entities = [TrainingEntity::class, ActivityEntity::class, TrainingActivityEntity::class, BreakEntity::class],
-    version = 3
+    entities = [TrainingEntity::class, ActivityEntity::class, TrainingActivityEntity::class, BreakEntity::class, WorkoutEntity::class],
+    version = 4
 )
-@TypeConverters(TrainingTypeConverter::class, ActivityTypeConverter::class)
+@TypeConverters(TrainingTypeConverter::class, ActivityTypeConverter::class, WorkoutTypeConverter::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun activityDao(): ActivityDao
     abstract fun trainingDao(): TrainingDao
     abstract fun breakDao(): BreakDao
     abstract fun trainingWithActivitiesDao(): TrainingWithActivitiesDao
+    abstract fun workoutDao(): WorkoutDao
 
     companion object {
         const val NAME = "stretchydb"
@@ -395,6 +399,194 @@ abstract class AppDatabase : RoomDatabase() {
                     android.util.Log.e("MIG_3", "Migration failed: ${e.message}", e)
                     throw e
                 }
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            @SuppressLint("Range")
+            override fun migrate(database: SupportSQLiteDatabase) {
+                android.util.Log.i("MIG_4", "Starting migration from version 3 to 4: New workout structure")
+
+                try {
+                    // Step 1: Create workout table
+                    android.util.Log.d("MIG_4", "Creating workout table")
+                    database.execSQL("""
+                        CREATE TABLE workout (
+                            workoutId INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                            name TEXT NOT NULL,
+                            durationSeconds INTEGER NOT NULL,
+                            workoutType TEXT NOT NULL
+                        )
+                    """)
+
+                    // Step 2: Migrate activities and breaks to workout table
+                    android.util.Log.d("MIG_4", "Migrating activities to workouts")
+
+                    // Map old activity types to new workout types
+                    // STRETCH -> STRETCH, EXERCISE/TIMELESS_EXERCISE -> BODYWEIGHT
+                    database.execSQL("""
+                        INSERT INTO workout (name, durationSeconds, workoutType)
+                        SELECT 
+                            name,
+                            duration,
+                            CASE 
+                                WHEN activityType = 'STRETCH' THEN 'STRETCH'
+                                WHEN activityType = 'EXERCISE' THEN 'BODYWEIGHT'
+                                WHEN activityType = 'TIMELESS_EXERCISE' THEN 'BODYWEIGHT'
+                                ELSE 'BODYWEIGHT'
+                            END
+                        FROM activity
+                    """)
+
+                    // Step 3: Create mapping from old activityId to new workoutId
+                    android.util.Log.d("MIG_4", "Creating activity to workout ID mapping")
+                    val activityToWorkoutMap = mutableMapOf<Long, Long>()
+
+                    val activityCursor = database.query("SELECT activityId FROM activity ORDER BY activityId")
+                    val workoutCursor = database.query("SELECT workoutId FROM workout ORDER BY workoutId")
+
+                    if (activityCursor.moveToFirst() && workoutCursor.moveToFirst()) {
+                        do {
+                            val activityId = activityCursor.getLong(0)
+                            val workoutId = workoutCursor.getLong(0)
+                            activityToWorkoutMap[activityId] = workoutId
+                        } while (activityCursor.moveToNext() && workoutCursor.moveToNext())
+                    }
+                    activityCursor.close()
+                    workoutCursor.close()
+
+                    // Step 4: Migrate breaks to workout table
+                    android.util.Log.d("MIG_4", "Migrating breaks to workouts")
+
+                    val breakToWorkoutMap = mutableMapOf<Long, Long>()
+                    val breakCursor = database.query("SELECT breakId, duration FROM breaks")
+
+                    if (breakCursor.moveToFirst()) {
+                        do {
+                            val breakId = breakCursor.getLong(0)
+                            val duration = breakCursor.getInt(1)
+
+                            database.execSQL("""
+                                INSERT INTO workout (name, durationSeconds, workoutType)
+                                VALUES ('Break', $duration, 'BREAK')
+                            """)
+
+                            val newWorkoutIdCursor = database.query("SELECT last_insert_rowid()")
+                            newWorkoutIdCursor.moveToFirst()
+                            val workoutId = newWorkoutIdCursor.getLong(0)
+                            newWorkoutIdCursor.close()
+
+                            breakToWorkoutMap[breakId] = workoutId
+                            android.util.Log.d("MIG_4", "Migrated break: breakId=$breakId -> workoutId=$workoutId, duration=$duration")
+                        } while (breakCursor.moveToNext())
+                    }
+                    breakCursor.close()
+
+                    // Step 5: Update training table - add isDraft and sequence columns
+                    android.util.Log.d("MIG_4", "Updating training table structure")
+
+                    // Create new training table with updated schema
+                    database.execSQL("""
+                        CREATE TABLE training_new (
+                            trainingId INTEGER NOT NULL PRIMARY KEY,
+                            name TEXT NOT NULL,
+                            trainingType TEXT NOT NULL,
+                            isDraft INTEGER,
+                            sequence TEXT NOT NULL
+                        )
+                    """)
+
+                    // Step 6: Migrate training data and build sequences
+                    android.util.Log.d("MIG_4", "Migrating training data and building sequences")
+
+                    val trainingCursor = database.query("SELECT trainingId, name, trainingType, finished FROM training")
+
+                    if (trainingCursor.moveToFirst()) {
+                        do {
+                            val trainingId = trainingCursor.getLong(0)
+                            val name = trainingCursor.getString(1)
+                            val trainingType = trainingCursor.getString(2)
+                            val finished = trainingCursor.getInt(3) == 1
+                            val isDraft = if (finished) null else 1
+
+                            // Build sequence from training_activities
+                            val sequence = buildSequenceForTraining(database, trainingId, activityToWorkoutMap, breakToWorkoutMap)
+
+                            val isDraftValue = if (isDraft == null) "NULL" else "1"
+                            database.execSQL("""
+                                INSERT INTO training_new (trainingId, name, trainingType, isDraft, sequence)
+                                VALUES ($trainingId, '${name.replace("'", "''")}', '$trainingType', $isDraftValue, '$sequence')
+                            """)
+
+                            android.util.Log.d("MIG_4", "Migrated training: id=$trainingId, sequence=$sequence")
+                        } while (trainingCursor.moveToNext())
+                    }
+                    trainingCursor.close()
+
+                    // Step 7: Replace old training table with new one
+                    database.execSQL("DROP TABLE training")
+                    database.execSQL("ALTER TABLE training_new RENAME TO training")
+
+                    // Step 8: Validation
+                    android.util.Log.d("MIG_4", "Performing validation checks")
+
+                    val workoutCountCursor = database.query("SELECT COUNT(*) FROM workout")
+                    workoutCountCursor.moveToFirst()
+                    val workoutCount = workoutCountCursor.getInt(0)
+                    workoutCountCursor.close()
+
+                    val trainingCountCursor = database.query("SELECT COUNT(*) FROM training")
+                    trainingCountCursor.moveToFirst()
+                    val trainingCount = trainingCountCursor.getInt(0)
+                    trainingCountCursor.close()
+
+                    android.util.Log.i("MIG_4", "Migration completed successfully: $workoutCount workouts created, $trainingCount trainings migrated")
+
+                } catch (e: Exception) {
+                    android.util.Log.e("MIG_4", "Migration failed: ${e.message}", e)
+                    throw e
+                }
+            }
+
+            @SuppressLint("Range")
+            private fun buildSequenceForTraining(
+                database: SupportSQLiteDatabase,
+                trainingId: Long,
+                activityToWorkoutMap: Map<Long, Long>,
+                breakToWorkoutMap: Map<Long, Long>
+            ): String {
+                val sequenceIds = mutableListOf<Long>()
+
+                // Query training_activities ordered by activityOrder (which should be 0,2,4,6 etc)
+                val cursor = database.query("""
+                    SELECT aId, activityOrder, breakId
+                    FROM training_activities
+                    WHERE tId = $trainingId
+                    ORDER BY activityOrder
+                """)
+
+                if (cursor.moveToFirst()) {
+                    do {
+                        val aId = cursor.getLong(cursor.getColumnIndex("aId"))
+                        val breakIdIndex = cursor.getColumnIndex("breakId")
+                        val breakId = if (cursor.isNull(breakIdIndex)) null else cursor.getLong(breakIdIndex)
+
+                        // Add workout ID for this activity
+                        activityToWorkoutMap[aId]?.let { workoutId ->
+                            sequenceIds.add(workoutId)
+                        }
+
+                        // Add workout ID for break if present
+                        breakId?.let { bId ->
+                            breakToWorkoutMap[bId]?.let { workoutId ->
+                                sequenceIds.add(workoutId)
+                            }
+                        }
+                    } while (cursor.moveToNext())
+                }
+                cursor.close()
+
+                return sequenceIds.joinToString(",")
             }
         }
     }
