@@ -1,7 +1,6 @@
 package com.example.stretchy.features.createtraining.domain
 
 import android.util.Log
-import com.example.stretchy.database.entity.BreakEntity
 import com.example.stretchy.repository.Repository
 
 private const val DOMAIN_TAG = "DOMAIN_BREAK"
@@ -17,24 +16,29 @@ class BreakManagementUseCase(private val repository: Repository) {
      * Creates or finds existing break with given duration
      * @param duration Break duration (0 = timeless, >0 = timed in seconds)
      * @return BreakDomain with proper validation
+     * Note: Breaks are now WorkoutEntity with type=BREAK, ID is workout ID
      */
     suspend fun findOrCreateBreak(duration: Int): BreakDomain {
         Log.d(DOMAIN_TAG, "Finding or creating break with duration=$duration")
 
         require(duration >= 0) { "Break duration cannot be negative: $duration" }
 
-        val breakEntity = repository.findOrCreateBreak(duration)
-        return breakEntity.toDomain()
+        val workoutId = repository.findOrCreateBreakWorkout(duration)
+        return BreakDomain(
+            id = workoutId,
+            duration = duration,
+            isActive = true
+        )
     }
 
     /**
      * Smart break editing with automatic sharing logic
-     * - If only one usage: update in place
-     * - If multiple usages: switch to existing break or create new
      * - If no duration: remove break
-     * @param currentBreakId Current break ID (null if no break)
+     * - Otherwise: find or create break workout with new duration
+     * @param currentBreakId Current break workout ID (null if no break)
      * @param newDuration New duration (null to remove break, 0 = timeless, >0 = timed)
-     * @return New break ID or null if removed
+     * @return New break workout ID or null if removed
+     * Note: Breaks are now WorkoutEntity with type=BREAK, so we just find/create workout
      */
     suspend fun editBreakSmart(currentBreakId: Long?, newDuration: Int?): BreakDomain? {
         Log.d(DOMAIN_TAG, "Smart break edit: currentId=$currentBreakId, newDuration=$newDuration")
@@ -44,23 +48,28 @@ class BreakManagementUseCase(private val repository: Repository) {
             require(newDuration >= 0) { "Break duration cannot be negative: $newDuration" }
         }
 
-        val newBreakId = repository.editBreakSmart(currentBreakId, newDuration)
-
-        return if (newBreakId != null && newDuration != null) {
-            BreakDomain(id = newBreakId, duration = newDuration)
-        } else {
-            null
+        // If no new duration, return null (no break)
+        if (newDuration == null) {
+            return null
         }
+
+        // Find or create workout for this break duration
+        val newWorkoutId = repository.findOrCreateBreakWorkout(newDuration)
+
+        return BreakDomain(id = newWorkoutId, duration = newDuration, isActive = true)
     }
 
     /**
      * Deletes break if it's not used by any exercises
-     * @param breakId Break ID to delete
+     * @param breakId Break workout ID to delete
      * @return true if deleted, false if still in use
+     * Note: With new structure, orphaned workouts are automatically cleaned up
+     * This method is kept for compatibility but does nothing
      */
     suspend fun deleteBreakIfUnused(breakId: Long): Boolean {
-        Log.d(DOMAIN_TAG, "Attempting to delete unused break id=$breakId")
-        return repository.deleteBreakIfUnused(breakId)
+        Log.d(DOMAIN_TAG, "deleteBreakIfUnused is deprecated - workouts are auto-cleaned")
+        // Workouts (including breaks) are automatically cleaned up by cleanupOrphanedWorkouts()
+        return false
     }
 
     /**
@@ -159,20 +168,5 @@ data class BreakUsageInfo(
 }
 
 // ========= DOMAIN MAPPERS - Clean conversion between layers =========
-
-/**
- * Extension function to convert BreakEntity to BreakDomain
- */
-fun BreakEntity.toDomain(): BreakDomain = BreakDomain(
-    id = breakId,
-    duration = duration,
-    isActive = true
-)
-
-/**
- * Extension function to convert BreakDomain to BreakEntity
- */
-fun BreakDomain.toEntity(): BreakEntity = BreakEntity(
-    breakId = id ?: 0,
-    duration = duration
-)
+// Note: BreakEntity mappers removed - breaks are now WorkoutEntity with type=BREAK
+// BreakDomain now uses workout ID directly

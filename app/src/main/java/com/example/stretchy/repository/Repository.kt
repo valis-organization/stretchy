@@ -1,7 +1,5 @@
 package com.example.stretchy.repository
 
-import com.example.stretchy.database.entity.BreakEntity
-
 interface Repository {
     suspend fun getTrainingsWithActivities(): List<TrainingWithActivity>
     suspend fun getTrainingWithActivitiesById(id: Long): TrainingWithActivity
@@ -9,8 +7,6 @@ interface Repository {
     suspend fun editTrainingWithActivities(trainingId: Long, editedTraining: TrainingWithActivity)
     suspend fun deleteTrainingById(trainingId: Long)
 
-    // Break management methods
-    suspend fun findOrCreateBreak(duration: Int): BreakEntity
-    suspend fun editBreakSmart(currentBreakId: Long?, newDuration: Int?): Long?
-    suspend fun deleteBreakIfUnused(breakId: Long): Boolean
+    // Break management - breaks are now WorkoutEntity with type=BREAK
+    suspend fun findOrCreateBreakWorkout(durationSeconds: Int): Long
 }
