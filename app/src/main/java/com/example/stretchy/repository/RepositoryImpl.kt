@@ -19,41 +19,55 @@ private const val REPO_TAG = "REPOSITORY"
 class RepositoryImpl(private val db: AppDatabase) : Repository {
     override suspend fun addTrainingWithActivities(training: TrainingWithActivity) {
         withContext(Dispatchers.IO) {
-            val tId = generateTrainingId()
+            // Validate input
+            if (training.activities.isEmpty()) {
+                Log.e(REPO_TAG, "Cannot add training with empty activities list")
+                throw IllegalArgumentException("Training must have at least one activity")
+            }
 
-            // Create/reuse workouts and build sequence
-            val workoutIds = mutableListOf<Long>()
+            // Use transaction for data integrity
+            db.runInTransaction {
+                val tId = generateTrainingId()
 
-            training.activities.forEach { activity ->
-                val workoutType = when (activity.activityType) {
-                    com.example.stretchy.database.data.ActivityType.STRETCH -> WorkoutType.STRETCH
-                    com.example.stretchy.database.data.ActivityType.EXERCISE,
-                    com.example.stretchy.database.data.ActivityType.TIMELESS_EXERCISE -> WorkoutType.BODYWEIGHT
-                    com.example.stretchy.database.data.ActivityType.BREAK -> WorkoutType.BREAK
+                // Create/reuse workouts and build sequence
+                val workoutIds = mutableListOf<Long>()
+
+                training.activities.forEach { activity ->
+                    val workoutType = when (activity.activityType) {
+                        com.example.stretchy.database.data.ActivityType.STRETCH -> WorkoutType.STRETCH
+                        com.example.stretchy.database.data.ActivityType.EXERCISE,
+                        com.example.stretchy.database.data.ActivityType.TIMELESS_EXERCISE -> WorkoutType.BODYWEIGHT
+                        com.example.stretchy.database.data.ActivityType.BREAK -> WorkoutType.BREAK
+                    }
+
+                    val workoutId = findOrCreateWorkout(
+                        name = activity.name,
+                        durationSeconds = activity.duration,
+                        workoutType = workoutType
+                    )
+
+                    workoutIds.add(workoutId)
+                    Log.d(REPO_TAG, "Added workout to sequence: id=$workoutId, name=${activity.name}, type=$workoutType")
                 }
 
-                val workoutId = findOrCreateWorkout(
-                    name = activity.name,
-                    durationSeconds = activity.duration,
-                    workoutType = workoutType
-                )
+                // Build comma-separated sequence
+                val sequence = workoutIds.joinToString(",")
+                Log.d(REPO_TAG, "Built sequence for training $tId: $sequence")
 
-                workoutIds.add(workoutId)
-                Log.d(REPO_TAG, "Added workout to sequence: id=$workoutId, name=${activity.name}, type=$workoutType")
+                // Validate sequence integrity before saving
+                if (!validateSequenceIntegrity(sequence)) {
+                    throw IllegalStateException("Sequence validation failed for training $tId")
+                }
+
+                // Save training with sequence
+                with(training) {
+                    val isDraft = if (finished) null else true
+                    db.trainingDao().add(TrainingEntity(tId, name, trainingType, isDraft, sequence))
+                }
+
+                // Also maintain backward compatibility with training_activities (temporary)
+                addTrainingWithActivitiesToDb(training.activities, tId)
             }
-
-            // Build comma-separated sequence
-            val sequence = workoutIds.joinToString(",")
-            Log.d(REPO_TAG, "Built sequence for training $tId: $sequence")
-
-            // Save training with sequence
-            with(training) {
-                val isDraft = if (finished) null else true
-                db.trainingDao().add(TrainingEntity(tId, name, trainingType, isDraft, sequence))
-            }
-
-            // Also maintain backward compatibility with training_activities (temporary)
-            addTrainingWithActivitiesToDb(training.activities, tId)
         }
     }
 
@@ -62,69 +76,100 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
         editedTraining: TrainingWithActivity
     ) {
         withContext(Dispatchers.IO) {
-            // Get old training to check for orphaned workouts later
+            // Validate input
+            if (editedTraining.activities.isEmpty()) {
+                Log.e(REPO_TAG, "Cannot edit training with empty activities list")
+                throw IllegalArgumentException("Training must have at least one activity")
+            }
+
+            // Get old training data before transaction
             val oldTraining = db.trainingDao().getById(trainingId)
             val oldSequence = oldTraining?.sequence ?: ""
 
-            // Create/reuse workouts and build new sequence
-            val workoutIds = mutableListOf<Long>()
+            // Get old training for backward compatibility (before editing)
+            val oldTrainingWithActivities = try {
+                getTrainingWithActivitiesById(trainingId)
+            } catch (e: Exception) {
+                null
+            }
 
-            editedTraining.activities.forEach { activity ->
-                val workoutType = when (activity.activityType) {
-                    com.example.stretchy.database.data.ActivityType.STRETCH -> WorkoutType.STRETCH
-                    com.example.stretchy.database.data.ActivityType.EXERCISE,
-                    com.example.stretchy.database.data.ActivityType.TIMELESS_EXERCISE -> WorkoutType.BODYWEIGHT
-                    com.example.stretchy.database.data.ActivityType.BREAK -> WorkoutType.BREAK
+            // Use transaction for data integrity
+            db.runInTransaction {
+                // Create/reuse workouts and build new sequence
+                val workoutIds = mutableListOf<Long>()
+
+                editedTraining.activities.forEach { activity ->
+                    val workoutType = when (activity.activityType) {
+                        com.example.stretchy.database.data.ActivityType.STRETCH -> WorkoutType.STRETCH
+                        com.example.stretchy.database.data.ActivityType.EXERCISE,
+                        com.example.stretchy.database.data.ActivityType.TIMELESS_EXERCISE -> WorkoutType.BODYWEIGHT
+                        com.example.stretchy.database.data.ActivityType.BREAK -> WorkoutType.BREAK
+                    }
+
+                    val workoutId = findOrCreateWorkout(
+                        name = activity.name,
+                        durationSeconds = activity.duration,
+                        workoutType = workoutType
+                    )
+
+                    workoutIds.add(workoutId)
                 }
 
-                val workoutId = findOrCreateWorkout(
-                    name = activity.name,
-                    durationSeconds = activity.duration,
-                    workoutType = workoutType
-                )
+                // Build comma-separated sequence
+                val newSequence = workoutIds.joinToString(",")
+                Log.d(REPO_TAG, "Updated sequence for training $trainingId: old=$oldSequence, new=$newSequence")
 
-                workoutIds.add(workoutId)
+                // Validate sequence integrity before saving
+                if (!validateSequenceIntegrity(newSequence)) {
+                    throw IllegalStateException("Sequence validation failed for training $trainingId")
+                }
+
+                // Update training with new sequence
+                with(editedTraining) {
+                    val isDraft = if (finished) null else true
+                    db.trainingDao().update(TrainingEntity(trainingId, name, trainingType, isDraft, newSequence))
+                }
+
+                // Clean up orphaned workouts from old sequence
+                cleanupOrphanedWorkouts(oldSequence, newSequence)
+
+                // Also maintain backward compatibility with training_activities (temporary)
+                oldTrainingWithActivities?.let {
+                    deleteActivitiesFromTraining(it.activities, trainingId)
+                }
+                addTrainingWithActivitiesToDb(editedTraining.activities, trainingId)
             }
-
-            // Build comma-separated sequence
-            val newSequence = workoutIds.joinToString(",")
-            Log.d(REPO_TAG, "Updated sequence for training $trainingId: old=$oldSequence, new=$newSequence")
-
-            // Update training with new sequence
-            with(editedTraining) {
-                val isDraft = if (finished) null else true
-                db.trainingDao().update(TrainingEntity(trainingId, name, trainingType, isDraft, newSequence))
-            }
-
-            // Clean up orphaned workouts from old sequence
-            cleanupOrphanedWorkouts(oldSequence, newSequence)
-
-            // Also maintain backward compatibility with training_activities (temporary)
-            deleteActivitiesFromTraining(
-                getTrainingWithActivitiesById(trainingId).activities,
-                trainingId
-            )
-            addTrainingWithActivitiesToDb(editedTraining.activities, trainingId)
         }
     }
 
     override suspend fun deleteTrainingById(trainingId: Long) {
         withContext(Dispatchers.IO) {
-            // Get training to clean up its workouts
+            // Get training data before transaction
             val training = db.trainingDao().getById(trainingId)
             val sequence = training?.sequence ?: ""
 
-            // Delete training
-            db.trainingDao().deleteById(trainingId = trainingId)
-
-            // Clean up orphaned workouts
-            if (sequence.isNotEmpty()) {
-                cleanupOrphanedWorkouts(sequence, "")
+            // Get old training for backward compatibility (before deletion)
+            val oldTraining = try {
+                getTrainingWithActivitiesById(trainingId)
+            } catch (e: Exception) {
+                null
             }
 
-            // Also maintain backward compatibility (temporary)
-            val oldTraining = getTrainingWithActivitiesById(trainingId)
-            deleteActivitiesFromTraining(oldTraining.activities, trainingId)
+            // Use transaction for data integrity
+            db.runInTransaction {
+                // Delete training
+                db.trainingDao().deleteById(trainingId = trainingId)
+
+                // Clean up orphaned workouts
+                if (sequence.isNotEmpty()) {
+                    cleanupOrphanedWorkouts(sequence, "")
+                }
+
+                // Also maintain backward compatibility (temporary)
+                oldTraining?.let {
+                    deleteActivitiesFromTraining(it.activities, trainingId)
+                }
+            }
         }
     }
 
@@ -445,5 +490,126 @@ class RepositoryImpl(private val db: AppDatabase) : Repository {
                 Log.d(REPO_TAG, "Workout still in use: id=$workoutId")
             }
         }
+    }
+
+    /**
+     * Validate that all workout IDs in sequence exist in database.
+     * This acts as a foreign key constraint check.
+     */
+    private fun validateSequenceIntegrity(sequence: String): Boolean {
+        if (sequence.isEmpty()) {
+            Log.e(REPO_TAG, "Sequence is empty - validation failed")
+            return false
+        }
+
+        val workoutIds = sequence.split(",").mapNotNull { it.toLongOrNull() }
+
+        if (workoutIds.isEmpty()) {
+            Log.e(REPO_TAG, "No valid workout IDs in sequence: $sequence")
+            return false
+        }
+
+        // Check that all workout IDs exist
+        val existingWorkouts = db.workoutDao().getByIds(workoutIds)
+        val existingIds = existingWorkouts.map { it.workoutId }.toSet()
+
+        val missingIds = workoutIds.filter { !existingIds.contains(it) }
+
+        if (missingIds.isNotEmpty()) {
+            Log.e(REPO_TAG, "Sequence validation failed: missing workout IDs: $missingIds")
+            return false
+        }
+
+        Log.d(REPO_TAG, "Sequence validation passed: all ${workoutIds.size} workouts exist")
+        return true
+    }
+
+    /**
+     * Verify data integrity across all trainings.
+     * Can be called periodically or after migrations.
+     */
+    suspend fun verifyDatabaseIntegrity(): DatabaseIntegrityReport = withContext(Dispatchers.IO) {
+        val report = DatabaseIntegrityReport()
+
+        Log.d(REPO_TAG, "Starting database integrity verification")
+
+        val allTrainings = db.trainingDao().getAll()
+
+        allTrainings.forEach { training ->
+            // Check 1: Sequence not empty for saved trainings
+            if (training.isDraft != true && training.sequence.isEmpty()) {
+                report.addError("Training ${training.trainingId} (${training.name}) is saved but has empty sequence")
+            }
+
+            // Check 2: All workout IDs in sequence exist
+            if (training.sequence.isNotEmpty()) {
+                val workoutIds = training.sequence.split(",").mapNotNull { it.toLongOrNull() }
+                val existingWorkouts = db.workoutDao().getByIds(workoutIds)
+                val existingIds = existingWorkouts.map { it.workoutId }.toSet()
+
+                val missingIds = workoutIds.filter { !existingIds.contains(it) }
+                if (missingIds.isNotEmpty()) {
+                    report.addError("Training ${training.trainingId} references missing workouts: $missingIds")
+                }
+            }
+
+            // Check 3: Backward compatibility - verify training_activities alignment
+            try {
+                val oldStyleTraining = db.trainingWithActivitiesDao().getTrainingsById(training.trainingId)
+                val oldActivitiesCount = oldStyleTraining.activities.size
+                val newWorkoutsCount = if (training.sequence.isEmpty()) 0
+                    else training.sequence.split(",").size
+
+                if (oldActivitiesCount != newWorkoutsCount) {
+                    report.addWarning("Training ${training.trainingId}: activity count mismatch (old=$oldActivitiesCount, new=$newWorkoutsCount)")
+                }
+            } catch (e: Exception) {
+                // Some trainings might not have old structure yet
+                Log.d(REPO_TAG, "Training ${training.trainingId} has no old structure (expected during migration)")
+            }
+        }
+
+        // Check 4: Find orphaned workouts
+        val allWorkouts = db.workoutDao().getAll()
+        allWorkouts.forEach { workout ->
+            val isUsed = allTrainings.any { training ->
+                training.sequence.split(",").mapNotNull { it.toLongOrNull() }.contains(workout.workoutId)
+            }
+
+            if (!isUsed) {
+                report.addWarning("Orphaned workout found: id=${workout.workoutId}, name=${workout.name}")
+            }
+        }
+
+        Log.d(REPO_TAG, "Integrity verification complete: ${report.errors.size} errors, ${report.warnings.size} warnings")
+        return@withContext report
+    }
+}
+
+/**
+ * Report containing database integrity check results.
+ */
+data class DatabaseIntegrityReport(
+    val errors: MutableList<String> = mutableListOf(),
+    val warnings: MutableList<String> = mutableListOf()
+) {
+    fun addError(message: String) {
+        errors.add(message)
+        Log.e(REPO_TAG, "INTEGRITY ERROR: $message")
+    }
+
+    fun addWarning(message: String) {
+        warnings.add(message)
+        Log.w(REPO_TAG, "INTEGRITY WARNING: $message")
+    }
+
+    fun isHealthy() = errors.isEmpty()
+
+    fun getSummary(): String {
+        return "Database Integrity Report:\n" +
+                "Errors: ${errors.size}\n" +
+                "Warnings: ${warnings.size}\n" +
+                if (errors.isNotEmpty()) "ERRORS:\n${errors.joinToString("\n")}\n" else "" +
+                if (warnings.isNotEmpty()) "WARNINGS:\n${warnings.joinToString("\n")}" else ""
     }
 }
