@@ -8,6 +8,9 @@ interface TrainingDao {
     @Query("SELECT * FROM training")
     fun getAll(): List<TrainingEntity>
 
+    @Query("SELECT * FROM training WHERE trainingId = :trainingId")
+    fun getById(trainingId: Long): TrainingEntity?
+
     @Insert
     fun add(trainingEntity: TrainingEntity)
 
