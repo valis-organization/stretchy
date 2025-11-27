@@ -11,6 +11,16 @@ import com.example.stretchy.database.entity.BreakEntity
 
 private const val MIG_TAG = "MIG_3"
 
+/**
+ * @deprecated Old structure from version 1-4. Kept only for migration code compatibility.
+ * After MIGRATION_4_5, the 'breaks' table no longer exists in the database.
+ * Breaks are now WorkoutEntity with workoutType=BREAK. Use WorkoutDao instead.
+ */
+@Deprecated(
+    message = "Old structure - breaks are now WorkoutEntity with type=BREAK",
+    replaceWith = ReplaceWith("WorkoutDao"),
+    level = DeprecationLevel.WARNING
+)
 @Dao
 interface BreakDao {
 

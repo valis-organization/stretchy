@@ -4,6 +4,17 @@ import androidx.room.*
 import com.example.stretchy.database.entity.TrainingActivityEntity
 import com.example.stretchy.database.entity.TrainingWithActivitiesEntity
 
+/**
+ * @deprecated Old structure from version 1-4. Kept only for migration code compatibility.
+ * After MIGRATION_4_5, the 'training_activities' table no longer exists in the database.
+ * Training sequences are now stored as comma-separated workout IDs in TrainingEntity.sequence.
+ * Use TrainingDao and WorkoutDao instead.
+ */
+@Deprecated(
+    message = "Old structure - use TrainingDao.sequence with WorkoutDao instead",
+    replaceWith = ReplaceWith("TrainingDao"),
+    level = DeprecationLevel.WARNING
+)
 @Dao
 interface TrainingWithActivitiesDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)

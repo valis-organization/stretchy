@@ -4,6 +4,15 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 
+/**
+ * @deprecated Old structure from version 1-4. Table dropped in MIGRATION_4_5.
+ * Breaks are now WorkoutEntity with workoutType=BREAK (version 5+).
+ */
+@Deprecated(
+    message = "Old structure - use WorkoutEntity with type=BREAK instead",
+    replaceWith = ReplaceWith("WorkoutEntity"),
+    level = DeprecationLevel.WARNING
+)
 @Entity(
     tableName = "breaks",
     indices = [Index(value = ["duration"], unique = false)]
