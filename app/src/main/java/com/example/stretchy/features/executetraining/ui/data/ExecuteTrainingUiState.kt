@@ -4,14 +4,14 @@ import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.features.executetraining.sound.data.SoundEvent
 
 data class ExecuteTrainingUiState(
-    var isLoading: Boolean,
-    var error: Throwable?,
-    var displayableActivityItemListWithBreakMerged: List<ActivityItemExerciseAndBreakMerged>?,
+    val isLoading: Boolean,
+    val error: Throwable?,
+    val displayableActivityItemListWithBreakMerged: List<ActivityItemExerciseAndBreakMerged>?,
     val trainingCompleted: TrainingCompleted?,
-    var currentSeconds: Float,
-    var trainingProgressPercent: Float,
-    var activityTypes: List<ActivityType>?,
-    var currentDisplayPage: Int,
+    val currentSeconds: Float,
+    val trainingProgressPercent: Float,
+    val activityTypes: List<ActivityType>?,
+    val currentDisplayPage: Int,
     //events
     val soundEvent: SoundEvent?
 )
@@ -25,13 +25,13 @@ data class ActivityItemExerciseAndBreakMerged(
 
 sealed class DisplayableActivityItem(
     open val nextExercise: String?,
-    open var currentTime: Float,
+    open val currentTime: Float,
     open val totalExerciseTime: Int
 ) {
     data class Exercise(
         val name: String,
         override val nextExercise: String?,
-        override var currentTime: Float,
+        override val currentTime: Float,
         override val totalExerciseTime: Int
     ) : DisplayableActivityItem(
         nextExercise,
@@ -46,7 +46,7 @@ sealed class DisplayableActivityItem(
 
     data class Break(
         override val nextExercise: String,
-        override var currentTime: Float,
+        override val currentTime: Float,
         override val totalExerciseTime: Int
     ) : DisplayableActivityItem(
         nextExercise,

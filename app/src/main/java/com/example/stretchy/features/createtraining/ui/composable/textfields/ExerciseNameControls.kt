@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.stretchy.R
@@ -69,3 +70,31 @@ fun ExerciseNameControls(
         )
     }
 }
+
+@Preview(name = "Exercise Name Controls - Empty", showBackground = true)
+@Composable
+private fun ExerciseNameControlsEmptyPreview() {
+    ExerciseNameControls(
+        currentName = "",
+        onNameEntered = {}
+    )
+}
+
+@Preview(name = "Exercise Name Controls - With text", showBackground = true)
+@Composable
+private fun ExerciseNameControlsWithTextPreview() {
+    ExerciseNameControls(
+        currentName = "Push Ups",
+        onNameEntered = {}
+    )
+}
+
+@Preview(name = "Exercise Name Controls - Long text", showBackground = true)
+@Composable
+private fun ExerciseNameControlsLongTextPreview() {
+    ExerciseNameControls(
+        currentName = "Advanced Mountain Climbers with Side Rotation",
+        onNameEntered = {}
+    )
+}
+

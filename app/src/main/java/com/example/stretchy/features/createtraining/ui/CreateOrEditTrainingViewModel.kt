@@ -2,45 +2,79 @@ package com.example.stretchy.features.createtraining.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.stretchy.database.data.ActivityType
 import com.example.stretchy.database.data.TrainingType
-import com.example.stretchy.extensions.toActivityType
+import com.example.stretchy.features.createtraining.domain.TrainingDomainMapper.toDomain
+import com.example.stretchy.features.createtraining.domain.TrainingDomainMapper.toUI
+import com.example.stretchy.features.createtraining.domain.BreakManagementUseCase
+import com.example.stretchy.features.domain.usecases.FetchTrainingDomainUseCase
+import com.example.stretchy.features.domain.usecases.CreateTrainingDomainUseCase
+import com.example.stretchy.features.domain.usecases.EditTrainingDomainUseCase
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
 import com.example.stretchy.features.createtraining.ui.data.AutomaticBreakPreferences
-import com.example.stretchy.features.createtraining.ui.data.Exercise
-import com.example.stretchy.repository.Activity
-import com.example.stretchy.repository.Repository
-import com.example.stretchy.repository.TrainingWithActivity
+import androidx.lifecycle.SavedStateHandle
+import com.example.stretchy.features.createtraining.domain.UIDomainMapper
+import com.example.stretchy.features.createtraining.domain.toRepository
+import javax.inject.Inject
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class CreateOrEditTrainingViewModel(
-    val repository: Repository,
-    val trainingId: Long,
+@HiltViewModel
+class CreateOrEditTrainingViewModel @Inject constructor(
+    // Clean Architecture: ONLY domain use cases - no repository-level use cases
+    internal val breakManagementUseCase: BreakManagementUseCase,
+    private val fetchTrainingDomainUseCase: FetchTrainingDomainUseCase,
+    private val createTrainingDomainUseCase: CreateTrainingDomainUseCase,
+    private val editTrainingDomainUseCase: EditTrainingDomainUseCase,
     private val automaticBreakPreferences: AutomaticBreakPreferences,
-    val trainingType: TrainingType
-) :
-    ViewModel() {
+    private val savedStateHandle: SavedStateHandle
+) : ViewModel() {
+
+    // Get parameters from savedStateHandle
+    val trainingId: Long = savedStateHandle.get<String>("id")?.toLongOrNull() ?: -1L
+    val trainingType: TrainingType = savedStateHandle.get<String>("trainingType")?.let {
+        try {
+            TrainingType.valueOf(it)
+        } catch (_: IllegalArgumentException) {
+            TrainingType.STRETCH
+        }
+    } ?: TrainingType.STRETCH
+
+    // ✅ Use cases now injected directly - no manual instantiation needed
+
+
     private val _uiState: MutableStateFlow<CreateTrainingUiState> =
         MutableStateFlow(CreateTrainingUiState.Init)
-    val uiState: StateFlow<CreateTrainingUiState> = _uiState
+    val uiState: StateFlow<CreateTrainingUiState> = _uiState.asStateFlow()
+
+    private val _events = MutableSharedFlow<UiEvent>()
+    val events: SharedFlow<UiEvent> = _events.asSharedFlow()
+
+    sealed class UiEvent {
+        data class ShowToast(val message: String) : UiEvent()
+        data class ShowErrorDialog(val message: String) : UiEvent()
+    }
 
     init {
         if (trainingId != -1L) {
             viewModelScope.launch(Dispatchers.IO) {
-                val trainingWithActivities = repository.getTrainingWithActivitiesById(trainingId)
+                val trainingDomain = fetchTrainingDomainUseCase(trainingId)
 
-                with(trainingWithActivities) {
-                    val exerciseList = activities.toExerciseWithBreaks()
+                with(trainingDomain) {
+                    val exerciseList = exercisesWithBreaks.map { it.toUI() }
                     _uiState.emit(
                         CreateTrainingUiState.Success(
                             trainingId,
                             true,
                             name,
                             exerciseList,
-                            trainingType,
+                            this.trainingType.toRepository(),
                             false,
                             isCreateTrainingButtonVisible(name, exerciseList),
                             isAutomaticBreakButtonClicked = true
@@ -68,20 +102,28 @@ class CreateOrEditTrainingViewModel(
 
     fun editTraining(trainingId: Long, exerciseList: List<ExercisesWithBreaks>) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        val activitiesList = exerciseList.mapToActivityList()
         viewModelScope.launch {
             val success = (_uiState.value as? CreateTrainingUiState.Success)
             if (success != null) {
-                repository.editTrainingWithActivities(
-                    trainingId,
-                    TrainingWithActivity(
-                        stateSuccess.currentName,
-                        trainingType,
-                        true,
-                        activitiesList
+                try {
+                    // ✅ USE UI-DOMAIN MAPPER
+                    val domainTraining = UIDomainMapper.createDomainFromUI(
+                        trainingId = trainingId,
+                        trainingName = stateSuccess.currentName,
+                        exercisesWithBreaks = exerciseList,
+                        trainingType = trainingType
                     )
-                )
-                _uiState.emit(CreateTrainingUiState.Done)
+
+                    // ✅ USE DOMAIN USE CASE
+                    editTrainingDomainUseCase(trainingId, domainTraining)
+                    _uiState.emit(CreateTrainingUiState.Done)
+                } catch (ex: Exception) {
+                    _uiState.emit(
+                        CreateTrainingUiState.Error(
+                            CreateTrainingUiState.Error.Reason.Unknown(ex)
+                        )
+                    )
+                }
             }
         }
     }
@@ -128,19 +170,26 @@ class CreateOrEditTrainingViewModel(
 
     fun createTraining(exerciseList: List<ExercisesWithBreaks>) {
         val stateSuccess = _uiState.value as CreateTrainingUiState.Success
-        val activitiesList = exerciseList.mapToActivityList()
         viewModelScope.launch {
             if (stateSuccess.currentName == "") {
                 _uiState.emit(CreateTrainingUiState.Error(CreateTrainingUiState.Error.Reason.MissingTrainingName))
             } else {
                 try {
-                    saveTraining(activitiesList)
+                    // ✅ USE UI-DOMAIN MAPPER
+                    val domainTraining = UIDomainMapper.createDomainFromUI(
+                        trainingId = null,
+                        trainingName = stateSuccess.currentName,
+                        exercisesWithBreaks = exerciseList,
+                        trainingType = trainingType
+                    )
+
+                    // ✅ USE DOMAIN USE CASE
+                    createTrainingDomainUseCase(domainTraining)
+                    _uiState.emit(CreateTrainingUiState.Done)
                 } catch (ex: Exception) {
                     _uiState.emit(
                         CreateTrainingUiState.Error(
-                            CreateTrainingUiState.Error.Reason.Unknown(
-                                ex
-                            )
+                            CreateTrainingUiState.Error.Reason.Unknown(ex)
                         )
                     )
                 }
@@ -163,23 +212,6 @@ class CreateOrEditTrainingViewModel(
 
     fun getAutoBreakDuration(): Int = automaticBreakPreferences.getCurrentAutoBreakDuration()
 
-    private fun saveTraining(activitiesList: List<Activity>) {
-        viewModelScope.launch {
-            val success = (_uiState.value as? CreateTrainingUiState.Success)
-            if (success != null) {
-                repository.addTrainingWithActivities(
-                    TrainingWithActivity(
-                        success.currentName,
-                        trainingType,
-                        true,
-                        activitiesList
-                    )
-                )
-                _uiState.emit(CreateTrainingUiState.Done)
-            }
-        }
-    }
-
     private fun isCreateTrainingButtonVisible(
         currentName: String,
         exerciseList: List<ExercisesWithBreaks>
@@ -192,9 +224,10 @@ class CreateOrEditTrainingViewModel(
         exerciseList: List<ExercisesWithBreaks>
     ): Boolean {
         if (trainingId != null && trainingId >= 0) {
-            val trainingFromDb = repository.getTrainingWithActivitiesById(trainingId)
+            val trainingFromDb = fetchTrainingDomainUseCase(trainingId)
             if (trainingFromDb.name == trainingName) {
-                if (trainingFromDb.activities.toExerciseWithBreaks() == exerciseList) {
+                val dbExerciseList = trainingFromDb.exercisesWithBreaks.map { it.toUI() }
+                if (dbExerciseList == exerciseList) {
                     return false
                 }
             }
@@ -202,62 +235,161 @@ class CreateOrEditTrainingViewModel(
         return true
     }
 
-    private fun List<ExercisesWithBreaks>.mapToActivityList(): List<Activity> {
-        val activityList = mutableListOf<Activity>()
-        val stateSuccess = _uiState.value as CreateTrainingUiState.Success
+    // ========= NEW DOMAIN-BASED METHODS - Clean Architecture =========
 
-        var activityOrder = 0
+    /**
+     * Updates break for specific exercise using domain logic
+     * Demonstrates clean separation between UI and domain layers
+     */
+    fun updateExerciseBreak(exerciseIndex: Int, newBreakDuration: Int?) {
+        viewModelScope.launch {
+            try {
+                val currentState = _uiState.value as? CreateTrainingUiState.Success ?: return@launch
+                val currentExercises = currentState.exercisesWithBreaks.toMutableList()
 
-        this.forEach {
-            with(it.exercise) {
-                activityList.add(
-                    Activity(
-                        name,
-                        activityOrder,
-                        duration,
-                        stateSuccess.trainingType.toActivityType(duration == 0)
-                    )
+                if (exerciseIndex !in currentExercises.indices) return@launch
+
+                val currentExercise = currentExercises[exerciseIndex].toDomain()
+
+                // Use domain use case for break management
+                val updatedExercise = breakManagementUseCase.updateExerciseBreak(
+                    currentExercise,
+                    newBreakDuration
                 )
-            }
-            activityOrder++
-            if (it.nextBreakDuration != 0 && it.nextBreakDuration != null) {
-                activityList.add(
-                    Activity(
-                        "",
-                        activityOrder,
-                        it.nextBreakDuration!!,
-                        ActivityType.BREAK
-                    )
+
+                // Convert back to UI model
+                currentExercises[exerciseIndex] = updatedExercise.toUI(exerciseIndex)
+
+                // Update UI state
+                _uiState.value = currentState.copy(
+                    exercisesWithBreaks = currentExercises,
+                    isTrainingChanged = true,
+                    saveButtonCanBeClicked = isCreateTrainingButtonVisible(currentState.currentName, currentExercises)
                 )
-                activityOrder++
+
+            } catch (e: Exception) {
+                _events.emit(UiEvent.ShowErrorDialog("Failed to update break: ${e.message}"))
             }
         }
-        return activityList
     }
 
-    private fun List<Activity>.toExerciseWithBreaks(): List<ExercisesWithBreaks> {
-        val list = mutableListOf<ExercisesWithBreaks>()
-        this.forEachIndexed() { index, item ->
-            if (item.activityType != ActivityType.BREAK) {
-                list.add(
-                    ExercisesWithBreaks(
-                        list.lastIndex + 1,
-                        Exercise(
-                            item.activityId.toInt(),
-                            item.name,
-                            item.activityOrder,
-                            item.duration
-                        ),
-                        if (this.getOrNull(index + 1)?.activityType == ActivityType.BREAK) this.getOrNull(
-                            index + 1
-                        )?.duration
-                        else null, false
-                    )
+    /**
+     * Applies automatic break to exercise using domain rules
+     */
+    fun applyAutomaticBreakToExercise(exerciseIndex: Int) {
+        viewModelScope.launch {
+            try {
+                val currentState = _uiState.value as? CreateTrainingUiState.Success ?: return@launch
+                val currentExercises = currentState.exercisesWithBreaks.toMutableList()
+
+                if (exerciseIndex !in currentExercises.indices) return@launch
+
+                val exercise = currentExercises[exerciseIndex].toDomain().exercise
+                val autoBreakDuration = getAutoBreakDuration()
+
+                // Use domain use case for automatic break logic
+                val exerciseWithBreak = breakManagementUseCase.applyAutomaticBreak(exercise, autoBreakDuration)
+
+                // Convert back to UI model
+                currentExercises[exerciseIndex] = exerciseWithBreak.toUI(exerciseIndex)
+
+                _uiState.value = currentState.copy(
+                    exercisesWithBreaks = currentExercises,
+                    isTrainingChanged = true
                 )
+
+            } catch (e: Exception) {
+                _events.emit(UiEvent.ShowErrorDialog("Failed to apply automatic break: ${e.message}"))
             }
         }
-        return list
+    }
+
+    /**
+     * Validates exercise with break using domain rules
+     */
+    fun validateExerciseWithBreak(exerciseIndex: Int): Boolean {
+        val currentState = _uiState.value as? CreateTrainingUiState.Success ?: return false
+        if (exerciseIndex !in currentState.exercisesWithBreaks.indices) return false
+
+        val exerciseWithBreak = currentState.exercisesWithBreaks[exerciseIndex].toDomain()
+        return breakManagementUseCase.isBreakCompatibleWithExercise(
+            exerciseWithBreak.breakAfter,
+            exerciseWithBreak.exercise
+        )
+    }
+
+    /**
+     * Gets break description using domain logic
+     */
+    fun getBreakDescription(exerciseIndex: Int): String {
+        val currentState = _uiState.value as? CreateTrainingUiState.Success ?: return "No break"
+        if (exerciseIndex !in currentState.exercisesWithBreaks.indices) return "No break"
+
+        val breakDomain = currentState.exercisesWithBreaks[exerciseIndex].toDomain().breakAfter
+        return breakDomain?.getDisplayText() ?: "No break"
+    }
+
+    /**
+     * Creates training using domain validation (future replacement for legacy method)
+     */
+    fun createTrainingWithDomainValidation(exerciseList: List<ExercisesWithBreaks>) {
+        viewModelScope.launch {
+            try {
+                val currentState = _uiState.value as? CreateTrainingUiState.Success ?: return@launch
+
+                // Convert UI to domain with validation
+                val trainingDomain = com.example.stretchy.features.createtraining.domain.TrainingDomainMapper.createDomainFromUI(
+                    name = currentState.currentName,
+                    exercisesWithBreaks = exerciseList,
+                    trainingType = trainingType
+                )
+
+                // Validate using domain rules
+                val validationErrors = com.example.stretchy.features.createtraining.domain.TrainingDomainRules.validateTraining(trainingDomain)
+                if (validationErrors.isNotEmpty()) {
+                    _events.emit(UiEvent.ShowErrorDialog("Validation failed: ${validationErrors.joinToString(", ")}"))
+                    return@launch
+                }
+
+                // Create using domain use case
+                createTrainingDomainUseCase(trainingDomain)
+                _uiState.emit(CreateTrainingUiState.Done)
+
+            } catch (e: Exception) {
+                _events.emit(UiEvent.ShowErrorDialog("Failed to create training: ${e.message}"))
+            }
+        }
+    }
+
+    /**
+     * Edits training using domain validation (future replacement for legacy method)
+     */
+    fun editTrainingWithDomainValidation(trainingId: Long, exerciseList: List<ExercisesWithBreaks>) {
+        viewModelScope.launch {
+            try {
+                val currentState = _uiState.value as? CreateTrainingUiState.Success ?: return@launch
+
+                // Convert UI to domain with validation
+                val trainingDomain = com.example.stretchy.features.createtraining.domain.TrainingDomainMapper.createDomainFromUI(
+                    name = currentState.currentName,
+                    exercisesWithBreaks = exerciseList,
+                    trainingType = trainingType
+                ).copy(id = trainingId)
+
+                // Validate using domain rules
+                val validationErrors = com.example.stretchy.features.createtraining.domain.TrainingDomainRules.validateTraining(trainingDomain)
+                if (validationErrors.isNotEmpty()) {
+                    _events.emit(UiEvent.ShowErrorDialog("Validation failed: ${validationErrors.joinToString(", ")}"))
+                    return@launch
+                }
+
+                // Edit using domain use case
+                editTrainingDomainUseCase(trainingId, trainingDomain)
+                _uiState.emit(CreateTrainingUiState.Done)
+
+            } catch (e: Exception) {
+                _events.emit(UiEvent.ShowErrorDialog("Failed to edit training: ${e.message}"))
+            }
+        }
     }
 }
-
-

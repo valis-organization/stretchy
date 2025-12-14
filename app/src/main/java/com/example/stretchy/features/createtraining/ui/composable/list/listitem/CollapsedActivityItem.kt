@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.stretchy.R
 import com.example.stretchy.features.createtraining.ui.composable.list.ExercisesWithBreaks
@@ -75,3 +76,70 @@ fun CollapsedActivityItem(
         }
     }
 }
+
+@Preview(name = "Collapsed Activity - With break", showBackground = true)
+@Composable
+private fun CollapsedActivityWithBreakPreview() {
+    val sampleExercise = com.example.stretchy.features.createtraining.ui.data.Exercise(
+        id = 1,
+        name = "Push Ups",
+        duration = 30
+    )
+    val exerciseWithBreaks = ExercisesWithBreaks(
+        listId = 0,
+        exercise = sampleExercise,
+        nextBreakDuration = 10,
+        isExpanded = false
+    )
+
+    CollapsedActivityItem(
+        exerciseWithBreaks = exerciseWithBreaks,
+        position = 0,
+        onExpand = {}
+    )
+}
+
+@Preview(name = "Collapsed Activity - No break", showBackground = true)
+@Composable
+private fun CollapsedActivityNoBreakPreview() {
+    val sampleExercise = com.example.stretchy.features.createtraining.ui.data.Exercise(
+        id = 2,
+        name = "Plank Hold",
+        duration = 60
+    )
+    val exerciseWithBreaks = ExercisesWithBreaks(
+        listId = 1,
+        exercise = sampleExercise,
+        nextBreakDuration = null,
+        isExpanded = false
+    )
+
+    CollapsedActivityItem(
+        exerciseWithBreaks = exerciseWithBreaks,
+        position = 1,
+        onExpand = {}
+    )
+}
+
+@Preview(name = "Collapsed Activity - Long name", showBackground = true)
+@Composable
+private fun CollapsedActivityLongNamePreview() {
+    val sampleExercise = com.example.stretchy.features.createtraining.ui.data.Exercise(
+        id = 3,
+        name = "Advanced Mountain Climbers with Side Rotation",
+        duration = 45
+    )
+    val exerciseWithBreaks = ExercisesWithBreaks(
+        listId = 2,
+        exercise = sampleExercise,
+        nextBreakDuration = 15,
+        isExpanded = false
+    )
+
+    CollapsedActivityItem(
+        exerciseWithBreaks = exerciseWithBreaks,
+        position = 2,
+        onExpand = {}
+    )
+}
+

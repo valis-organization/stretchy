@@ -3,7 +3,8 @@ package com.example.stretchy.features.traininglist.ui.data
 sealed class TrainingListUiState {
     object Empty : TrainingListUiState()
     object Loading : TrainingListUiState()
-    class Loaded(var trainings: List<Training>) : TrainingListUiState()
+    data class Loaded(val trainings: List<Training>) : TrainingListUiState()
+    data class Error(val message: String, val throwable: Throwable? = null) : TrainingListUiState()
 }
 
 data class Training(

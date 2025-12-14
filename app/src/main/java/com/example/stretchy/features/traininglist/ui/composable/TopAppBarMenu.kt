@@ -15,14 +15,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.example.stretchy.R
-import com.example.stretchy.features.traininglist.ui.TrainingListViewModel
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 
 @Composable
-fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportClick: () -> Unit) {
+fun Menu(
+    onRequestExportPermission: () -> Unit,
+    onRequestImportPermission: () -> Unit,
+    onPerformExport: () -> Unit,
+    onPerformImport: suspend () -> Unit
+) {
     val context = LocalContext.current
     var expanded by remember {
         mutableStateOf(false)
@@ -35,7 +40,7 @@ fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportCl
         Icon(
             imageVector = Icons.Filled.MoreVert,
             contentDescription = stringResource(id = R.string.desc_menu_icon),
-            tint = Color.White
+            tint = Color.Black
         )
         DropdownMenu(
             expanded = expanded,
@@ -46,10 +51,10 @@ fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportCl
                     expanded = false
                     if (isPermissionsGranted(context, Manifest.permission.READ_EXTERNAL_STORAGE)) {
                         CoroutineScope(Dispatchers.Default).launch {
-                            viewModel.import()
+                            onPerformImport()
                         }
                     } else {
-                        onImportClick()
+                        onRequestImportPermission()
                     }
                     Toast.makeText(context, R.string.import_trainings, Toast.LENGTH_LONG).show()
                 }
@@ -60,9 +65,9 @@ fun Menu(viewModel: TrainingListViewModel, onExportClick: () -> Unit, onImportCl
                 onClick = {
                     expanded = false
                     if (isPermissionsGranted(context, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                        viewModel.export()
+                        onPerformExport()
                     } else {
-                        onExportClick()
+                        onRequestExportPermission()
                     }
                     Toast.makeText(context, R.string.export_trainings, Toast.LENGTH_LONG).show()
                 }
